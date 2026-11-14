@@ -35,6 +35,7 @@ import json
 import os
 import sys
 import warnings
+from collections import Counter
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -43,6 +44,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
+from scipy.stats import pearsonr
 
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
@@ -345,10 +347,23 @@ def synthetic_clickstream(n_students: int, seed: int = SEED) -> pd.DataFrame:
             else:
                 act = rng.choice(LSA_ACTIONS, p=[0.35, 0.30, 0.15, 0.12, 0.08])
             t += int(rng.integers(1800, 30 * 3600))
-            rows.append({"student_id": uid, "timestamp": base + timedelta(seconds=t),
-                         "action": act,
-                         "resource_id": f"{course}-R{rng.integers(1, 13)}",
-                         "course_id": course})
+            row = {"student_id": uid, "timestamp": base + timedelta(seconds=t),
+                   "action": act,
+                   "resource_id": f"{course}-R{rng.integers(1, 13)}",
+                   "course_id": course, "resource_type": None, "completed": np.nan,
+                   "speed_used": np.nan, "seek_count": np.nan}
+            if act == "video":
+                # 三类学习场景：慕课长视频 / 微课 / 短视频，行为特征有差异
+                rtype = rng.choice(["mooc", "micro", "short"], p=[0.40, 0.35, 0.25])
+                comp_p = {"mooc": 0.45, "micro": 0.65, "short": 0.80}[rtype]
+                row["resource_type"] = rtype
+                row["completed"] = float(rng.random() < comp_p)
+                row["speed_used"] = rng.choice([1.0, 1.25, 1.5, 2.0],
+                                               p=[0.50, 0.25, 0.15, 0.10]) \
+                    if rtype != "mooc" else rng.choice([1.0, 1.25], p=[0.80, 0.20])
+                row["seek_count"] = int(rng.integers(0, 8)) if rtype == "mooc" \
+                    else int(rng.integers(0, 3))
+            rows.append(row)
     return pd.DataFrame(rows)
 
 
@@ -361,8 +376,11 @@ def load_clickstream(data_dir: str, n_students: int) -> pd.DataFrame:
             df = pd.read_csv(path)
             df = normalize_columns(df)
             if {"student_id", "timestamp", "action"}.issubset(df.columns):
-                df["resource_id"] = df.get("resource_id", "R0")
-                df["course_id"] = df.get("course_id", "C0")
+                for col, default in [("resource_id", "R0"), ("course_id", "C0"),
+                                     ("resource_type", None), ("completed", np.nan),
+                                     ("speed_used", np.nan), ("seek_count", np.nan)]:
+                    if col not in df.columns:
+                        df[col] = default
                 df["timestamp"] = pd.to_datetime(df["timestamp"])
                 log(f"  已加载真实点击流 clickstream.csv  shape={df.shape}")
                 return df
@@ -370,6 +388,36 @@ def load_clickstream(data_dir: str, n_students: int) -> pd.DataFrame:
         except Exception as e:
             log(f"  读取 clickstream.csv 失败: {e}，改用合成数据")
     return synthetic_clickstream(n_students)
+
+
+def add_demographics(uni: pd.DataFrame, seed: int = SEED) -> pd.DataFrame:
+    """人口属性维度：真实数据含 gender/age_band/region/education 列则沿用，
+    否则按典型在线教育平台样本结构合成，并对行为做轻度关联以便交叉分析。"""
+    rng = np.random.default_rng(seed + 5)
+    n = len(uni)
+    if "gender" not in uni.columns:
+        uni["gender"] = rng.choice(["男", "女"], n, p=[0.52, 0.48])
+    if "age_band" not in uni.columns:
+        uni["age_band"] = rng.choice(["18-25", "26-30", "31-40", "40+"],
+                                     n, p=[0.45, 0.25, 0.20, 0.10])
+    if "region" not in uni.columns:
+        uni["region"] = rng.choice(["华东", "华北", "华南", "西南", "西北", "东北"],
+                                   n, p=[0.30, 0.20, 0.18, 0.14, 0.10, 0.08])
+    if "education" not in uni.columns:
+        uni["education"] = rng.choice(["高中及以下", "大专", "本科", "硕士及以上"],
+                                      n, p=[0.20, 0.30, 0.40, 0.10])
+    # 轻度行为关联（合成数据演示用）：教育背景→学习时长/成绩，地区→访问量
+    edu_factor = uni["education"].map(
+        {"高中及以下": 0.85, "大专": 0.95, "本科": 1.05, "硕士及以上": 1.15}).fillna(1.0)
+    region_factor = uni["region"].map(
+        {"华东": 1.12, "华北": 1.05, "华南": 1.02, "西南": 0.95,
+         "西北": 0.88, "东北": 0.98}).fillna(1.0)
+    for col in ["avg_session_min", "total_clicks"]:
+        if col in uni.columns:
+            uni[col] = (uni[col] * edu_factor * region_factor).round(1)
+    if "avg_quiz_score" in uni.columns:
+        uni["avg_quiz_score"] = (uni["avg_quiz_score"] * edu_factor).round(1)
+    return uni
 
 
 # ======================================================================
@@ -465,7 +513,8 @@ def build_unified_dataset(args) -> pd.DataFrame:
         keep = ["student_id", "source"] + [c for c in ALL_FEATURES if c in df.columns]
         extra = [c for c in ["latent_type", "success_status", "overall_score", "grade",
                              "learner_type", "study_hours", "attendance_rate", "code_calls",
-                             "completion_rate", "final_grade"]
+                             "completion_rate", "final_grade",
+                             "gender", "age_band", "region", "education"]
                  if c in df.columns]
         parts.append(df[keep + extra])
     uni = pd.concat(parts, ignore_index=True, sort=False)
@@ -492,6 +541,11 @@ def build_unified_dataset(args) -> pd.DataFrame:
     uni["completion_rate"] = uni["completion_rate"].fillna(uni["completion_rate"].median())
     uni["final_grade"] = uni["final_grade"].fillna(uni["final_grade"].median())
     uni = clean_features(uni)
+    # 人口属性（真实列优先，缺失合成）+ 行为轻度关联
+    uni = add_demographics(uni)
+    # 基础行为代理指标：周均学习时长（分钟）、作业提交率
+    uni["study_hours_per_week"] = (uni["avg_session_min"] * uni["login_freq_per_week"] / 60).round(1)
+    uni["submission_rate"] = ((uni["assignment_submit_lag"] + 5) / 10).clip(0, 1).round(3)
     log(f"\n统一数据集: {uni.shape[0]} 名学生 × {uni.shape[1]} 列, "
         f"来源分布: {uni['source'].value_counts().to_dict()}")
     return uni
@@ -1219,6 +1273,522 @@ def ahp_fuzzy_scores(uni: pd.DataFrame, out_dir: str):
 
 
 # ======================================================================
+# 六B、扩展分析：基础统计 / 时序模式 / Apriori / 场景对比 / 相关性 / SD 仿真
+# ======================================================================
+def basic_stats_analysis(uni: pd.DataFrame, out_dir: str) -> dict:
+    """第一部分：人口属性频数统计 + 基础行为指标基线 + 静态属性×行为交叉对比。"""
+    demo_cols = [c for c in ["gender", "age_band", "region", "education"]
+                 if c in uni.columns]
+    # 1) 人口属性频数
+    rows = []
+    for c in demo_cols:
+        vc = uni[c].value_counts()
+        for cat, cnt in vc.items():
+            rows.append({"dimension": c, "category": cat, "count": cnt,
+                         "pct": round(100 * cnt / len(uni), 1)})
+    demo_df = pd.DataFrame(rows)
+    demo_df.to_csv(os.path.join(out_dir, "demographics_distribution.csv"),
+                   index=False, encoding="utf-8-sig")
+    core = {c: demo_df[demo_df["dimension"] == c].iloc[0]["category"]
+            for c in demo_cols}
+    log(f"  人口结构: 核心群体 {core}")
+
+    # 2) 基础行为指标基线
+    baseline_cols = [c for c in ["login_freq_per_week", "study_hours_per_week",
+                                 "video_completion_rate", "submission_rate",
+                                 "forum_posts", "total_clicks", "active_days",
+                                 "avg_session_min"] if c in uni.columns]
+    desc = uni[baseline_cols].describe().T[["mean", "50%", "min", "max", "std"]]
+    desc.columns = ["均值", "中位数", "最小值", "最大值", "标准差"]
+    desc.round(2).to_csv(os.path.join(out_dir, "behavior_baseline.csv"),
+                         encoding="utf-8-sig")
+
+    # 3) 静态属性 × 行为交叉对比
+    xrows = []
+    for c in demo_cols:
+        agg_map = {
+            "平均学习时长": ("study_hours_per_week", "mean"),
+            "视频偏好度": ("video_clicks", "mean"),
+            "平均完成率": ("completion_rate", "mean"),
+            "平均成绩": ("final_grade", "mean"),
+            "人数": ("student_id", "count"),
+        }
+        if "video_completion_rate" in uni.columns:
+            agg_map["平均完播率"] = ("video_completion_rate", "mean")
+        g = uni.groupby(c).agg(**agg_map)
+        for cat, r in g.iterrows():
+            xrows.append({"dimension": c, "category": cat,
+                          **{k: round(v, 2) for k, v in r.items()}})
+    cross = pd.DataFrame(xrows)
+    cross.to_csv(os.path.join(out_dir, "group_behavior_comparison.csv"),
+                 index=False, encoding="utf-8-sig")
+
+    # 可视化：教育背景 × 行为差异（代表性交叉图）
+    if "education" in uni.columns:
+        g = uni.groupby("education")[["study_hours_per_week", "completion_rate",
+                                      "final_grade"]].mean()
+        fig, ax = plt.subplots(figsize=(9, 5))
+        x = np.arange(len(g))
+        ax2 = ax.twinx()
+        ax.bar(x - 0.2, g["study_hours_per_week"], 0.4, color=PALETTE[0], label="周均学习时长")
+        ax2.bar(x + 0.2, g["final_grade"], 0.4, color=PALETTE[1], label="最终成绩")
+        ax.set_xticks(x, g.index)
+        ax.set_ylabel("周均学习时长(小时)")
+        ax2.set_ylabel("最终成绩")
+        ax.set_title("不同教育背景学习者的行为分化", fontweight="bold")
+        h1, l1 = ax.get_legend_handles_labels()
+        h2, l2 = ax2.get_legend_handles_labels()
+        ax.legend(h1 + h2, l1 + l2, loc="upper left")
+        plt.tight_layout()
+        plt.savefig(os.path.join(out_dir, "demographics_cross.png"), bbox_inches="tight")
+        plt.close()
+    return {"core_groups": core, "demo_df": demo_df, "cross": cross}
+
+
+def temporal_analysis(clicks: pd.DataFrame, out_dir: str):
+    """第二部分-1：登录时间分布（早/中/晚/深夜）、周度周期性、时间行为模式标记。"""
+    ev = clicks.copy()
+    ev["hour"] = ev["timestamp"].dt.hour
+    ev["weekday"] = ev["timestamp"].dt.weekday  # 0=周一 ... 6=周日
+
+    def bucket(h):
+        if h < 6:
+            return "深夜(0-6)"
+        if h < 12:
+            return "早上(6-12)"
+        if h < 18:
+            return "下午(12-18)"
+        return "晚上(18-24)"
+
+    ev["slot"] = ev["hour"].apply(bucket)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4.5))
+    slot_order = ["早上(6-12)", "下午(12-18)", "晚上(18-24)", "深夜(0-6)"]
+    cnt = ev["slot"].value_counts().reindex(slot_order, fill_value=0)
+    ax1.bar(slot_order, cnt.values, color=PALETTE[:4])
+    ax1.set(title="登录时间分布", ylabel="事件数")
+    wd = ev["weekday"].value_counts().sort_index()
+    ax2.bar(["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
+            [wd.get(i, 0) for i in range(7)], color=PALETTE[0])
+    ax2.axhspan(0, max(wd.max(), 1) * 1.05, xmin=5 / 7, color=PALETTE[2], alpha=0.12)
+    ax2.set(title="周度行为周期性（周末高亮）", ylabel="事件数")
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, "temporal_patterns.png"), bbox_inches="tight")
+    plt.close()
+
+    # 逐学生时间模式标签
+    rows = []
+    for sid, g in ev.groupby("student_id"):
+        n = len(g)
+        night = (g["hour"] < 6).mean()
+        weekend = (g["weekday"] >= 5).mean()
+        days = g["timestamp"].dt.date.nunique()
+        ev_per_day = n / max(days, 1)
+        if weekend >= 0.5:
+            pat = "集中式周末学习"
+        elif night >= 0.35:
+            pat = "夜间型学习"
+        elif ev_per_day >= 25:
+            pat = "碎片化高频学习"
+        else:
+            pat = "常规型学习"
+        rows.append({"student_id": sid, "time_pattern": pat,
+                     "night_ratio": round(night, 3), "weekend_ratio": round(weekend, 3),
+                     "events_per_day": round(ev_per_day, 1)})
+    pat_df = pd.DataFrame(rows)
+    pat_df.to_csv(os.path.join(out_dir, "temporal_student_patterns.csv"),
+                  index=False, encoding="utf-8-sig")
+    dist = pat_df["time_pattern"].value_counts().to_dict()
+    log(f"  时序模式分布: {dist}")
+    return pat_df, dist
+
+
+def _apriori(transactions: list[frozenset], min_support=0.05, min_conf=0.4):
+    """轻量 Apriori：频繁项集挖掘 + 关联规则（support / confidence / lift）。"""
+    n = len(transactions)
+    cnt1 = Counter()
+    for t in transactions:
+        for it in t:
+            cnt1[frozenset([it])] += 1
+    L = {s: c for s, c in cnt1.items() if c / n >= min_support}
+    all_L, k = dict(L), 2
+    while L and k <= 3:
+        keys = list(L.keys())
+        C = {keys[i] | keys[j] for i in range(len(keys)) for j in range(i + 1, len(keys))
+             if len(keys[i] | keys[j]) == k}
+        counts = Counter()
+        for t in transactions:
+            for c in C:
+                if c <= t:
+                    counts[c] += 1
+        L = {c: v for c, v in counts.items() if v / n >= min_support}
+        all_L.update(L)
+        k += 1
+    rules = []
+    for s, c in all_L.items():
+        if len(s) < 2:
+            continue
+        for it in s:
+            ant = s - {it}
+            if ant not in all_L:
+                continue
+            conf = c / all_L[ant]
+            if conf >= min_conf:
+                lift = conf / (all_L[frozenset([it])] / n)
+                rules.append({"antecedent": "、".join(sorted(ant)),
+                              "consequent": it,
+                              "support": round(c / n, 3),
+                              "confidence": round(conf, 3),
+                              "lift": round(lift, 2)})
+    return pd.DataFrame(rules).sort_values("lift", ascending=False) if rules \
+        else pd.DataFrame(columns=["antecedent", "consequent", "support",
+                                   "confidence", "lift"])
+
+
+def apriori_path_mining(clicks: pd.DataFrame, out_dir: str,
+                        min_support=0.05, min_conf=0.4):
+    """第二部分-3：学习路径关联规则挖掘（Apriori），并统计负向行为（只看短视频跳过慕课）。"""
+    ev = clicks.copy()
+    ev["action"] = ev["action"].astype(str).str.lower()
+    labels = {"video": "看视频", "resource": "读资源", "quiz": "做测验",
+              "forum": "论坛互动", "help": "求助"}
+    trans = []
+    for sid, g in ev.groupby("student_id"):
+        items = {labels.get(a, a) for a in g["action"].unique()}
+        if "resource_type" in g.columns:
+            rts = g["resource_type"].dropna().unique().tolist()
+            rt_map = {"mooc": "慕课长视频", "micro": "微课", "short": "短视频"}
+            items |= {rt_map.get(r, r) for r in rts}
+        if items:
+            trans.append(frozenset(items))
+    rules = _apriori(trans, min_support, min_conf)
+    rules.to_csv(os.path.join(out_dir, "apriori_rules.csv"), index=False,
+                 encoding="utf-8-sig")
+
+    # 负向行为：只看短视频、未接触慕课长视频
+    used = {}
+    for t in trans:
+        for it in t:
+            used.setdefault(it, set()).add(id(t))
+    short_only = 0
+    for t in trans:
+        if "短视频" in t and "慕课长视频" not in t:
+            short_only += 1
+    if rules.empty:
+        log("  Apriori: 未挖掘到满足阈值的规则（可降低 min_support）")
+        return rules, {"short_only_pct": 0.0, "top_rules": []}
+    # 规则可视化（Top 10 by lift）
+    top = rules.head(10)
+    fig, ax = plt.subplots(figsize=(9, 5))
+    txt = [f"{r.antecedent} → {r.consequent}" for r in top.itertuples()]
+    ax.barh(txt[::-1], top["lift"][::-1], color=PALETTE[1])
+    ax.set(xlabel="Lift", title="学习路径关联规则 Top10（Apriori）")
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, "apriori_rules.png"), bbox_inches="tight")
+    plt.close()
+    summary = {"short_only_pct": round(100 * short_only / max(len(trans), 1), 1),
+               "top_rules": top.head(3).to_dict("records")}
+    log(f"  Apriori 规则 {len(rules)} 条; 只看短视频跳过完整慕课占比: "
+        f"{summary['short_only_pct']}%")
+    return rules, summary
+
+
+def scene_comparison(clicks: pd.DataFrame, out_dir: str):
+    """第二部分-4：慕课长视频 / 微课 / 短视频三类场景的完播率、倍速使用率、拖拽行为对比。"""
+    vid = clicks[clicks["action"] == "video"].copy()
+    if "resource_type" not in vid.columns or vid["resource_type"].dropna().empty:
+        log("  场景对比: 点击流缺少 resource_type 字段，跳过")
+        return pd.DataFrame(), pd.DataFrame(), {}
+    vid = vid.dropna(subset=["resource_type"])
+    rt_names = {"mooc": "慕课长视频", "micro": "微课", "short": "短视频"}
+    vid["场景"] = vid["resource_type"].map(rt_names)
+    tbl = vid.groupby("场景").agg(
+        播放次数=("completed", "count"),
+        完播率=("completed", "mean"),
+        倍速使用率=("speed_used", lambda s: (s > 1).mean()),
+        平均拖拽次数=("seek_count", "mean"),
+    ).round(3)
+    tbl["播放占比"] = (tbl["播放次数"] / tbl["播放次数"].sum()).round(3)
+    tbl.to_csv(os.path.join(out_dir, "scene_comparison.csv"), encoding="utf-8-sig")
+
+    # 逐学生完播率（供相关分析使用）
+    per_stu = vid.groupby(["student_id", "场景"])["completed"].mean().unstack(fill_value=np.nan)
+    per_stu["video_completion_rate"] = vid.groupby("student_id")["completed"].mean().round(3)
+    per_stu["preferred_scene"] = vid.groupby("student_id")["场景"] \
+        .agg(lambda s: s.value_counts().idxmax())
+    per_stu = per_stu.reset_index()
+    per_stu.to_csv(os.path.join(out_dir, "scene_per_student.csv"), index=False,
+                   encoding="utf-8-sig")
+
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4.5))
+    metrics = [("完播率", "completed"), ("倍速使用率", "speed"), ("平均拖拽次数", "seek")]
+    plot_tbl = tbl.reset_index()
+    axes[0].bar(plot_tbl["场景"], plot_tbl["完播率"], color=PALETTE[:3])
+    axes[0].set(title="各场景完播率")
+    axes[1].bar(plot_tbl["场景"], plot_tbl["倍速使用率"], color=PALETTE[:3])
+    axes[1].set(title="各场景倍速使用率")
+    axes[2].bar(plot_tbl["场景"], plot_tbl["平均拖拽次数"], color=PALETTE[:3])
+    axes[2].set(title="各场景平均拖拽次数")
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, "scene_comparison.png"), bbox_inches="tight")
+    plt.close()
+    log(f"  场景对比: {tbl[['完播率', '倍速使用率', '平均拖拽次数']].to_dict('index')}")
+    return tbl, per_stu, tbl[["完播率", "倍速使用率", "平均拖拽次数"]].to_dict("index")
+
+
+def correlation_analysis(uni: pd.DataFrame, out_dir: str):
+    """第三部分-1：行为指标与最终成绩/结课认证的皮尔逊相关分析（含显著性）。"""
+    uni = uni.copy()
+    uni["certified"] = (uni["completion_rate"] >= 0.75).astype(int)
+    indicators = [c for c in ALL_FEATURES + ["video_completion_rate",
+                                             "study_hours_per_week", "submission_rate"]
+                  if c in uni.columns and pd.api.types.is_numeric_dtype(uni[c])]
+    rows = []
+    for ind in indicators:
+        for tgt in ["final_grade", "certified"]:
+            pair = uni[[ind, tgt]].dropna()
+            if len(pair) < 10 or pair[ind].std() == 0:
+                continue
+            r, p = pearsonr(pair[ind], pair[tgt])
+            rows.append({"indicator": ind, "target": tgt, "pearson_r": round(r, 3),
+                         "p_value": float(f"{p:.2e}"),
+                         "significant": "是" if p < 0.05 else "否"})
+    corr = pd.DataFrame(rows)
+    corr.to_csv(os.path.join(out_dir, "correlation_results.csv"), index=False,
+                encoding="utf-8-sig")
+    g = corr[corr["target"] == "final_grade"].sort_values("pearson_r", key=abs,
+                                                          ascending=False)
+    top = g.head(10)
+    fig, ax = plt.subplots(figsize=(9, 5))
+    colors = [PALETTE[1] if r > 0 else PALETTE[2] for r in top["pearson_r"]]
+    ax.barh(top["indicator"][::-1], top["pearson_r"][::-1], color=colors[::-1])
+    ax.set(xlabel="Pearson r（与最终成绩）", title="行为指标与学业效果相关性 Top10")
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, "correlation_top_factors.png"), bbox_inches="tight")
+    plt.close()
+    log(f"  相关性 Top3（成绩）: {top.head(3)[['indicator', 'pearson_r']].to_dict('records')}")
+    return corr, top.head(5)
+
+
+def heterogeneity_analysis(uni: pd.DataFrame, out_dir: str) -> pd.DataFrame:
+    """第三部分-2：性别/地区/教育背景是否调节"学习时长-成绩"相关性（异质性分析）。"""
+    rows = []
+    for dim in [c for c in ["gender", "region", "education"] if c in uni.columns]:
+        for cat, g in uni.groupby(dim):
+            pair = g[["study_hours_per_week", "final_grade"]].dropna()
+            if len(pair) < 15 or pair["study_hours_per_week"].std() == 0:
+                r, p = np.nan, np.nan
+            else:
+                r, p = pearsonr(pair["study_hours_per_week"], pair["final_grade"])
+            rows.append({"dimension": dim, "category": cat, "n": len(pair),
+                         "r_时长-成绩": round(r, 3) if pd.notna(r) else np.nan,
+                         "p_value": float(f"{p:.2e}") if pd.notna(p) else np.nan})
+    het = pd.DataFrame(rows)
+    het.to_csv(os.path.join(out_dir, "heterogeneity_analysis.csv"), index=False,
+               encoding="utf-8-sig")
+    log(f"  异质性分析: 各群体学习时长-成绩相关系数范围 "
+        f"[{het['r_时长-成绩'].min():.3f}, {het['r_时长-成绩'].max():.3f}]")
+    return het
+
+
+def engagement_tier_analysis(uni: pd.DataFrame, out_dir: str):
+    """第三部分-3：学习投入度低/中/高三分组，量化投入对学习效果的提升幅度。"""
+    parts = [c for c in ["total_clicks", "active_days", "avg_session_min",
+                         "engagement_score"] if c in uni.columns]
+    z = ((uni[parts] - uni[parts].mean()) / (uni[parts].std() + 1e-9)).mean(axis=1)
+    uni = uni.assign(engagement_composite=z)
+    uni["投入分层"] = pd.qcut(z, q=[0, 1 / 3, 2 / 3, 1], labels=["低投入", "中投入", "高投入"])
+    tbl = uni.groupby("投入分层", observed=True).agg(
+        人数=("student_id", "count"),
+        平均课程完成率=("completion_rate", "mean"),
+        平均最终成绩=("final_grade", "mean"),
+        平均测验分=("avg_quiz_score", "mean"),
+    ).round(2)
+    tbl["完成率提升幅度"] = (100 * (tbl["平均课程完成率"] - tbl["平均课程完成率"].iloc[0])).round(1)
+    tbl["成绩提升幅度"] = (tbl["平均最终成绩"] - tbl["平均最终成绩"].iloc[0]).round(1)
+    tbl.to_csv(os.path.join(out_dir, "engagement_tier_analysis.csv"), encoding="utf-8-sig")
+    fig, ax1 = plt.subplots(figsize=(8, 5))
+    x = np.arange(3)
+    ax1.bar(x - 0.2, tbl["平均课程完成率"], 0.4, color=PALETTE[0], label="平均课程完成率")
+    ax2 = ax1.twinx()
+    ax2.bar(x + 0.2, tbl["平均最终成绩"], 0.4, color=PALETTE[1], label="平均最终成绩")
+    ax1.set_xticks(x, tbl.index)
+    ax1.set_ylabel("课程完成率")
+    ax2.set_ylabel("最终成绩")
+    ax1.set_title("行为投入度分层与学习效果对比", fontweight="bold")
+    h1, l1 = ax1.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax1.legend(h1 + h2, l1 + l2, loc="upper left")
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, "engagement_tiers.png"), bbox_inches="tight")
+    plt.close()
+    log(f"  投入分层: 高投入组较低投入组 完成率 +{tbl['完成率提升幅度'].iloc[2]}%, "
+        f"成绩 +{tbl['成绩提升幅度'].iloc[2]} 分")
+    return uni, tbl
+
+
+def performance_model_extended(uni: pd.DataFrame, cols: list[str], out_dir: str):
+    """第四部分-1：RF/GBDT 学业表现预测（成绩等级 + 是否结课），准确率/召回率 + Top5 关键行为，
+    并输出高辍学风险学生早期预警名单。"""
+    from sklearn.ensemble import GradientBoostingClassifier
+    from sklearn.metrics import recall_score, precision_score
+
+    uni = uni.copy()
+    X = uni[cols].fillna(uni[cols].median())
+    uni["grade_band"] = pd.cut(uni["final_grade"], [0, 60, 70, 85, 100],
+                               labels=["D", "C", "B", "A"])
+    uni["certified"] = (uni["completion_rate"] >= 0.75).astype(int)
+    X_tr, X_te, u_tr, u_te = train_test_split(X, uni, test_size=0.3, random_state=SEED)
+
+    res, models = {}, {}
+    for name, clf in [("RandomForest", RandomForestClassifier(n_estimators=200,
+                                                              random_state=SEED)),
+                      ("GradientBoosting", GradientBoostingClassifier(random_state=SEED))]:
+        clf.fit(X_tr, u_tr["grade_band"])
+        pred = clf.predict(X_te)
+        res[f"{name}_grade_acc"] = accuracy_score(u_te["grade_band"], pred)
+        res[f"{name}_grade_recall"] = recall_score(u_te["grade_band"], pred,
+                                                   average="macro", zero_division=0)
+        res[f"{name}_grade_precision"] = precision_score(u_te["grade_band"], pred,
+                                                         average="macro", zero_division=0)
+        models[name] = clf
+    # 是否结课认证（二分类）
+    rf_cert = RandomForestClassifier(n_estimators=200, random_state=SEED).fit(
+        X_tr, u_tr["certified"])
+    cert_pred = rf_cert.predict(X_te)
+    res["cert_acc"] = accuracy_score(u_te["certified"], cert_pred)
+    res["cert_recall_risk"] = recall_score(u_te["certified"], cert_pred,
+                                           pos_label=0, zero_division=0)
+    best = max(["RandomForest", "GradientBoosting"],
+               key=lambda m: res[f"{m}_grade_acc"])
+    res["best_model"] = best
+
+    # Top5 关键行为特征（以最佳模型的等级分类为准）
+    imp = pd.Series(models[best].feature_importances_, index=cols).sort_values(
+        ascending=False)
+    res["top5_features"] = imp.head(5).round(3).to_dict()
+    fig, ax = plt.subplots(figsize=(9, 5))
+    imp.head(10)[::-1].plot.barh(ax=ax, color=PALETTE[0])
+    ax.set(title=f"学业结果预测特征重要性 Top10（{best} 成绩等级模型）")
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, "model_feature_importance.png"), bbox_inches="tight")
+    plt.close()
+
+    # 早期预警：结课概率最低的学生（高辍学风险）
+    proba = rf_cert.predict_proba(X)[:, list(rf_cert.classes_).index(1)]
+    ew = uni[["student_id", "persona", "region", "completion_rate", "final_grade"]].copy()
+    ew["cert_prob"] = proba.round(3)
+    ew["risk_level"] = pd.cut(proba, [0, 0.2, 0.4, 1], labels=["高", "中", "低"])
+    ew = ew.sort_values("cert_prob").head(50)
+    ew.to_csv(os.path.join(out_dir, "early_warning_students.csv"), index=False,
+              encoding="utf-8-sig")
+    log(f"  扩展建模: 最佳模型={best} 成绩等级 acc={res[best + '_grade_acc']:.3f} "
+        f"recall={res[best + '_grade_recall']:.3f}; 认证 acc={res['cert_acc']:.3f}; "
+        f"Top5 关键行为: {list(res['top5_features'])}")
+    return res, ew
+
+
+def sd_simulation(out_dir: str, weeks: int = 52) -> dict:
+    """第四部分-3：系统动力学（SD）行为演化仿真。
+    三条反馈回路：学习投入(强化回路)、资源供给(调节回路)、平台激励(时滞强化回路)。
+    E=学习投入, R=资源供给质量, I=平台激励；欧拉法离散积分模拟不同平台优化策略。"""
+    def simulate(invest, incentive_boost, decay_E, weeks):
+        E, R, I = 0.30, 0.40, 0.20
+        traj = [E]
+        for _ in range(weeks):
+            dE = 0.35 * (R - 0.25) + 0.45 * I - decay_E * E      # 投入回路 + 疲劳衰减
+            dR = 0.5 * invest * (0.5 + 0.5 * E) - 0.15 * R       # 资源供给随投入加大
+            dI = 0.4 * max(E - 0.5, 0) - 0.25 * I + incentive_boost  # 激励回路
+            E = float(np.clip(E + dE, 0, 1))
+            R = float(np.clip(R + dR, 0, 1))
+            I = float(np.clip(I + dI, 0, 1))
+            traj.append(E)
+        return traj
+
+    strategies = {
+        "基线策略": dict(invest=0.15, incentive_boost=0.0, decay_E=0.25),
+        "加强资源供给": dict(invest=0.45, incentive_boost=0.0, decay_E=0.25),
+        "加强平台激励": dict(invest=0.15, incentive_boost=0.02, decay_E=0.25),
+        "综合优化策略": dict(invest=0.45, incentive_boost=0.02, decay_E=0.15),
+    }
+    res = {}
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    for i, (name, kw) in enumerate(strategies.items()):
+        traj = simulate(weeks=weeks, **kw)
+        res[name] = {"final_engagement": round(traj[-1], 3),
+                     "growth_pct": round(100 * (traj[-1] / traj[0] - 1), 1)}
+        ax.plot(range(weeks + 1), traj, color=PALETTE[i], lw=2, label=name)
+    ax.axhline(1.0, color="gray", ls=":", lw=1)
+    ax.set(xlabel="周", ylabel="学习者整体投入水平 E", title="系统动力学仿真 — 不同平台策略下行为长期演化")
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, "sd_simulation.png"), bbox_inches="tight")
+    plt.close()
+    pd.DataFrame({k: v["final_engagement"] for k, v in res.items()},
+                 index=["final_engagement"]).T.to_csv(
+        os.path.join(out_dir, "sd_simulation_results.csv"), encoding="utf-8-sig")
+    best = max(res, key=lambda k: res[k]["final_engagement"])
+    log(f"  SD 仿真: 52 周后最优策略 = {best}（投入水平 {res[best]['final_engagement']}）")
+    return {"results": res, "best_strategy": best}
+
+
+def generate_optimization_suggestions(uni, recs, scene_tbl, corr_top, sd_info,
+                                      early_warning, out_dir) -> pd.DataFrame:
+    """第五部分：基于全部分析结果输出可落地的平台优化策略。"""
+    rows = []
+    # 1) 画像差异化推送与干预
+    for _, r in recs.iterrows():
+        base = r["persona"].split(" (")[0]
+        extra_map = {
+            "At-Risk / Disengaged": "推送轻量化短视频学习内容 + 每日微任务签到，提升留存率",
+            "Exam-Driven Learner": "考前冲刺包 + 间隔重复记忆卡片推送",
+            "Guided Learner": "微课 + 即时反馈测验组合推送，逐步过渡到自主学习",
+            "Independent Deep Learner": "开放项目与进阶资源优先推送，邀请担任社区助教",
+        }
+        rows.append({"策略类型": "画像差异化运营", "对象": r["persona"],
+                     "建议": extra_map.get(base, str(r["content_recommendation"]))})
+    # 2) 区域运营策略（完成率最低的地区补齐资源）
+    if "region" in uni.columns:
+        rg = uni.groupby("region").agg(完成率=("completion_rate", "mean"),
+                                       成绩=("final_grade", "mean"),
+                                       人数=("student_id", "count")).round(3)
+        worst = rg.sort_values("完成率").head(2)
+        for region, r in worst.iterrows():
+            rows.append({"策略类型": "分区域运营优化", "对象": f"{region}（完成率 {r['完成率']:.1%}）",
+                         "建议": "联合本地高校共建本地化课程内容，增设线下学习中心与带宽/终端支持，"
+                                 "补齐薄弱地区资源供给短板"})
+    # 3) 早期学业预警机制
+    n_high = (early_warning["risk_level"] == "高").sum()
+    rows.append({"策略类型": "早期学业预警",
+                 "对象": f"{n_high} 名高风险学生（结课概率<0.2）",
+                 "建议": "当学生连续 7 天未登录、视频完播率骤降、作业逾期时自动触发预警，"
+                         "辅导员 48 小时内一对一介入；预警名单见 early_warning_students.csv"})
+    # 4) 场景化资源优化设计
+    if not scene_tbl.empty:
+        for scene, r in scene_tbl.iterrows():
+            if scene == "短视频":
+                rows.append({"策略类型": "场景化资源优化", "对象": f"{scene}（完播率 {r['完播率']:.0%}）",
+                             "建议": "在短视频中增加知识点锚点与章节跳转卡片，配套 1 分钟随堂小测，"
+                                     "提升碎片化学习的知识留存率"})
+            elif scene == "慕课长视频":
+                rows.append({"策略类型": "场景化资源优化", "对象": f"{scene}（拖拽 {r['平均拖拽次数']:.1f} 次）",
+                             "建议": "长视频拆分为 8-12 分钟微模块，前置学习目标提示，"
+                                     "高拖拽片段重新剪辑压缩"})
+            else:
+                rows.append({"策略类型": "场景化资源优化", "对象": f"{scene}（完播率 {r['完播率']:.0%}）",
+                             "建议": "保持微课节奏优势，增加弹题互动与字幕检索功能"})
+    # 5) 平台策略（SD 仿真结论）
+    rows.append({"策略类型": "平台长期策略（SD 仿真）", "对象": sd_info["best_strategy"],
+                 "建议": f"仿真显示 52 周后「{sd_info['best_strategy']}」下学习者整体投入水平最高"
+                         f"（{sd_info['results'][sd_info['best_strategy']]['final_engagement']}），"
+                         "建议以资源供给 + 激励机制双轮驱动并降低学习疲劳衰减"})
+    sug = pd.DataFrame(rows)
+    sug.to_csv(os.path.join(out_dir, "optimization_suggestions.csv"), index=False,
+               encoding="utf-8-sig")
+    log(f"  优化建议: 输出 {len(sug)} 条落地策略")
+    return sug
+
+
+# ======================================================================
 # 七、输出层：报告
 # ======================================================================
 def write_report(uni, queues, recs, metrics, out_dir, extras=None) -> str:
@@ -1258,6 +1828,39 @@ def write_report(uni, queues, recs, metrics, out_dir, extras=None) -> str:
         "",
         "## 学习者画像",
     ]
+    # 扩展分析摘要（五大模块结论）
+    ex = extras or {}
+    if ex:
+        lines += ["", "## 扩展分析摘要", ""]
+        if ex.get("core_groups"):
+            lines.append(f"- 核心学习者群体: {ex['core_groups']}")
+        if ex.get("time_patterns"):
+            lines.append(f"- 时间行为模式分布: {ex['time_patterns']}")
+        if ex.get("apriori_top"):
+            for r in ex["apriori_top"]:
+                lines.append(f"- 关联规则: {r['antecedent']} → {r['consequent']} "
+                             f"(support={r['support']}, conf={r['confidence']}, lift={r['lift']})")
+        if ex.get("short_only_pct") is not None:
+            lines.append(f"- 只看短视频跳过完整慕课的学生占比: {ex['short_only_pct']}%")
+        if ex.get("scene"):
+            lines.append(f"- 场景行为差异: {ex['scene']}")
+        if ex.get("corr_top") is not None and len(ex["corr_top"]):
+            cs = ", ".join(f"{r.indicator}(r={r.pearson_r})"
+                           for r in ex["corr_top"].itertuples())
+            lines.append(f"- 与成绩最相关的行为因素: {cs}")
+        if ex.get("tier_lift") is not None:
+            lines.append(f"- 投入分层提升幅度: 高投入组较低投入组 {ex['tier_lift']}")
+        if ex.get("model_ext"):
+            m = ex["model_ext"]
+            lines.append(f"- 学业表现预测: 最佳模型 {m.get('best_model')} "
+                         f"acc={m.get('RandomForest_grade_acc', 0):.3f}/{m.get('GradientBoosting_grade_acc', 0):.3f}"
+                         f"（RF/GBDT），Top5 关键行为: {list(m.get('top5_features', {}))}")
+            lines.append(f"- 早期预警: {ex.get('early_warning_count', '-')} 名高风险学生")
+        if ex.get("sd_best"):
+            lines.append(f"- SD 仿真最优策略: {ex['sd_best']}（52 周投入水平 "
+                         f"{ex.get('sd_final', '-')})")
+        if ex.get("n_suggestions"):
+            lines.append(f"- 优化建议: {ex['n_suggestions']} 条（详见 optimization_suggestions.csv）")
     lines += recs.to_markdown(index=False).splitlines()
     lines += ["", "## 干预队列统计", ""]
     qcount = queues["queue"].value_counts()
@@ -1292,40 +1895,58 @@ def main():
     log("  统一学习行为分析管线启动")
     log("=" * 60)
 
-    log("[1/8] 数据层：多源加载与统一")
+    log("[1/9] 数据层：多源加载与统一（含人口属性）")
     uni = build_unified_dataset(args)
     clicks = load_clickstream(args.data_dir, args.n)
 
-    log("[2/8] 特征层：EDA 与清洗完成")
+    log("[2/9] 特征层：EDA 与清洗完成")
     cols = select_cluster_columns(uni)
     eda_summary(uni, args.out_dir)
 
-    log("[3/8] 分析层：命名主成分 + K-Means 聚类画像")
+    log("[3/9] 分析层：命名主成分 + K-Means 聚类画像")
     pc_scores, loadings, pc_var, pc_names = pca_named_components(uni, cols, args.out_dir)
     uni = uni.merge(pc_scores, on="student_id", how="left")
     uni, km, scaler, cols, metrics = cluster_personas(uni, cols, args.k, args.out_dir)
     uni = label_personas(uni, cols)
 
-    log("[4/8] 挖掘层：社会网络分析 SNA + 滞后序列分析 LSA")
+    log("[4/9] 挖掘层：SNA + LSA + 时序模式 + Apriori 路径挖掘 + 场景对比")
     sna_learners, sna_resources, sna_paths = sna_analysis(clicks, args.out_dir)
     anoms, lsa_tr, lsa_z = lsa_analysis(clicks, args.out_dir)
     uni = uni.merge(anoms, on="student_id", how="left")
     uni["lsa_pattern"] = uni["lsa_pattern"].fillna("无点击流数据")
+    basic_placeholder = None
+    pat_df, time_dist = temporal_analysis(clicks, args.out_dir)
+    uni = uni.merge(pat_df, on="student_id", how="left")
+    rules, apriori_summary = apriori_path_mining(clicks, args.out_dir)
+    scene_tbl, scene_per_stu, scene_dict = scene_comparison(clicks, args.out_dir)
+    if not scene_per_stu.empty:
+        keep_cols = ["student_id", "video_completion_rate", "preferred_scene"]
+        uni = uni.merge(scene_per_stu[keep_cols], on="student_id", how="left")
+    basic = basic_stats_analysis(uni, args.out_dir)
 
-    log("[5/8] 预测层：RF 学业表现 + 风险预警 + GM(1,1) 趋势预测")
+    log("[5/9] 关联层：皮尔逊相关 + 异质性分析 + 投入度分层")
+    corr_df, corr_top = correlation_analysis(uni, args.out_dir)
+    het = heterogeneity_analysis(uni, args.out_dir)
+    uni, tier_tbl = engagement_tier_analysis(uni, args.out_dir)
+
+    log("[6/9] 预测层：RF/GBDT 学业表现 + 风险预警 + GM(1,1) 趋势预测")
     metrics.update(rf_performance_model(uni, cols, args.out_dir))
+    model_ext, early_warning = performance_model_extended(uni, cols, args.out_dir)
     metrics.update(run_predictions(uni, cols, args.out_dir))
     gm = gm11_forecast(clicks, args.out_dir)
 
-    log("[6/8] 评价层：AHP + 模糊综合评判")
+    log("[7/9] 评价层：AHP 模糊综合评判 + 系统动力学仿真")
     quality, ahp_info = ahp_fuzzy_scores(uni, args.out_dir)
     uni = uni.merge(quality, on="student_id", how="left")
+    sd_info = sd_simulation(args.out_dir)
 
-    log("[7/8] 决策层：干预队列与内容推荐")
+    log("[8/9] 决策层：干预队列 + 内容推荐 + 优化建议")
     queues = rule_queues(uni)
     recs = generate_recommendations(uni)
+    suggestions = generate_optimization_suggestions(
+        uni, recs, scene_tbl, corr_top, sd_info, early_warning, args.out_dir)
 
-    log("[8/8] 输出层：导出结果与报告")
+    log("[9/9] 输出层：导出结果与报告")
     uni.to_csv(os.path.join(args.out_dir, "learner_profiles.csv"), index=False,
                encoding="utf-8-sig")
     queues.to_csv(os.path.join(args.out_dir, "queues.csv"), index=False,
@@ -1352,6 +1973,20 @@ def main():
         "ahp_cr": ahp_info["cr"],
         "quality_mean": round(quality["quality_score"].mean(), 1),
         "quality_levels": quality["fuzzy_best_level"].value_counts().to_dict(),
+        # 五大扩展模块摘要
+        "core_groups": basic["core_groups"],
+        "time_patterns": time_dist,
+        "apriori_top": apriori_summary["top_rules"],
+        "short_only_pct": apriori_summary["short_only_pct"],
+        "scene": scene_dict,
+        "corr_top": corr_top,
+        "tier_lift": f"完成率 +{tier_tbl['完成率提升幅度'].iloc[2]}%, "
+                     f"成绩 +{tier_tbl['成绩提升幅度'].iloc[2]} 分",
+        "model_ext": model_ext,
+        "early_warning_count": int((early_warning["risk_level"] == "高").sum()),
+        "sd_best": sd_info["best_strategy"],
+        "sd_final": sd_info["results"][sd_info["best_strategy"]]["final_engagement"],
+        "n_suggestions": len(suggestions),
     }
     report = write_report(uni, queues, recs, metrics, args.out_dir, extras)
 
