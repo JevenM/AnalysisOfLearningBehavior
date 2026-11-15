@@ -1,3 +1,4 @@
 data/__pycache__/simulate_oulad.cpython-38.pyc
+data/real/thu_shortvideo/interaction_sampled.csv
 out/*
 *.csv
