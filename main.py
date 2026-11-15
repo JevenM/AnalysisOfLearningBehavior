@@ -28,8 +28,11 @@ main.py — 统一学习行为分析与学习者画像管线（一体化入口�
 用法：
     python main.py                    # 融合 data/real/ 等目录下的全部真实公开数据集
     python main.py --k 4              # 指定聚类数（默认自动：肘部拐点 + 轮廓系数综合选择）
+    python main.py --device gpu       # GPU 加速（自动探测 PyTorch CUDA / cuML，无则回退 CPU）
     python main.py --data-dir data --out-dir out
 """
+
+from __future__ import annotations
 
 import argparse
 import ast
@@ -238,6 +241,8 @@ def load_thu_shortvideo(data_dir: str):
         edu_cats = set(edu["category_id"].tolist())
     df["is_edu"] = df["category_id"].isin(edu_cats)
     social = df[["cvm_like", "comment", "follow", "collect", "forward"]].any(axis=1)
+    # 向量化完播率（每行 观看时长/视频时长，逐用户平均），避免 groupby.apply
+    watch_ratio = (df["watch_time"] / df["duration"].clip(lower=1)).clip(0, 1)
 
     g = df.groupby("user_id")
     feat = pd.DataFrame({
@@ -248,9 +253,7 @@ def load_thu_shortvideo(data_dir: str):
         "video_clicks": g["click"].sum().values.astype(float),
         "forum_posts": g["comment"].sum().values.astype(float),
         "engagement_score": social.groupby(df["user_id"]).mean().values.round(3),
-        "completion_rate": g.apply(
-            lambda d: (d["watch_time"] / d["duration"].clip(lower=1)).clip(0, 1).mean(),
-            include_groups=False).values.round(3),
+        "completion_rate": watch_ratio.groupby(df["user_id"]).mean().values.round(3),
         "edu_video_ratio": g["is_edu"].mean().values.round(3),
         "gender": g["gender"].first().values,
         "age_band": pd.cut(pd.to_numeric(g["age"].first(), errors="coerce"),
@@ -315,37 +318,36 @@ def load_mooc_tianchi(data_dir: str):
         log("  [天池慕课] 未找到 user_learning_behavior.xls，跳过")
         return [], None
     df = pd.read_excel(beh_path)
-    df["occur_time"] = pd.to_datetime(df["occur_time"])
+    # 真实数据存在脏时间戳（如 3000 年），越界值置 NaT 后丢弃
+    df["occur_time"] = pd.to_datetime(df["occur_time"], errors="coerce")
+    df = df[df["occur_time"].notna()]
     df["date"] = df["occur_time"].dt.date
     action_map = {"video_play": "video", "quiz_submit": "quiz", "homework_submit": "quiz",
                   "forum_browse": "forum", "resource_download": "resource",
                   "course_eval": "help"}
     df["action"] = df["behavior_type"].map(action_map).fillna("resource")
 
+    # 行为类型布尔列（向量化统计，避免 groupby.apply 逐组遍历）
+    for t in ("video_play", "forum_browse", "resource_download", "course_eval"):
+        df[f"is_{t}"] = df["behavior_type"].eq(t)
+    df["is_quiz"] = df["behavior_type"].isin(["quiz_submit", "homework_submit"])
+    progress = (df["progress_after_pct"] / 100).clip(0, 1)
+
     g = df.groupby("learner_id")
     score_mean = g["score"].mean()
-    quiz_n = g.apply(lambda d: d["behavior_type"].isin(
-        ["quiz_submit", "homework_submit"]).sum(), include_groups=False)
-    video_n = g.apply(lambda d: (d["behavior_type"] == "video_play").sum(),
-                      include_groups=False)
     feat = pd.DataFrame({
         "student_id": [f"MOOC-{u}" for u in g.size().index],
         "total_clicks": g.size().values.astype(float),
         "active_days": g["date"].nunique().values.astype(float),
         "avg_session_min": (g["duration_sec"].mean() / 60).values,
-        "video_clicks": video_n.values.astype(float),
-        "quiz_attempts": quiz_n.values.astype(float),
+        "video_clicks": g["is_video_play"].sum().values.astype(float),
+        "quiz_attempts": g["is_quiz"].sum().values.astype(float),
         "avg_quiz_score": score_mean.values.round(1),
         "final_grade": score_mean.values.round(1),
-        "forum_posts": g.apply(lambda d: (d["behavior_type"] == "forum_browse").sum(),
-                               include_groups=False).values.astype(float),
-        "resource_clicks": g.apply(lambda d: (d["behavior_type"] == "resource_download").sum(),
-                                   include_groups=False).values.astype(float),
-        "help_requests": g.apply(lambda d: (d["behavior_type"] == "course_eval").sum(),
-                                 include_groups=False).values.astype(float),
-        "completion_rate": g.apply(
-            lambda d: (d["progress_after_pct"] / 100).clip(0, 1).mean(),
-            include_groups=False).values.round(3),
+        "forum_posts": g["is_forum_browse"].sum().values.astype(float),
+        "resource_clicks": g["is_resource_download"].sum().values.astype(float),
+        "help_requests": g["is_course_eval"].sum().values.astype(float),
+        "completion_rate": progress.groupby(df["learner_id"]).mean().values.round(3),
         "success_rate": g["is_passed"].mean().values.round(3),
         "avg_response_time": g["duration_sec"].mean().values,
     })
@@ -404,8 +406,7 @@ def load_harvardx_mitx(data_dir: str, max_users: int = 50000):
         "resource_clicks": g["nchapters"].sum().values.astype(float),
         "avg_quiz_score": grade_max.values.round(1),
         "final_grade": grade_max.values.round(1),
-        "completion_rate": g.apply(
-            lambda d: d[["viewed", "explored"]].max().mean(), include_groups=False) \
+        "completion_rate": g[["viewed", "explored"]].max().mean(axis=1) \
             .values.round(3),
         "success_status": np.where(g["certified"].max().values == 1,
                                    "certified", "none"),
@@ -430,8 +431,14 @@ def load_edudata_assistments(data_dir: str):
     if not os.path.exists(path):
         log("  [EduData/ASSISTments] 未找到 skill_builder_data_corrected.csv，跳过")
         return [], None
-    df = pd.read_csv(path, usecols=["user_id", "correct", "ms_first_response",
-                                    "hint_count", "order_id", "skill_id"])
+    try:
+        df = pd.read_csv(path, usecols=["user_id", "correct", "ms_first_response",
+                                        "hint_count", "order_id", "skill_id"])
+    except UnicodeDecodeError:
+        # 个别行含非 UTF-8 字节；所用列均为数值列，latin-1 可无损解析
+        df = pd.read_csv(path, usecols=["user_id", "correct", "ms_first_response",
+                                        "hint_count", "order_id", "skill_id"],
+                         encoding="latin-1")
     df = df.dropna(subset=["user_id"])
     g = df.groupby("user_id")
     acc = g["correct"].mean()
@@ -690,6 +697,150 @@ def eda_summary(uni: pd.DataFrame, out_dir: str) -> pd.DataFrame:
     return desc
 
 
+# ======================================================================
+# 计算加速：可选 GPU 后端（--device auto|cpu|gpu）
+# ======================================================================
+# 探测顺序：RAPIDS cuML（Linux/WSL，KMeans 全 GPU）→ PyTorch CUDA（Windows 可用，
+# GPU 加速 KMeans / 轮廓系数 / 最近质心分配）→ CPU（sklearn + RF 多核并行）。
+# 显式指定 --device gpu 但无可用后端时自动回退 CPU 并告警，不中断管线。
+_DEVICE_PREF = "auto"
+_ENGINE_INFO: dict = {}
+
+
+def detect_device(pref: str = "auto") -> dict:
+    """探测可用 GPU 计算后端；pref=cpu 强制 CPU。"""
+    global _ENGINE_INFO
+    info = {"pref": pref, "backend": "cpu", "device_name": None}
+    if pref != "cpu":
+        try:
+            import cuml  # noqa: F401
+            info["backend"] = "cuml"
+        except Exception:
+            pass
+        if info["backend"] == "cpu":
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    info["backend"] = "torch"
+                    info["device_name"] = torch.cuda.get_device_name(0)
+            except Exception:
+                pass
+    _ENGINE_INFO = info
+    return info
+
+
+def _torch_device():
+    import torch
+    return torch.device("cuda")
+
+
+def torch_kmeans(X_np: np.ndarray, k: int, seed: int = SEED, n_init: int = 3,
+                 max_iter: int = 100, tol: float = 1e-5):
+    """GPU KMeans（PyTorch Lloyd 迭代，多次初始化取最优）。"""
+    import torch
+    dev = _torch_device()
+    torch.manual_seed(seed)
+    X = torch.as_tensor(np.ascontiguousarray(X_np, dtype=np.float32), device=dev)
+    n = X.shape[0]
+    best = None
+    for _ in range(max(1, n_init)):
+        centers = X[torch.randperm(n, device=dev)[:k]].clone()
+        for _ in range(max_iter):
+            labels = torch.cdist(X, centers).argmin(1)
+            sums = torch.zeros_like(centers)
+            sums.index_add_(0, labels, X)
+            counts = torch.zeros(k, device=dev)
+            counts.index_add_(0, labels, torch.ones(n, device=dev))
+            counts = counts.clamp(min=1)
+            new_centers = sums / counts.unsqueeze(1)
+            shift = float((new_centers - centers).norm(dim=1).max())
+            centers = new_centers
+            if shift < tol:
+                break
+        inertia = float(torch.cdist(X, centers).min(dim=1).values.pow(2).sum())
+        if best is None or inertia < best[0]:
+            best = (inertia, centers, labels)
+    inertia, centers, labels = best
+    return centers.cpu().numpy(), labels.cpu().numpy(), inertia
+
+
+def torch_silhouette(X_np: np.ndarray, labels: np.ndarray, chunk: int = 4096) -> float:
+    """GPU 轮廓系数（分块计算成对距离，控制显存占用）。"""
+    import torch
+    dev = _torch_device()
+    X = torch.as_tensor(np.ascontiguousarray(X_np, dtype=np.float32), device=dev)
+    y = torch.as_tensor(np.asarray(labels, dtype=np.int64), device=dev)
+    n = X.shape[0]
+    uniq, y_inv = torch.unique(y, return_inverse=True)
+    k = len(uniq)
+    sizes = torch.bincount(y_inv, minlength=k).float()
+    s = torch.zeros(n, device=dev)
+    for st in range(0, n, chunk):
+        ed = min(st + chunk, n)
+        d = torch.cdist(X[st:ed], X)
+        same = y_inv[st:ed].unsqueeze(1) == y_inv.unsqueeze(0)
+        a = (d * same).sum(1) / (sizes[y_inv[st:ed]] - 1).clamp(min=1)
+        sums = torch.zeros((ed - st, k), device=dev)
+        sums.scatter_add_(1, y_inv.unsqueeze(0).expand(ed - st, -1), d)
+        mean = sums / sizes.unsqueeze(0)
+        mean.scatter_(1, y_inv[st:ed].unsqueeze(1), float("inf"))   # 屏蔽自身簇
+        b = mean.min(dim=1).values
+        s[st:ed] = (b - a) / torch.maximum(a, b).clamp(min=1e-12)
+    s[sizes[y_inv] <= 1] = 0            # 单点簇轮廓系数记 0（与 sklearn 一致）
+    return float(s.mean())
+
+
+def torch_nearest_centers(X_np: np.ndarray, centers_np: np.ndarray,
+                          chunk: int = 16384) -> np.ndarray:
+    """GPU 最近质心分配（全量样本标签，分块控显存）。"""
+    import torch
+    dev = _torch_device()
+    C = torch.as_tensor(np.ascontiguousarray(centers_np, dtype=np.float32), device=dev)
+    X = torch.as_tensor(np.ascontiguousarray(X_np, dtype=np.float32), device=dev)
+    labels = torch.empty(X.shape[0], dtype=torch.long, device=dev)
+    for st in range(0, X.shape[0], chunk):
+        ed = min(st + chunk, X.shape[0])
+        labels[st:ed] = torch.cdist(X[st:ed], C).argmin(1)
+    return labels.cpu().numpy()
+
+
+class ClusterEngine:
+    """KMeans + 轮廓系数统一引擎，按 detect_device 探测的后端自动加速。"""
+
+    def __init__(self, info: dict | None = None):
+        self.backend = (info or _ENGINE_INFO or {"backend": "cpu"})["backend"]
+
+    def fit(self, X_fit: np.ndarray, k: int, seed: int = SEED, n_init: int = 10) -> dict:
+        if self.backend == "torch":
+            centers, labels, inertia = torch_kmeans(X_fit, k, seed=seed, n_init=3)
+            sil = torch_silhouette(X_fit, labels)
+            return {"labels": labels, "centers": centers, "inertia": inertia, "sil": sil}
+        if self.backend == "cuml":
+            from cuml.cluster import KMeans as cuKMeans
+            km = cuKMeans(n_clusters=k, random_state=seed,
+                          n_init=3).fit(X_fit.astype(np.float32))
+            labels = np.asarray(km.labels_).astype(int)
+            try:
+                sil = float(silhouette_score(X_fit, labels))
+            except ValueError:
+                sil = np.nan
+            return {"labels": labels, "centers": np.asarray(km.cluster_centers_),
+                    "inertia": float(km.inertia_), "sil": sil}
+        km = KMeans(n_clusters=k, random_state=seed, n_init=n_init).fit(X_fit)
+        try:
+            sil = silhouette_score(X_fit, km.labels_)
+        except ValueError:
+            sil = np.nan
+        return {"labels": km.labels_, "centers": km.cluster_centers_,
+                "inertia": km.inertia_, "sil": sil}
+
+    def predict(self, X: np.ndarray, centers: np.ndarray) -> np.ndarray:
+        if self.backend == "torch":
+            return torch_nearest_centers(X, centers)
+        d = ((X[:, None, :] - centers[None, :, :]) ** 2).sum(-1)
+        return d.argmin(1).astype(int)
+
+
 def _knee_distances(ks: np.ndarray, ys: np.ndarray) -> np.ndarray:
     """肘部得分：inertia 下降曲线上每个 k 到首尾连线的垂直距离（kneedle 思路）。"""
     x0, y0, x1, y1 = ks[0], ys[0], ks[-1], ys[-1]
@@ -723,14 +874,12 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
     # --- 选 K ---
     k_max = min(8, n - 1)
     k_range = np.arange(2, k_max + 1)
+    engine = ClusterEngine(_ENGINE_INFO or {"backend": "cpu"})
     inertias, sils = [], []
     for kk in k_range:
-        km = KMeans(n_clusters=int(kk), random_state=SEED, n_init=10).fit(X_fit)
-        inertias.append(km.inertia_)
-        try:
-            sils.append(silhouette_score(X_fit, km.labels_))
-        except ValueError:
-            sils.append(np.nan)
+        r = engine.fit(X_fit, int(kk))
+        inertias.append(r["inertia"])
+        sils.append(r["sil"])
     inertias = np.array(inertias, dtype=float)
     sils = np.array(sils, dtype=float)
     sil_n = (sils - np.nanmin(sils)) / (np.nanmax(sils) - np.nanmin(sils) + 1e-9)
@@ -762,10 +911,11 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
     plt.close()
 
     # --- 最终聚类（子样本拟合 + 全量最近质心分配） ---
-    km = KMeans(n_clusters=k, random_state=SEED, n_init=10).fit(X_fit)
-    labels = km.predict(X)
-    sil = silhouette_score(X_fit, km.labels_)
-    log(f"  K-Means(K={k})  Silhouette(基于 {len(fit_idx)} 样本) = {sil:.3f}")
+    r = engine.fit(X_fit, k)
+    labels = engine.predict(X, r["centers"])
+    sil = r["sil"]
+    log(f"  K-Means(K={k}, backend={engine.backend})  "
+        f"Silhouette(基于 {len(fit_idx)} 样本) = {sil:.3f}")
     uni["cluster"] = labels
 
     # --- PCA 散点（大样本时仅绘制子集） ---
@@ -840,8 +990,9 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
     plt.savefig(os.path.join(out_dir, "heatmap_features.png"), bbox_inches="tight")
     plt.close()
 
-    return uni, km, scaler, cols, {
+    return uni, engine, scaler, cols, {
         "silhouette": sil, "k": k, "knee_k": knee_k,
+        "backend": engine.backend,
         "k_scores": {int(kk): round(float(s), 3) for kk, s in zip(k_range, sils)},
         "n_fit_samples": int(len(fit_idx)),
     }
@@ -1158,10 +1309,11 @@ def run_predictions(uni: pd.DataFrame, cols: list[str], out_dir: str) -> dict:
     activity_cols = [c for c in ["total_clicks", "active_days", "login_freq_per_week",
                                  "engagement_score", "avg_session_min"] if c in cols]
     early_cols = activity_cols or cols[:3]
-    rf_full = RandomForestClassifier(n_estimators=200, random_state=SEED)
-    rf_early = RandomForestClassifier(n_estimators=200, random_state=SEED)
-    cv_full = cross_val_score(rf_full, X, y, cv=5, scoring="roc_auc")
-    cv_early = cross_val_score(rf_early, X[early_cols], y, cv=5, scoring="roc_auc")
+    rf_full = RandomForestClassifier(n_estimators=200, random_state=SEED, n_jobs=-1)
+    rf_early = RandomForestClassifier(n_estimators=200, random_state=SEED, n_jobs=-1)
+    cv_full = cross_val_score(rf_full, X, y, cv=5, scoring="roc_auc", n_jobs=-1)
+    cv_early = cross_val_score(rf_early, X[early_cols], y, cv=5, scoring="roc_auc",
+                               n_jobs=-1)
     res["rf_auc_full"] = cv_full.mean()
     res["rf_auc_early"] = cv_early.mean()
     log(f"  RandomForest 风险预测 5-fold AUC: 全特征={res['rf_auc_full']:.3f}  "
@@ -1174,8 +1326,9 @@ def run_predictions(uni: pd.DataFrame, cols: list[str], out_dir: str) -> dict:
     le = LabelEncoder()
     y_p = le.fit_transform(uni["persona"])
     mask = y_p < np.unique(y_p).__len__()  # 全部样本
-    cv_p = cross_val_score(RandomForestClassifier(n_estimators=200, random_state=SEED),
-                           X, y_p, cv=5, scoring="accuracy")
+    cv_p = cross_val_score(RandomForestClassifier(n_estimators=200, random_state=SEED,
+                                                  n_jobs=-1),
+                           X, y_p, cv=5, scoring="accuracy", n_jobs=-1)
     res["persona_pred_acc"] = cv_p.mean()
     log(f"  RandomForest 由行为预测画像标签: acc={res['persona_pred_acc']:.3f} "
         f"(classes={list(le.classes_)})")
@@ -1193,17 +1346,19 @@ def rf_performance_model(uni: pd.DataFrame, cols: list[str], out_dir: str) -> di
     X_tr, X_te, y_tr, y_te = train_test_split(X, uni, test_size=0.3, random_state=SEED)
 
     # 最终成绩（回归）
-    rf_g = RandomForestRegressor(n_estimators=200, random_state=SEED).fit(X_tr, y_tr["final_grade"])
+    rf_g = RandomForestRegressor(n_estimators=200, random_state=SEED,
+                                 n_jobs=-1).fit(X_tr, y_tr["final_grade"])
     pred_g = rf_g.predict(X_te)
     res["rf_grade_r2"] = r2_score(y_te["final_grade"], pred_g)
     res["rf_grade_mae"] = mean_absolute_error(y_te["final_grade"], pred_g)
     # 课程完成率（回归）
-    rf_c = RandomForestRegressor(n_estimators=200, random_state=SEED).fit(X_tr, y_tr["completion_rate"])
+    rf_c = RandomForestRegressor(n_estimators=200, random_state=SEED,
+                                 n_jobs=-1).fit(X_tr, y_tr["completion_rate"])
     pred_c = rf_c.predict(X_te)
     res["rf_completion_r2"] = r2_score(y_te["completion_rate"], pred_c)
     # 是否完成（分类：完成率 ≥ 0.75）
     thr = 0.75
-    rf_f = RandomForestClassifier(n_estimators=200, random_state=SEED)
+    rf_f = RandomForestClassifier(n_estimators=200, random_state=SEED, n_jobs=-1)
     rf_f.fit(X_tr, (y_tr["completion_rate"] >= thr))
     res["rf_completion_acc"] = accuracy_score((y_te["completion_rate"] >= thr),
                                               rf_f.predict(X_te))
@@ -1253,16 +1408,20 @@ def _gm11(x0: np.ndarray):
 
 def gm11_forecast(clicks: pd.DataFrame, out_dir: str, horizon: int = 2,
                   min_points: int = 4) -> pd.DataFrame:
-    """针对每位学习者的周活跃度序列做 GM(1,1) 趋势预测，
-    弥补机器学习模型对小样本群体预测差的短板。"""
+    """针对每位学习者的日活跃度序列做 GM(1,1) 趋势预测，
+    弥补机器学习模型对小样本群体预测差的短板。
+
+    注：采用「天」粒度——清华短视频公开子样本的事件时间仅覆盖约一周
+    （每用户最多 7 个日序列点），周粒度序列过短会导致全员数据不足。
+    """
     ev = clicks.copy()
-    ev["week"] = pd.to_datetime(ev["timestamp"]).dt.isocalendar().week.astype(int)
-    weekly = ev.groupby(["student_id", "week"]).size().unstack(fill_value=0)
+    ev["day"] = pd.to_datetime(ev["timestamp"]).dt.normalize()
+    daily = ev.groupby(["student_id", "day"]).size().unstack(fill_value=0)
     rows = []
-    for sid, series in weekly.iterrows():
+    for sid, series in daily.iterrows():
         x0 = series.values.astype(float)
         if len(x0) < min_points:
-            rows.append({"student_id": sid, "n_weeks": len(x0), "a": np.nan,
+            rows.append({"student_id": sid, "n_days": len(x0), "a": np.nan,
                          "posterior_C": np.nan, "trend": "数据不足",
                          "pred_next1": np.nan, "pred_next2": np.nan, "model_grade": "-"})
             continue
@@ -1275,7 +1434,7 @@ def gm11_forecast(clicks: pd.DataFrame, out_dir: str, horizon: int = 2,
         else:
             trend = "平稳"
         grade = "优" if C < 0.35 else ("良" if C < 0.5 else "合格")
-        rows.append({"student_id": sid, "n_weeks": len(x0), "a": round(a, 4),
+        rows.append({"student_id": sid, "n_days": len(x0), "a": round(a, 4),
                      "posterior_C": round(C, 3), "trend": trend,
                      "pred_next1": round(preds[0], 1),
                      "pred_next2": round(preds[1], 1) if len(preds) > 1 else np.nan,
@@ -1810,7 +1969,8 @@ def performance_model_extended(uni: pd.DataFrame, cols: list[str], out_dir: str)
 
     res, models = {}, {}
     for name, clf in [("RandomForest", RandomForestClassifier(n_estimators=200,
-                                                              random_state=SEED)),
+                                                              random_state=SEED,
+                                                              n_jobs=-1)),
                       ("GradientBoosting", GradientBoostingClassifier(random_state=SEED))]:
         clf.fit(X_tr, u_tr["grade_band"])
         pred = clf.predict(X_te)
@@ -1821,8 +1981,8 @@ def performance_model_extended(uni: pd.DataFrame, cols: list[str], out_dir: str)
                                                          average="macro", zero_division=0)
         models[name] = clf
     # 是否结课认证（二分类）
-    rf_cert = RandomForestClassifier(n_estimators=200, random_state=SEED).fit(
-        X_tr, u_tr["certified"])
+    rf_cert = RandomForestClassifier(n_estimators=200, random_state=SEED,
+                                     n_jobs=-1).fit(X_tr, u_tr["certified"])
     cert_pred = rf_cert.predict(X_te)
     res["cert_acc"] = accuracy_score(u_te["certified"], cert_pred)
     res["cert_recall_risk"] = recall_score(u_te["certified"], cert_pred,
@@ -1960,6 +2120,14 @@ def generate_optimization_suggestions(uni, recs, scene_tbl, corr_top, sd_info,
 # ======================================================================
 # 七、输出层：报告
 # ======================================================================
+def _df_markdown(df: pd.DataFrame) -> list[str]:
+    """DataFrame 转 Markdown 表格；缺少 tabulate 时降级为纯文本表格。"""
+    try:
+        return df.to_markdown(index=False).splitlines()
+    except ImportError:
+        return df.to_string(index=False).splitlines()
+
+
 def write_report(uni, queues, recs, metrics, out_dir, extras=None) -> str:
     extras = extras or {}
     lines = [
@@ -1988,7 +2156,7 @@ def write_report(uni, queues, recs, metrics, out_dir, extras=None) -> str:
         f"- RandomForest 风险预测 5-fold AUC: 全特征={metrics['rf_auc_full']:.3f}, "
         f"早期特征={metrics['rf_auc_early']:.3f}",
         f"- 行为特征预测画像标签 acc = {metrics['persona_pred_acc']:.3f}",
-        f"- GM(1,1) 周活跃趋势: {extras.get('gm_trends', {})}",
+        f"- GM(1,1) 日活跃趋势: {extras.get('gm_trends', {})}",
         "",
         "## 学习质量评价（AHP + 模糊综合评判）",
         f"- AHP 权重: {extras.get('ahp_weights', {})}, 一致性 CR = {extras.get('ahp_cr', '-')}",
@@ -2030,13 +2198,13 @@ def write_report(uni, queues, recs, metrics, out_dir, extras=None) -> str:
                          f"{ex.get('sd_final', '-')})")
         if ex.get("n_suggestions"):
             lines.append(f"- 优化建议: {ex['n_suggestions']} 条（详见 optimization_suggestions.csv）")
-    lines += recs.to_markdown(index=False).splitlines()
+    lines += _df_markdown(recs)
     lines += ["", "## 干预队列统计", ""]
     qcount = queues["queue"].value_counts()
     lines += [f"- {q}: {n} 人" for q, n in qcount.items()]
     lines += ["", "## 需要教师复核的学生（review/support 队列示例，前 20）", ""]
     sub = queues[queues["queue"].isin(["support", "review"])].head(20)
-    lines += sub.to_markdown(index=False).splitlines()
+    lines += _df_markdown(sub)
     report = "\n".join(lines)
     with open(os.path.join(out_dir, "report.md"), "w", encoding="utf-8") as f:
         f.write(report)
@@ -2052,6 +2220,9 @@ def main():
     ap.add_argument("--out-dir", default="out", help="输出目录")
     ap.add_argument("--k", type=int, default=0,
                     help="聚类数（0 = 自动：肘部拐点 + 轮廓系数综合选择）")
+    ap.add_argument("--device", choices=["auto", "cpu", "gpu"], default="auto",
+                    help="计算设备：auto 自动探测 GPU（PyTorch CUDA / RAPIDS cuML），"
+                         "gpu 强制 GPU（无后端则回退 CPU），cpu 强制 CPU")
     args = ap.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -2059,6 +2230,14 @@ def main():
     log_handle = open(os.path.join(args.out_dir, "pipeline_log.jsonl"), "a",
                       encoding="utf-8")
     setup_cjk_font()
+    dev = detect_device(args.device)
+    if dev["backend"] == "cpu":
+        log("  计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）")
+        if dev["pref"] == "gpu":
+            log("  警告: 未检测到可用 GPU 后端（需 PyTorch+CUDA 或 RAPIDS cuML），已回退 CPU")
+    else:
+        log(f"  计算设备: GPU[{dev.get('device_name') or 'CUDA'}]，"
+            f"KMeans / 轮廓系数 / 质心分配使用 {dev['backend']} 后端加速")
 
     log("=" * 60)
     log("  统一学习行为分析管线启动")
@@ -2075,7 +2254,7 @@ def main():
     log("[3/9] 分析层：命名主成分 + K-Means 聚类画像")
     pc_scores, loadings, pc_var, pc_names = pca_named_components(uni, cols, args.out_dir)
     uni = uni.merge(pc_scores, on="student_id", how="left")
-    uni, km, scaler, cols, metrics = cluster_personas(uni, cols, args.k, args.out_dir)
+    uni, engine, scaler, cols, metrics = cluster_personas(uni, cols, args.k, args.out_dir)
     uni = label_personas(uni, cols)
 
     log("[4/9] 挖掘层：SNA + LSA + 时序模式 + Apriori 路径挖掘 + 场景对比")
