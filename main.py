@@ -5,8 +5,11 @@ main.py — 统一学习行为分析与学习者画像管线（一体化入口�
 
 整合了 7 个开源学习分析项目的方法论，形成一条完整管线：
 
-  数据层  多源适配：学生汇总表 CSV / 交互日志 JSONL / 答题事件流 / 代码提交
-          —— 内置各类数据源的合成生成器，扫描 data/ 目录自动加载真实数据
+  数据层  多源真实公开数据集适配器（统一接口）：
+          UCI Student Performance / 清华 FIB 短视频行为数据集（WWW 2025）/
+          阿里云天池高校慕课学习行为脱敏样本(2024–2025) / HarvardX-MITx Person Course /
+          中科大 EduData 集成包（ASSISTments 2009）/ data/ 目录通用扫描
+          —— 只使用真实公开数据集，不生成任何虚拟或合成数据
   特征层  统一特征 schema、去重、IQR 离群处理、中值填充、衍生特征
   分析层  命名主成分（PCA 降维：学习投入度/资源偏好度/互动活跃度/学业表现）
           → 肘部法 + 轮廓系数选 K → K-Means 聚类画像
@@ -23,8 +26,8 @@ main.py — 统一学习行为分析与学习者画像管线（一体化入口�
   输出层  out/ 目录：图表 PNG、metrics/profiles/queues CSV、report.md、审计日志
 
 用法：
-    python main.py                    # 使用合成数据 + data/ 目录中可发现的真实数据
-    python main.py --n 600 --k 4      # 指定合成样本量与聚类数
+    python main.py                    # 融合 data/real/ 等目录下的全部真实公开数据集
+    python main.py --k 4              # 指定聚类数（默认自动：肘部拐点 + 轮廓系数综合选择）
     python main.py --data-dir data --out-dir out
 """
 
@@ -51,7 +54,7 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (accuracy_score, roc_auc_score, silhouette_score,
-                             adjusted_rand_score, f1_score)
+                             f1_score)
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 
@@ -159,145 +162,122 @@ def setup_cjk_font() -> str | None:
 
 
 # ======================================================================
-# 一、数据层：合成数据生成器（各参考项目的数据形态）
+# 一、数据层：多源真实公开数据集适配器（统一接口）
 # ======================================================================
-def synthetic_oulad(n: int, seed: int = SEED) -> pd.DataFrame:
-    """源形态 A：学生级行为汇总表（OULAD 风格， Learner-Persona-Detection）。"""
-    rng = np.random.default_rng(seed)
-    types = rng.choice([0, 1, 2, 3], size=n, p=[0.25, 0.30, 0.25, 0.20])
-    params = {
-        0: dict(total_clicks=(600, 1400), active_days=(50, 90), avg_session_min=(35, 70),
-                forum_posts=(8, 25), resource_clicks=(150, 400), video_clicks=(50, 150),
-                quiz_attempts=(1, 3), avg_quiz_score=(72, 95), assignment_submit_lag=(1, 5),
-                help_requests=(0, 4), login_freq_per_week=(4, 7)),
-        1: dict(total_clicks=(400, 900), active_days=(35, 70), avg_session_min=(20, 45),
-                forum_posts=(3, 12), resource_clicks=(60, 180), video_clicks=(120, 350),
-                quiz_attempts=(2, 5), avg_quiz_score=(60, 80), assignment_submit_lag=(0, 3),
-                help_requests=(4, 12), login_freq_per_week=(3, 6)),
-        2: dict(total_clicks=(200, 600), active_days=(20, 45), avg_session_min=(15, 35),
-                forum_posts=(0, 5), resource_clicks=(30, 100), video_clicks=(20, 80),
-                quiz_attempts=(4, 9), avg_quiz_score=(55, 78), assignment_submit_lag=(-1, 1),
-                help_requests=(1, 6), login_freq_per_week=(1, 4)),
-        3: dict(total_clicks=(10, 200), active_days=(3, 20), avg_session_min=(3, 18),
-                forum_posts=(0, 2), resource_clicks=(5, 40), video_clicks=(2, 30),
-                quiz_attempts=(0, 3), avg_quiz_score=(25, 58), assignment_submit_lag=(-5, 0),
-                help_requests=(0, 3), login_freq_per_week=(0, 2)),
-    }
-    records = []
-    for t in types:
-        p = params[t]
-        rec = {}
-        for k, (lo, hi) in p.items():
-            rec[k] = rng.integers(lo, hi) if isinstance(lo, int) and isinstance(hi, int) \
-                else rng.uniform(lo, hi)
-        rec["latent_type"] = t
-        records.append(rec)
-    df = pd.DataFrame(records)
-    df["student_id"] = [f"OULAD-{i:04d}" for i in range(n)]
-    df["source"] = "oulad_synthetic"
-    return df
+# 接口约定：每个适配器返回 (features_frames, clicks_df|None)
+#   features_frames: list[DataFrame]，含 student_id / source / 统一特征列
+#                    （ALL_FEATURES 的子集）+ 标签列与真实人口属性列
+#   clicks_df: 事件流（student_id/timestamp/action/resource_id/course_id/
+#              resource_type/completed/speed_used/seek_count），无事件流的源为 None
+# 本仓库只使用真实公开数据集，不生成任何虚拟/合成数据。
+ROOT = os.path.dirname(os.path.abspath(__file__))
+MAX_CLICKS = 200000        # 事件流总量上限（SNA / LSA / GM(1,1) 的输入规模）
+CLICKS_PER_USER = 30       # 每个用户最多抽取的事件数
+_ADAPTER_CACHE: dict = {}
 
 
-def synthetic_interaction(n: int, seed: int = SEED) -> pd.DataFrame:
-    """源形态 B：个性化学习系统的学习者指标（ai-personalized-learning 形态）。"""
-    rng = np.random.default_rng(seed + 1)
-    df = pd.DataFrame({
-        "student_id": [f"INT-{i:04d}" for i in range(n)],
-        "accuracy": rng.uniform(0.3, 0.98, n),
-        "avg_response_time": rng.uniform(8, 120, n),
-        "hesitation_rate": rng.uniform(0.05, 0.6, n),
-        "engagement_score": rng.uniform(0.2, 1.0, n),
-        "hint_usage": rng.integers(0, 15, n),
-        "source": "interaction_logs",
-    })
-    # 与 OULAD 特征对齐的一部分字段（模拟真实系统间的重叠）
-    df["avg_quiz_score"] = (df["accuracy"] * 100).round(1)
-    df["help_requests"] = df["hint_usage"]
-    df["quiz_attempts"] = rng.integers(1, 10, n)
-    df["active_days"] = (df["engagement_score"] * 90).astype(int)
-    df["total_clicks"] = (df["engagement_score"] * 1500).astype(int)
-    return df
+def get_source(fn, data_dir):
+    """适配器结果缓存（特征表与事件流共用一次加载）。"""
+    key = fn.__name__
+    if key not in _ADAPTER_CACHE:
+        _ADAPTER_CACHE[key] = fn(data_dir)
+    return _ADAPTER_CACHE[key]
 
 
-def synthetic_chatbot_events(n_students: int, seed: int = SEED) -> pd.DataFrame:
-    """源形态 C：答题/聊天机器人事件流（MSc Thesis 形态）。
-    action_type: 1=答对 2=答错 3=跳过 9=升级 10=降级"""
-    rng = np.random.default_rng(seed + 2)
-    rows = []
-    base = datetime(2026, 9, 1)
-    for i in range(n_students):
-        uid = f"CHAT-{i:04d}"
-        n_events = rng.integers(40, 400)
-        level, t = 1, 0
-        for _ in range(n_events):
-            t += int(rng.integers(30, 3 * 86400))
-            act = rng.choice([1, 2, 3, 9, 10], p=[0.5, 0.28, 0.12, 0.05, 0.05])
-            if act == 9:
-                level += 1
-            elif act == 10 and level > 1:
-                level -= 1
-            rows.append({"student_id": uid, "timestamp": base + timedelta(seconds=t),
-                         "action_type": int(act), "question_id": f"Q{rng.integers(1, 300)}",
-                         "response_time": float(rng.uniform(5, 180))})
-    return pd.DataFrame(rows)
+def load_uci_student(data_dir: str):
+    """UCI Student Performance（葡萄牙两所中学数学/葡萄牙语成绩单，395+649 名学生）。
+    https://archive.ics.uci.edu/dataset/320/student+performance"""
+    frames = []
+    for name, tag in [("student-mat.csv", "mat"), ("student-por.csv", "por")]:
+        path = os.path.join(data_dir, "real", "uci_student", name)
+        if not os.path.exists(path):
+            log(f"  [UCI Student Performance] 缺少 {name}，跳过")
+            continue
+        df = pd.read_csv(path, sep=";")
+        study_map = {1: 1.5, 2: 3.5, 3: 7.5, 4: 12.0}   # 周学习时长档位 → 小时中值
+        feat = pd.DataFrame({
+            "student_id": [f"UCI-{tag}-{i}" for i in range(len(df))],
+            "study_hours": df["studytime"].map(study_map).astype(float),
+            "avg_quiz_score": df[["G1", "G2", "G3"]].mean(axis=1).astype(float),
+            "final_grade": df["G3"].astype(float),
+            "quiz_attempts": 3.0,                        # 学期三次正式测验 G1/G2/G3
+            "attendance_rate": (100 - df["absences"] / 93 * 100).clip(0, 100),
+            "help_requests": (df["schoolsup"] == "yes").astype(float),
+            "success_status": np.where(df["G3"] >= 10, "pass", "fail"),
+            "gender": df["sex"].map({"F": "女", "M": "男"}),
+            "age_band": pd.cut(df["age"], [0, 17, 19, 22, 100],
+                               labels=["≤17", "18-19", "20-22", "23+"]).astype(str),
+            "region": df["address"].map({"U": "城市", "R": "农村"}),
+            "education": "高中",
+        })
+        feat["source"] = "real:uci_student_performance"
+        frames.append(feat)
+        log(f"  [UCI Student Performance] 已加载 {name}  n={len(feat)}")
+    return frames, None
 
 
-def events_to_features(events: pd.DataFrame) -> pd.DataFrame:
-    """事件流 → 学生级特征（MSc Thesis 的特征工程思路）。"""
-    ev = events.copy()
-    ev["date"] = pd.to_datetime(ev["timestamp"]).dt.date
-    span = (ev["date"].max() - ev["date"].min()).days + 1
-    g = ev.groupby("student_id")
+def load_thu_shortvideo(data_dir: str):
+    """清华大学 FIB 实验室大规模短视频行为数据集（WWW 2025 发布）本地子样本。
+    点击/停留/完播/点赞等行为记录，并利用类目表标记教育类内容占比。
+    http://fi.ee.tsinghua.edu.cn/datasets/short-video-dataset"""
+    base = os.path.join(data_dir, "real", "thu_shortvideo")
+    path = os.path.join(base, "interaction_sampled.csv")
+    if not os.path.exists(path):
+        log("  [清华短视频] 未找到 interaction_sampled.csv，跳过")
+        return [], None
+    usecols = ["user_id", "pid", "category_id", "exposed_time", "watch_time",
+               "duration", "cvm_like", "comment", "follow", "collect", "forward",
+               "hate", "click", "p_date", "p_hour", "gender", "age"]
+    df = pd.read_csv(path, usecols=usecols)
+    edu_cats = set()
+    cat_path = os.path.join(base, "categories_cn_en.csv")
+    if os.path.exists(cat_path):
+        cats = pd.read_csv(cat_path)
+        edu = cats[cats["category_name_cn"].astype(str).str.contains(
+            "教育|学习|知识|科普|技能", na=False)]
+        edu_cats = set(edu["category_id"].tolist())
+    df["is_edu"] = df["category_id"].isin(edu_cats)
+    social = df[["cvm_like", "comment", "follow", "collect", "forward"]].any(axis=1)
+
+    g = df.groupby("user_id")
     feat = pd.DataFrame({
-        "total_events": g.size(),
-        "success_rate": g.apply(
-            lambda d: (d["action_type"] == 1).mean(), include_groups=False),
-        "skip_rate": g.apply(
-            lambda d: (d["action_type"] == 3).mean(), include_groups=False),
-        "avg_response_time": g["response_time"].mean(),
-        "active_days": g["date"].nunique(),
-        "unique_days_ratio": g["date"].nunique() / max(span, 1),
-        "avg_interactions_per_day": g.size() / g["date"].nunique(),
-        "level_ups": g.apply(
-            lambda d: (d["action_type"] == 9).sum(), include_groups=False),
-        "level_downs": g.apply(
-            lambda d: (d["action_type"] == 10).sum(), include_groups=False),
-    }).reset_index()
-    feat["quiz_attempts"] = feat["total_events"]
-    feat["avg_quiz_score"] = feat["success_rate"] * 100
-    feat["help_requests"] = feat["level_downs"]
-    feat["source"] = "chatbot_events"
-    return feat
+        "student_id": [f"THUSV-{u}" for u in g.size().index],
+        "total_clicks": g.size().values.astype(float),
+        "active_days": g["p_date"].nunique().values.astype(float),
+        "avg_session_min": (g["watch_time"].mean() / 60).values,
+        "video_clicks": g["click"].sum().values.astype(float),
+        "forum_posts": g["comment"].sum().values.astype(float),
+        "engagement_score": social.groupby(df["user_id"]).mean().values.round(3),
+        "completion_rate": g.apply(
+            lambda d: (d["watch_time"] / d["duration"].clip(lower=1)).clip(0, 1).mean(),
+            include_groups=False).values.round(3),
+        "edu_video_ratio": g["is_edu"].mean().values.round(3),
+        "gender": g["gender"].first().values,
+        "age_band": pd.cut(pd.to_numeric(g["age"].first(), errors="coerce"),
+                           [0, 17, 25, 40, 120],
+                           labels=["≤17", "18-25", "26-40", "40+"]).astype(str).values,
+    })
+    feat["source"] = "real:thu_shortvideo"
+    log(f"  [清华短视频] 已加载 interaction_sampled.csv  用户 n={len(feat)}, "
+        f"行为记录 {len(df)} 条")
 
-
-def synthetic_code_submissions(n: int, seed: int = SEED) -> pd.DataFrame:
-    """源形态 D：编程课代码提交（user2code2vec 形态）—— 生成代码文本再提特征。"""
-    rng = np.random.default_rng(seed + 3)
-    skill = rng.uniform(0.1, 1.0, n)
-    rows = []
-    templates = [
-        "def solve(x):\n{body}\n    return result\n",
-        "class Task:\n    def __init__(self):\n{body}\n",
-    ]
-    for i, s in enumerate(skill):
-        n_lines = int(5 + s * 40)
-        n_funcs = int(1 + s * 6)
-        body_lines = []
-        for _ in range(n_lines):
-            r = rng.random()
-            if r < s * 0.25:
-                body_lines.append("    # " + rng.choice(["handle edge case", "optimize loop",
-                                                        "validate input"]))
-            elif r < 0.6:
-                body_lines.append(f"    value_{rng.integers(0, 99)} = x * {rng.integers(1, 10)}")
-            else:
-                body_lines.append("    pass")
-        code = templates[i % 2].format(body="\n".join(body_lines))
-        code = code.replace("solve", "solve", 1)
-        for fi in range(1, n_funcs):
-            code += f"\ndef helper_{fi}(x):\n    return x\n"
-        rows.append({"student_id": f"CODE-{i:04d}", "code": code, "grade": s * 100})
-    return pd.DataFrame(rows)
+    # 事件流（每用户抽样，供 SNA/LSA/GM(1,1) 使用）
+    ev = df.sort_values("exposed_time").groupby("user_id", group_keys=False) \
+        .head(CLICKS_PER_USER)
+    clicks = pd.DataFrame({
+        "student_id": "THUSV-" + ev["user_id"].astype(str),
+        "timestamp": pd.to_datetime(ev["p_date"].astype(str), format="%Y%m%d") \
+            + pd.to_timedelta(ev["p_hour"], unit="h"),
+        "action": "video",
+        "resource_id": "V" + ev["pid"].astype(str),
+        "course_id": "shortvideo",
+        "resource_type": "short",
+        "completed": (ev["watch_time"] >= 0.9 * ev["duration"].clip(lower=1)) \
+            .astype(float).values,
+        "speed_used": np.nan,
+        "seek_count": np.nan,
+    })
+    return [feat], clicks
 
 
 def code_to_features(subs: pd.DataFrame) -> pd.DataFrame:
@@ -324,52 +304,180 @@ def code_to_features(subs: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def synthetic_clickstream(n_students: int, seed: int = SEED) -> pd.DataFrame:
-    """源形态 E：点击流事件（SNA / LSA / GM(1,1) 的输入）。
-    action ∈ video/resource/quiz/forum/help；内置三种行为模式：
-    normal（混合浏览）/ skim（刷课：高占比连续视频）/ skip（跳步：未学先测）。
-    学生 ID 与 OULAD 合成源对齐（OULAD-{i:04d}），便于特征合并。"""
-    rng = np.random.default_rng(seed + 4)
-    rows = []
-    base = datetime(2026, 9, 7)
-    n_courses = 5
-    for i in range(n_students):
-        uid = f"OULAD-{i:04d}"
-        mode = "normal" if i % 5 < 3 else ("skim" if i % 5 == 3 else "skip")
-        course = f"C{i % n_courses}"
-        t, n_ev = 0, int(rng.integers(40, 120))
-        for _ in range(n_ev):
-            if mode == "skim":
-                act = "video" if rng.random() < 0.8 else rng.choice(LSA_ACTIONS)
-            elif mode == "skip":
-                act = "quiz" if rng.random() < 0.6 else \
-                    rng.choice(["video", "quiz", "forum"], p=[0.3, 0.4, 0.3])
-            else:
-                act = rng.choice(LSA_ACTIONS, p=[0.35, 0.30, 0.15, 0.12, 0.08])
-            t += int(rng.integers(1800, 30 * 3600))
-            row = {"student_id": uid, "timestamp": base + timedelta(seconds=t),
-                   "action": act,
-                   "resource_id": f"{course}-R{rng.integers(1, 13)}",
-                   "course_id": course, "resource_type": None, "completed": np.nan,
-                   "speed_used": np.nan, "seek_count": np.nan}
-            if act == "video":
-                # 三类学习场景：慕课长视频 / 微课 / 短视频，行为特征有差异
-                rtype = rng.choice(["mooc", "micro", "short"], p=[0.40, 0.35, 0.25])
-                comp_p = {"mooc": 0.45, "micro": 0.65, "short": 0.80}[rtype]
-                row["resource_type"] = rtype
-                row["completed"] = float(rng.random() < comp_p)
-                row["speed_used"] = rng.choice([1.0, 1.25, 1.5, 2.0],
-                                               p=[0.50, 0.25, 0.15, 0.10]) \
-                    if rtype != "mooc" else rng.choice([1.0, 1.25], p=[0.80, 0.20])
-                row["seek_count"] = int(rng.integers(0, 8)) if rtype == "mooc" \
-                    else int(rng.integers(0, 3))
-            rows.append(row)
-    return pd.DataFrame(rows)
+def load_mooc_tianchi(data_dir: str):
+    """阿里云天池《中国高校慕课课程多维画像与学习行为脱敏样本数据集(2024–2025)》。
+    user_learning_behavior.xls：视频播放/测验/作业/论坛/资源下载等学习行为事件；
+    courses.xls：课程维表（中国大学 MOOC 平台真实脱敏样本）。"""
+    base = os.path.join(ROOT, "_repos",
+                        "阿里云天池《中国高校慕课课程多维画像与学习行为脱敏样本数据集(2024–2025)》")
+    beh_path = os.path.join(base, "user_learning_behavior.xls")
+    if not os.path.exists(beh_path):
+        log("  [天池慕课] 未找到 user_learning_behavior.xls，跳过")
+        return [], None
+    df = pd.read_excel(beh_path)
+    df["occur_time"] = pd.to_datetime(df["occur_time"])
+    df["date"] = df["occur_time"].dt.date
+    action_map = {"video_play": "video", "quiz_submit": "quiz", "homework_submit": "quiz",
+                  "forum_browse": "forum", "resource_download": "resource",
+                  "course_eval": "help"}
+    df["action"] = df["behavior_type"].map(action_map).fillna("resource")
+
+    g = df.groupby("learner_id")
+    score_mean = g["score"].mean()
+    quiz_n = g.apply(lambda d: d["behavior_type"].isin(
+        ["quiz_submit", "homework_submit"]).sum(), include_groups=False)
+    video_n = g.apply(lambda d: (d["behavior_type"] == "video_play").sum(),
+                      include_groups=False)
+    feat = pd.DataFrame({
+        "student_id": [f"MOOC-{u}" for u in g.size().index],
+        "total_clicks": g.size().values.astype(float),
+        "active_days": g["date"].nunique().values.astype(float),
+        "avg_session_min": (g["duration_sec"].mean() / 60).values,
+        "video_clicks": video_n.values.astype(float),
+        "quiz_attempts": quiz_n.values.astype(float),
+        "avg_quiz_score": score_mean.values.round(1),
+        "final_grade": score_mean.values.round(1),
+        "forum_posts": g.apply(lambda d: (d["behavior_type"] == "forum_browse").sum(),
+                               include_groups=False).values.astype(float),
+        "resource_clicks": g.apply(lambda d: (d["behavior_type"] == "resource_download").sum(),
+                                   include_groups=False).values.astype(float),
+        "help_requests": g.apply(lambda d: (d["behavior_type"] == "course_eval").sum(),
+                                 include_groups=False).values.astype(float),
+        "completion_rate": g.apply(
+            lambda d: (d["progress_after_pct"] / 100).clip(0, 1).mean(),
+            include_groups=False).values.round(3),
+        "success_rate": g["is_passed"].mean().values.round(3),
+        "avg_response_time": g["duration_sec"].mean().values,
+    })
+    feat["source"] = "real:tianchi_mooc_2024_2025"
+    log(f"  [天池慕课] 已加载 user_learning_behavior.xls  学习者 n={len(feat)}, "
+        f"行为事件 {len(df)} 条")
+
+    clicks = pd.DataFrame({
+        "student_id": "MOOC-" + df["learner_id"].astype(str),
+        "timestamp": df["occur_time"],
+        "action": df["action"],
+        "resource_id": df["resource_code"].astype(str),
+        "course_id": df["course_id"].astype(str),
+        "resource_type": np.where(df["behavior_type"] == "video_play", "mooc", None),
+        "completed": (df["progress_after_pct"] >= 95).astype(float),
+        "speed_used": pd.to_numeric(df["playback_speed"], errors="coerce"),
+        "seek_count": np.nan,
+    })
+    return [feat], clicks
 
 
-def load_clickstream(data_dir: str, n_students: int) -> pd.DataFrame:
-    """优先加载 data/clickstream.csv（须含 student_id/timestamp/action 列），
-    否则使用内置合成点击流。"""
+def load_harvardx_mitx(data_dir: str, max_users: int = 50000):
+    """HarvardX-MITx Person Course Dataset（edX 2012-2013 年两校课程真实脱敏数据）。
+    按用户聚合跨课程行为：事件数/活跃天数/视频/论坛/章节 + 结业标签与人口属性。"""
+    base = os.path.join(ROOT, "_repos",
+                        "HarvardX_MITx_Person_Course_Dataset_Exploration-master", "data")
+    path = os.path.join(base, "hmx_cleaned.csv")
+    uid_col = "user_id"
+    if not os.path.exists(path):
+        path = os.path.join(base, "HMXPC13_DI_v2_5-14-14.csv")
+        uid_col = "userid_DI"
+    if not os.path.exists(path):
+        log("  [HarvardX/MITx] 未找到数据文件，跳过")
+        return [], None
+    usecols = [uid_col, "course_id", "nevents", "ndays_act", "nplay_video",
+               "nforum_posts", "nchapters", "grade", "certified", "viewed",
+               "explored", "gender", "YoB", "education"]
+    df = pd.read_csv(path, usecols=[c for c in usecols])
+    df = df.rename(columns={uid_col: "user_id"})
+    users = df["user_id"].unique()
+    if len(users) > max_users:                      # 真实数据随机抽样，控制规模
+        users = np.random.default_rng(SEED).choice(users, max_users, replace=False)
+        df = df[df["user_id"].isin(users)]
+        log(f"  [HarvardX/MITx] 用户量 {len(users)} 超上限，随机抽样 {max_users} 人")
+    g = df.groupby("user_id")
+    grade_max = g["grade"].max() * 100
+    edu_map = {"Less than Secondary": "高中及以下", "Secondary": "高中及以下",
+               "High School": "高中及以下", "Bachelor's": "本科", "Master's": "硕士及以上",
+               "Doctorate": "硕士及以上"}
+    feat = pd.DataFrame({
+        "student_id": "EDX-" + g.size().index.astype(str),
+        "total_clicks": g["nevents"].sum().values.astype(float),
+        "active_days": g["ndays_act"].sum().values.astype(float),
+        "video_clicks": g["nplay_video"].sum().values.astype(float),
+        "forum_posts": g["nforum_posts"].sum().values.astype(float),
+        "resource_clicks": g["nchapters"].sum().values.astype(float),
+        "avg_quiz_score": grade_max.values.round(1),
+        "final_grade": grade_max.values.round(1),
+        "completion_rate": g.apply(
+            lambda d: d[["viewed", "explored"]].max().mean(), include_groups=False) \
+            .values.round(3),
+        "success_status": np.where(g["certified"].max().values == 1,
+                                   "certified", "none"),
+        "gender": g["gender"].first().map({"m": "男", "f": "女", "M": "男", "F": "女"}) \
+            .values,
+        "age_band": pd.cut(pd.to_numeric(g["YoB"].first(), errors="coerce"),
+                           [0, 1975, 1985, 1995, 2004],
+                           labels=["40+", "31-40", "26-30", "18-25"]).astype(str).values,
+        "education": g["education"].first().map(edu_map).values,
+    })
+    feat["source"] = "real:harvardx_mitx_person_course"
+    log(f"  [HarvardX/MITx] 已加载 {os.path.basename(path)}  用户 n={len(feat)}")
+    return [feat], None
+
+
+def load_edudata_assistments(data_dir: str):
+    """中科大 EduData 集成包托管的 ASSISTments 2009-2010 答题行为数据
+    （skill_builder_data_corrected，约 34 万条中学数学答题记录）。
+    https://github.com/bigdata-ustc/EduData"""
+    path = os.path.join(data_dir, "real", "edudata", "assistment_2009",
+                        "skill_builder_data_corrected.csv")
+    if not os.path.exists(path):
+        log("  [EduData/ASSISTments] 未找到 skill_builder_data_corrected.csv，跳过")
+        return [], None
+    df = pd.read_csv(path, usecols=["user_id", "correct", "ms_first_response",
+                                    "hint_count", "order_id", "skill_id"])
+    df = df.dropna(subset=["user_id"])
+    g = df.groupby("user_id")
+    acc = g["correct"].mean()
+    feat = pd.DataFrame({
+        "student_id": "AST-" + g.size().index.astype(int).astype(str),
+        "total_clicks": g.size().values.astype(float),
+        "quiz_attempts": g.size().values.astype(float),
+        "accuracy": acc.values.round(3),
+        "success_rate": acc.values.round(3),
+        "avg_quiz_score": (acc * 100).values.round(1),
+        "avg_response_time": (g["ms_first_response"].mean() / 1000).values.round(1),
+        "hint_usage": g["hint_count"].sum().values.astype(float),
+        "help_requests": g["hint_count"].sum().values.astype(float),
+        "success_status": np.where(acc.values >= 0.6, "pass", "fail"),
+    })
+    feat["source"] = "real:edudata_assistments_2009"
+    log(f"  [EduData/ASSISTments] 已加载 skill_builder_data_corrected.csv  "
+        f"学生 n={len(feat)}, 答题记录 {len(df)} 条")
+    return [feat], None
+
+
+def _cap_clickstream(frames: list) -> pd.DataFrame:
+    """合并各真实源事件流，超限时随机抽样（保持真实行为分布，不造数据）。"""
+    frames = [f for f in frames if f is not None and not f.empty]
+    if not frames:
+        return pd.DataFrame(columns=["student_id", "timestamp", "action"])
+    df = pd.concat(frames, ignore_index=True)
+    df = df[df["action"].isin(LSA_ACTIONS)].dropna(subset=["timestamp"])
+    if len(df) > MAX_CLICKS:
+        df = df.sample(MAX_CLICKS, random_state=SEED).sort_values("timestamp")
+        log(f"  事件流超过 {MAX_CLICKS} 条，随机采样至 {len(df)} 条")
+    return df.reset_index(drop=True)
+
+
+def build_clickstream(data_dir: str) -> pd.DataFrame:
+    """汇聚各真实数据源的带时间戳事件流（SNA / LSA / GM(1,1) 的输入）。
+    可用来源：清华短视频、天池慕课事件、data/clickstream.csv。"""
+    frames = []
+    for fn in (load_thu_shortvideo, load_mooc_tianchi):
+        try:
+            _, ev = get_source(fn, data_dir)
+            if ev is not None and not ev.empty:
+                frames.append(ev)
+                log(f"  事件流来源 {fn.__name__}: {len(ev)} 条")
+        except Exception as e:
+            log(f"  事件流适配器 {fn.__name__} 失败: {e}")
     path = os.path.join(data_dir, "clickstream.csv")
     if os.path.exists(path):
         try:
@@ -381,42 +489,28 @@ def load_clickstream(data_dir: str, n_students: int) -> pd.DataFrame:
                                      ("speed_used", np.nan), ("seek_count", np.nan)]:
                     if col not in df.columns:
                         df[col] = default
-                df["timestamp"] = pd.to_datetime(df["timestamp"])
-                log(f"  已加载真实点击流 clickstream.csv  shape={df.shape}")
-                return df
-            log("  clickstream.csv 缺少必需列（student_id/timestamp/action），改用合成数据")
+                frames.append(df)
+                log(f"  事件流来源 clickstream.csv: {len(df)} 条")
+            else:
+                log("  clickstream.csv 缺少必需列（student_id/timestamp/action），跳过")
         except Exception as e:
-            log(f"  读取 clickstream.csv 失败: {e}，改用合成数据")
-    return synthetic_clickstream(n_students)
+            log(f"  读取 clickstream.csv 失败: {e}")
+    clicks = _cap_clickstream(frames)
+    if clicks.empty:
+        raise SystemExit("未发现带时间戳的真实事件流：请确认 "
+                         "data/real/thu_shortvideo/interaction_sampled.csv 或天池慕课数据存在")
+    return clicks
 
 
-def add_demographics(uni: pd.DataFrame, seed: int = SEED) -> pd.DataFrame:
-    """人口属性维度：真实数据含 gender/age_band/region/education 列则沿用，
-    否则按典型在线教育平台样本结构合成，并对行为做轻度关联以便交叉分析。"""
-    rng = np.random.default_rng(seed + 5)
-    n = len(uni)
-    if "gender" not in uni.columns:
-        uni["gender"] = rng.choice(["男", "女"], n, p=[0.52, 0.48])
-    if "age_band" not in uni.columns:
-        uni["age_band"] = rng.choice(["18-25", "26-30", "31-40", "40+"],
-                                     n, p=[0.45, 0.25, 0.20, 0.10])
-    if "region" not in uni.columns:
-        uni["region"] = rng.choice(["华东", "华北", "华南", "西南", "西北", "东北"],
-                                   n, p=[0.30, 0.20, 0.18, 0.14, 0.10, 0.08])
-    if "education" not in uni.columns:
-        uni["education"] = rng.choice(["高中及以下", "大专", "本科", "硕士及以上"],
-                                      n, p=[0.20, 0.30, 0.40, 0.10])
-    # 轻度行为关联（合成数据演示用）：教育背景→学习时长/成绩，地区→访问量
-    edu_factor = uni["education"].map(
-        {"高中及以下": 0.85, "大专": 0.95, "本科": 1.05, "硕士及以上": 1.15}).fillna(1.0)
-    region_factor = uni["region"].map(
-        {"华东": 1.12, "华北": 1.05, "华南": 1.02, "西南": 0.95,
-         "西北": 0.88, "东北": 0.98}).fillna(1.0)
-    for col in ["avg_session_min", "total_clicks"]:
-        if col in uni.columns:
-            uni[col] = (uni[col] * edu_factor * region_factor).round(1)
-    if "avg_quiz_score" in uni.columns:
-        uni["avg_quiz_score"] = (uni["avg_quiz_score"] * edu_factor).round(1)
+def harmonize_demographics(uni: pd.DataFrame) -> pd.DataFrame:
+    """人口属性仅来自真实数据列；缺失保持缺失，不再做任何合成或行为加权。"""
+    if "gender" in uni.columns:
+        g = uni["gender"].astype(str).str.strip().str.upper()
+        uni["gender"] = g.map({"M": "男", "F": "女", "男": "男", "女": "女"})
+    if "age_band" not in uni.columns and "age" in uni.columns:
+        uni["age_band"] = pd.cut(pd.to_numeric(uni["age"], errors="coerce"),
+                                 [0, 17, 25, 40, 120],
+                                 labels=["≤17", "18-25", "26-40", "40+"]).astype(str)
     return uni
 
 
@@ -503,31 +597,48 @@ def clean_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_unified_dataset(args) -> pd.DataFrame:
-    """合并所有数据源 → 统一特征表（union 列，缺失由 clean_features 填充）。"""
-    frames = [synthetic_oulad(args.n, SEED), synthetic_interaction(max(args.n // 2, 50), SEED),
-              events_to_features(synthetic_chatbot_events(max(args.n // 4, 30), SEED)),
-              code_to_features(synthetic_code_submissions(max(args.n // 4, 30), SEED))]
+    """融合所有真实公开数据集 → 统一特征表（union 列，缺失由 clean_features 填充）。
+
+    数据源（均为真实公开数据，不含任何合成数据）：
+      1. UCI Student Performance（395+649 名中学生成绩单）
+      2. 清华 FIB 短视频行为数据集（WWW 2025，本地子样本）
+      3. 阿里云天池《中国高校慕课课程多维画像与学习行为脱敏样本数据集(2024–2025)》
+      4. HarvardX/MITx Person Course Dataset（edX 真实脱敏数据）
+      5. 中科大 EduData 集成包（ASSISTments 2009 答题行为）
+      6. data/ 根目录通用扫描（CSV/XLSX 汇总表、JSONL 事件流、代码提交）
+    """
+    adapters = [load_uci_student, load_thu_shortvideo, load_mooc_tianchi,
+                load_harvardx_mitx, load_edudata_assistments]
+    frames = []
+    for fn in adapters:
+        try:
+            src_frames, _ = get_source(fn, args.data_dir)
+            frames += src_frames
+        except Exception as e:
+            log(f"  适配器 {fn.__name__} 加载失败: {e}")
     frames += load_real_data(args.data_dir)
+    if not frames:
+        raise SystemExit("未发现任何真实数据集，请先按 README 将公开数据集放入 data/real/")
     parts = []
     for df in frames:
         keep = ["student_id", "source"] + [c for c in ALL_FEATURES if c in df.columns]
-        extra = [c for c in ["latent_type", "success_status", "overall_score", "grade",
-                             "learner_type", "study_hours", "attendance_rate", "code_calls",
-                             "completion_rate", "final_grade",
+        extra = [c for c in ["success_status", "overall_score", "grade",
+                             "learner_type", "study_hours", "attendance_rate",
+                             "code_calls", "completion_rate", "final_grade",
                              "gender", "age_band", "region", "education"]
                  if c in df.columns]
         parts.append(df[keep + extra])
     uni = pd.concat(parts, ignore_index=True, sort=False)
-    # 派生标签：优先使用真实标签列，否则按分数阈值派生 success
-    if "success_status" in uni.columns:
+    # 标签列：优先使用数据集自带的成功/结业标签，否则由真实成绩中位数派生
+    if "success_status" in uni.columns and uni["success_status"].notna().any():
         uni["success"] = uni["success_status"].astype(str).str.lower().isin(
-            ["successful", "success", "1", "true", "pass"])
+            ["successful", "success", "certified", "pass", "1", "true"])
     else:
         score = uni["avg_quiz_score"]
         if "overall_score" in uni.columns:
             score = score.fillna(uni["overall_score"])
         uni["success"] = score >= np.nanmedian(score)
-    # RF 学业表现预测的目标变量：若真实数据未提供则按行为派生
+    # 以下两列仅对数据集未提供的来源按其真实行为派生代理值（非合成样本）
     if "completion_rate" not in uni.columns:
         eng = uni[["total_clicks", "active_days", "engagement_score"]].mean(axis=1)
         eng_n = (eng - eng.min()) / (eng.max() - eng.min() + 1e-9)
@@ -541,11 +652,20 @@ def build_unified_dataset(args) -> pd.DataFrame:
     uni["completion_rate"] = uni["completion_rate"].fillna(uni["completion_rate"].median())
     uni["final_grade"] = uni["final_grade"].fillna(uni["final_grade"].median())
     uni = clean_features(uni)
-    # 人口属性（真实列优先，缺失合成）+ 行为轻度关联
-    uni = add_demographics(uni)
-    # 基础行为代理指标：周均学习时长（分钟）、作业提交率
-    uni["study_hours_per_week"] = (uni["avg_session_min"] * uni["login_freq_per_week"] / 60).round(1)
-    uni["submission_rate"] = ((uni["assignment_submit_lag"] + 5) / 10).clip(0, 1).round(3)
+    # 人口属性只保留真实列，缺失保持缺失（不再合成）
+    uni = harmonize_demographics(uni)
+    # 基础行为代理指标（仅由真实字段派生；字段缺失时保持缺失，不再合成）
+    if "study_hours" in uni.columns:            # UCI 自报周学习时长（真实字段）
+        uni["study_hours_per_week"] = pd.to_numeric(uni["study_hours"], errors="coerce")
+    elif "login_freq_per_week" in uni.columns:
+        uni["study_hours_per_week"] = (uni["avg_session_min"] *
+                                       uni["login_freq_per_week"] / 60).round(1)
+    else:
+        uni["study_hours_per_week"] = np.nan
+    if "assignment_submit_lag" in uni.columns:
+        uni["submission_rate"] = ((uni["assignment_submit_lag"] + 5) / 10).clip(0, 1).round(3)
+    else:
+        uni["submission_rate"] = np.nan
     log(f"\n统一数据集: {uni.shape[0]} 名学生 × {uni.shape[1]} 列, "
         f"来源分布: {uni['source'].value_counts().to_dict()}")
     return uni
@@ -555,41 +675,85 @@ def build_unified_dataset(args) -> pd.DataFrame:
 # 四、分析层：EDA + 聚类画像
 # ======================================================================
 def select_cluster_columns(uni: pd.DataFrame, min_fill: float = 0.6) -> list[str]:
-    fill_ratio = uni[ALL_FEATURES].notna().mean()
+    avail = [c for c in ALL_FEATURES if c in uni.columns]
+    fill_ratio = uni[avail].notna().mean()
     cols = fill_ratio[fill_ratio >= min_fill].index.tolist()
     log(f"  聚类特征（缺失率 ≤ {1 - min_fill:.0%}）: {cols}")
     return cols
 
 
 def eda_summary(uni: pd.DataFrame, out_dir: str) -> pd.DataFrame:
-    desc = uni[ALL_FEATURES].describe().T.round(2)
-    desc["missing"] = uni[ALL_FEATURES].isna().sum()
+    avail = [c for c in ALL_FEATURES if c in uni.columns]
+    desc = uni[avail].describe().T.round(2)
+    desc["missing"] = uni[avail].isna().sum()
     desc.to_csv(os.path.join(out_dir, "eda_summary.csv"), encoding="utf-8-sig")
     return desc
 
 
-def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str):
-    """肘部法 + 轮廓系数选 K → KMeans → PCA / 雷达 / 热力图（当前仓库管线风格）。"""
+def _knee_distances(ks: np.ndarray, ys: np.ndarray) -> np.ndarray:
+    """肘部得分：inertia 下降曲线上每个 k 到首尾连线的垂直距离（kneedle 思路）。"""
+    x0, y0, x1, y1 = ks[0], ys[0], ks[-1], ys[-1]
+    denom = np.hypot(x1 - x0, y1 - y0) + 1e-12
+    return np.abs((y1 - y0) * ks - (x1 - x0) * ys + x1 * y0 - y1 * x0) / denom
+
+
+def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
+                     max_fit: int = 15000, max_plot: int = 5000):
+    """肘部法 + 轮廓系数选 K → KMeans → PCA / 雷达 / 热力图。
+
+    选 K 修复点（相对旧实现）：
+      1. 自动模式综合「肘部拐点」与「轮廓系数」两路证据等权融合（旧实现肘部法
+         只画图不参与选择，仅取轮廓 argmax，与文档描述不符）；
+      2. 显式指定的 k 做合法性校验并夹取到 [2, min(8, n-1)]（旧实现 k>=n 时
+         KMeans 直接报错、k=1 时 silhouette 报错）；
+      3. 大数据集下 silhouette 为 O(n²) 不可行，改为固定随机子样本上拟合与评估，
+         全量样本用最近质心分配标签；
+      4. K 选择与最终聚类使用一致的 n_init 与同一份标准化矩阵。
+    """
     X_raw = uni[cols].values.astype(float)
     scaler = StandardScaler()
     X = scaler.fit_transform(X_raw)
+    n = len(X)
+    if n > max_fit:
+        fit_idx = np.sort(np.random.default_rng(SEED).choice(n, max_fit, replace=False))
+    else:
+        fit_idx = np.arange(n)
+    X_fit = X[fit_idx]
 
     # --- 选 K ---
-    k_range = range(2, 8)
+    k_max = min(8, n - 1)
+    k_range = np.arange(2, k_max + 1)
     inertias, sils = [], []
     for kk in k_range:
-        km = KMeans(n_clusters=kk, random_state=SEED, n_init=10).fit(X)
+        km = KMeans(n_clusters=int(kk), random_state=SEED, n_init=10).fit(X_fit)
         inertias.append(km.inertia_)
-        sils.append(silhouette_score(X, km.labels_))
-    if k <= 0:
-        k = list(k_range)[int(np.argmax(sils))]
-        log(f"  自动选择 K = {k}（轮廓系数 {max(sils):.3f}）")
+        try:
+            sils.append(silhouette_score(X_fit, km.labels_))
+        except ValueError:
+            sils.append(np.nan)
+    inertias = np.array(inertias, dtype=float)
+    sils = np.array(sils, dtype=float)
+    sil_n = (sils - np.nanmin(sils)) / (np.nanmax(sils) - np.nanmin(sils) + 1e-9)
+    knee_n = _knee_distances(k_range.astype(float), inertias)
+    knee_n = (knee_n - knee_n.min()) / (knee_n.max() - knee_n.min() + 1e-9)
+    knee_k = int(k_range[int(np.argmax(knee_n))])
+    combined = 0.5 * sil_n + 0.5 * knee_n
+    best_i = int(np.argmax(combined))
+    if k <= 0 or k < 2 or k > k_max:
+        k = int(k_range[best_i])
+        log(f"  自动选择 K = {k}（轮廓系数 {sils[best_i]:.3f}，肘部拐点 K={knee_k}，"
+            f"各 K 综合得分: {dict(zip(k_range.tolist(), combined.round(2).tolist()))}）")
+    elif k > k_max:
+        log(f"  警告: 指定 K={k} 超出可行范围（≤ {k_max}），已夹取为 {k_max}")
+        k = k_max
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
     fig.suptitle("Selecting Optimal Number of Clusters", fontsize=14, fontweight="bold")
-    axes[0].plot(list(k_range), inertias, "o-", color=PALETTE[0])
+    axes[0].plot(k_range, inertias, "o-", color=PALETTE[0])
+    axes[0].axvline(knee_k, color=PALETTE[3], ls="--", label=f"Elbow K = {knee_k}")
     axes[0].set(xlabel="K", ylabel="Inertia", title="Elbow Method")
-    axes[1].plot(list(k_range), sils, "s-", color=PALETTE[1])
+    axes[0].legend()
+    axes[1].plot(k_range, sils, "s-", color=PALETTE[1])
     axes[1].axvline(k, color=PALETTE[2], ls="--", label=f"K = {k}")
     axes[1].set(xlabel="K", ylabel="Silhouette", title="Silhouette Analysis")
     axes[1].legend()
@@ -597,19 +761,14 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str):
     plt.savefig(os.path.join(out_dir, "elbow_silhouette.png"), bbox_inches="tight")
     plt.close()
 
-    # --- 最终聚类 ---
-    km = KMeans(n_clusters=k, random_state=SEED, n_init=20)
-    labels = km.fit_predict(X)
-    sil = silhouette_score(X, labels)
-    if "latent_type" in uni.columns and uni["latent_type"].notna().any():
-        m = uni["latent_type"].notna().values
-        ari = adjusted_rand_score(uni.loc[m, "latent_type"], labels[m])
-    else:
-        ari = float("nan")
-    log(f"  K-Means(K={k})  Silhouette = {sil:.3f}  ARI(vs latent) = {ari:.3f}")
+    # --- 最终聚类（子样本拟合 + 全量最近质心分配） ---
+    km = KMeans(n_clusters=k, random_state=SEED, n_init=10).fit(X_fit)
+    labels = km.predict(X)
+    sil = silhouette_score(X_fit, km.labels_)
+    log(f"  K-Means(K={k})  Silhouette(基于 {len(fit_idx)} 样本) = {sil:.3f}")
     uni["cluster"] = labels
 
-    # --- PCA 散点 ---
+    # --- PCA 散点（大样本时仅绘制子集） ---
     pca = PCA(n_components=2, random_state=SEED)
     X_pca = pca.fit_transform(X)
     var = pca.explained_variance_ratio_ * 100
@@ -617,10 +776,12 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str):
     proj["cluster"] = labels
     proj.to_csv(os.path.join(out_dir, "pca_projection.csv"), index=False)
     log(f"  PCA 方差解释率: PC1={var[0]:.1f}%, PC2={var[1]:.1f}%")
+    plot_idx = fit_idx if n > max_plot else np.arange(n)
+    lab_p, pca_p = labels[plot_idx], X_pca[plot_idx]
     fig, ax = plt.subplots(figsize=(9, 6))
     for c in range(k):
-        m = labels == c
-        ax.scatter(X_pca[m, 0], X_pca[m, 1], c=PALETTE[c % len(PALETTE)],
+        m = lab_p == c
+        ax.scatter(pca_p[m, 0], pca_p[m, 1], c=PALETTE[c % len(PALETTE)],
                    label=f"Cluster {c}", alpha=0.75, s=55, edgecolors="white", linewidths=0.4)
     ax.set(xlabel=f"PC1 ({var[0]:.1f}%)", ylabel=f"PC2 ({var[1]:.1f}%)",
            title="Learner Personas — PCA Projection")
@@ -640,16 +801,18 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str):
         n_r = len(radar_cols)
         angles = np.linspace(0, 2 * np.pi, n_r, endpoint=False).tolist()
         angles += angles[:1]
-        ncol = min(k, 3)
-        nrow = int(np.ceil(k / ncol))
+        clusters = list(cm.index)
+        ncol = min(len(clusters), 3)
+        nrow = int(np.ceil(len(clusters) / ncol))
         fig, axes = plt.subplots(nrow, ncol, figsize=(5 * ncol, 4.5 * nrow),
                                  subplot_kw=dict(polar=True), squeeze=False)
         fig.suptitle("Behavioral Radar — Learner Personas", fontsize=14, fontweight="bold")
         for idx, ax in enumerate(axes.flat):
-            if idx >= k:
+            if idx >= len(clusters):
                 ax.remove()
                 continue
-            vals = norm.loc[idx].tolist() + norm.loc[idx].tolist()[:1]
+            c = clusters[idx]
+            vals = norm.loc[c].tolist() + norm.loc[c].tolist()[:1]
             ax.plot(angles, vals, color=PALETTE[idx % len(PALETTE)], lw=2)
             ax.fill(angles, vals, color=PALETTE[idx % len(PALETTE)], alpha=0.25)
             ax.set_xticks(angles[:-1])
@@ -677,7 +840,11 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str):
     plt.savefig(os.path.join(out_dir, "heatmap_features.png"), bbox_inches="tight")
     plt.close()
 
-    return uni, km, scaler, cols, {"silhouette": sil, "ari": ari, "k": k}
+    return uni, km, scaler, cols, {
+        "silhouette": sil, "k": k, "knee_k": knee_k,
+        "k_scores": {int(kk): round(float(s), 3) for kk, s in zip(k_range, sils)},
+        "n_fit_samples": int(len(fit_idx)),
+    }
 
 
 def label_personas(uni: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
@@ -1634,10 +1801,12 @@ def performance_model_extended(uni: pd.DataFrame, cols: list[str], out_dir: str)
 
     uni = uni.copy()
     X = uni[cols].fillna(uni[cols].median())
-    uni["grade_band"] = pd.cut(uni["final_grade"], [0, 60, 70, 85, 100],
+    uni["grade_band"] = pd.cut(uni["final_grade"].clip(lower=0), [-0.1, 60, 70, 85, 100.01],
                                labels=["D", "C", "B", "A"])
     uni["certified"] = (uni["completion_rate"] >= 0.75).astype(int)
-    X_tr, X_te, u_tr, u_te = train_test_split(X, uni, test_size=0.3, random_state=SEED)
+    has_band = uni["grade_band"].notna()
+    X_tr, X_te, u_tr, u_te = train_test_split(X[has_band], uni[has_band],
+                                              test_size=0.3, random_state=SEED)
 
     res, models = {}, {}
     for name, clf in [("RandomForest", RandomForestClassifier(n_estimators=200,
@@ -1881,8 +2050,8 @@ def main():
     ap = argparse.ArgumentParser(description="统一学习行为分析与学习者画像管线")
     ap.add_argument("--data-dir", default="data", help="真实数据扫描目录")
     ap.add_argument("--out-dir", default="out", help="输出目录")
-    ap.add_argument("--n", type=int, default=400, help="OULAD 合成样本量")
-    ap.add_argument("--k", type=int, default=4, help="聚类数（0 = 自动选择）")
+    ap.add_argument("--k", type=int, default=0,
+                    help="聚类数（0 = 自动：肘部拐点 + 轮廓系数综合选择）")
     args = ap.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -1897,7 +2066,7 @@ def main():
 
     log("[1/9] 数据层：多源加载与统一（含人口属性）")
     uni = build_unified_dataset(args)
-    clicks = load_clickstream(args.data_dir, args.n)
+    clicks = build_clickstream(args.data_dir)
 
     log("[2/9] 特征层：EDA 与清洗完成")
     cols = select_cluster_columns(uni)
