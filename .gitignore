@@ -1,4 +1,4 @@
 data/*
 _repos/*
-out/*
+out/*.csv
 *.csv
