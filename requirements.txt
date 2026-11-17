@@ -5,6 +5,9 @@ matplotlib>=3.7
 seaborn>=0.12
 openpyxl>=3.1
 
+# 可选：UMAP 可视化（out/umap_clusters.png；缺失时管线自动跳过）
+#   pip install umap-learn
+
 # 可选：GPU 加速（--device gpu）
 # 方案一（Windows/Linux 通用）：PyTorch + CUDA，加速 KMeans / 轮廓系数 / 质心分配
 #   pip install torch --index-url https://download.pytorch.org/whl/cu121

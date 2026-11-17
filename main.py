@@ -940,6 +940,72 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
     plt.savefig(os.path.join(out_dir, "pca_clusters.png"), bbox_inches="tight")
     plt.close()
 
+    # --- 非线性嵌入散点：t-SNE + UMAP（展示簇分离度；仅可视化用，不参与建模） ---
+    # PCA 是线性投影，重尾行为特征使簇沿 PC1 呈条状排布；非线性嵌入能展开局部
+    # 邻域结构，簇团分离度更清晰。做法：万级子样本 → PCA 预降到 10 维去噪提速
+    # → t-SNE(init='pca') 与 UMAP(n_neighbors=15, min_dist=0.1)，均固定随机种子。
+    # 两者坐标尺度均无业务含义（簇间距离/簇大小不可解读），且无 transform
+    # 方法（UMAP 有但此处不做建模用途），不能替代 PCA 建模。
+    viz_idx = (np.sort(np.random.default_rng(SEED).choice(
+        n, min(n, 10000), replace=False)) if n > 10000 else np.arange(n))
+    log(f"  非线性嵌入可视化: {len(viz_idx)} 样本")
+    X_pre = PCA(n_components=min(10, X.shape[1]), random_state=SEED) \
+        .fit_transform(X[viz_idx])
+
+    try:
+        from sklearn.manifold import TSNE
+        perp = float(min(30, max(5, len(viz_idx) // 3)))
+        log(f"  t-SNE: perplexity={perp:.0f} (大数据集需 1-2 分钟)")
+        X_tsne = TSNE(n_components=2, perplexity=perp, init="pca",
+                      random_state=SEED).fit_transform(X_pre)
+        emb = pd.DataFrame(X_tsne, columns=["tSNE1", "tSNE2"])
+        emb["cluster"] = labels[viz_idx]
+        emb.to_csv(os.path.join(out_dir, "tsne_projection.csv"), index=False)
+        fig, ax = plt.subplots(figsize=(9, 6))
+        for c in range(k):
+            sub = emb[emb["cluster"] == c]
+            ax.scatter(sub["tSNE1"], sub["tSNE2"], c=PALETTE[c % len(PALETTE)],
+                       label=f"Cluster {c}", alpha=0.55, s=12,
+                       edgecolors="none", rasterized=True)
+        ax.set(title="Learner Personas — t-SNE Projection "
+                     "(cluster separation view; axis scale has no business meaning)")
+        ax.legend(title="Cluster", markerscale=3)
+        plt.tight_layout()
+        plt.savefig(os.path.join(out_dir, "tsne_clusters.png"),
+                    bbox_inches="tight", dpi=150)
+        plt.close()
+    except Exception as e:                      # sklearn 过旧/内存不足时安全跳过
+        log(f"  警告: t-SNE 可视化跳过（{type(e).__name__}: {e}）")
+
+    try:
+        import umap
+        log("  UMAP: n_neighbors=15, min_dist=0.1 (约 10-30 秒)")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")     # 固定 random_state 会禁用并行，忽略提示
+            reducer = umap.UMAP(n_components=2, n_neighbors=15, min_dist=0.1,
+                                random_state=SEED, n_jobs=1)
+            X_umap = reducer.fit_transform(X_pre)
+        emb = pd.DataFrame(X_umap, columns=["UMAP1", "UMAP2"])
+        emb["cluster"] = labels[viz_idx]
+        emb.to_csv(os.path.join(out_dir, "umap_projection.csv"), index=False)
+        fig, ax = plt.subplots(figsize=(9, 6))
+        for c in range(k):
+            sub = emb[emb["cluster"] == c]
+            ax.scatter(sub["UMAP1"], sub["UMAP2"], c=PALETTE[c % len(PALETTE)],
+                       label=f"Cluster {c}", alpha=0.55, s=12,
+                       edgecolors="none", rasterized=True)
+        ax.set(title="Learner Personas — UMAP Projection "
+                     "(cluster separation view; axis scale has no business meaning)")
+        ax.legend(title="Cluster", markerscale=3)
+        plt.tight_layout()
+        plt.savefig(os.path.join(out_dir, "umap_clusters.png"),
+                    bbox_inches="tight", dpi=150)
+        plt.close()
+    except ImportError:
+        log("  提示: 未安装 umap-learn，UMAP 可视化跳过（pip install umap-learn）")
+    except Exception as e:
+        log(f"  警告: UMAP 可视化跳过（{type(e).__name__}: {e}）")
+
     # --- 雷达图 ---
     radar_cols = [c for c in ["total_clicks", "active_days", "avg_session_min",
                               "video_clicks", "quiz_attempts", "avg_quiz_score",

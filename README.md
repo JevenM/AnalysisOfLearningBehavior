@@ -177,6 +177,8 @@ curl -o data/real/edudata/assistment_2009.zip \
 | `elbow_silhouette.png` | 肘部法与轮廓系数曲线（标注肘部拐点与所选 K） |
 | `pca_loadings.csv` / `pca_component_scores.csv` | 主成分载荷矩阵（含命名）/ 逐学生主成分得分 |
 | `pca_clusters.png` / `pca_projection.csv` | 2D PCA 聚类散点 / 各样本投影坐标 |
+| `tsne_clusters.png` / `tsne_projection.csv` | t-SNE 非线性嵌入散点（簇分离度视图，坐标尺度无业务含义）/ 子样本投影坐标 |
+| `umap_clusters.png` / `umap_projection.csv` | UMAP 非线性嵌入散点（保留更多全局结构，需 `pip install umap-learn`，缺失时跳过） |
 | `radar_personas.png` / `heatmap_features.png` | 各簇行为雷达图 / 簇级特征 Z-score 热力图 |
 | `sna_*.csv` / `sna_network.png` | SNA 学习者/资源指标、路径 Top 边、网络可视化 |
 | `lsa_transition_*.csv` / `lsa_transition_graph.png` / `lsa_behavior_patterns.csv` | LSA 转换矩阵、z 分数、转换图谱、逐学生异常模式 |

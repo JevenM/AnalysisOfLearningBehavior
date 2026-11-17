@@ -1,5 +1,5 @@
 # 学习者画像分析报告
-生成时间: 2026-11-17 15:32:07
+生成时间: 2026-11-17 16:17:44
 
 ## 数据概览
 - 学生总数: 62630，数据来源: {'real:harvardx_mitx_person_course': 50000, 'real:thu_shortvideo': 6654, 'real:edudata_assistments_2009': 4217, 'real:uci_student_performance': 1044, 'real:tianchi_mooc_2024_2025': 715}
