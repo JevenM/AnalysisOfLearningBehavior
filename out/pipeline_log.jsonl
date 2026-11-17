@@ -1302,3 +1302,233 @@
 {"ts": "2026-11-15T22:18:47", "msg": "[8/9] 决策层：干预队列 + 内容推荐 + 优化建议"}
 {"ts": "2026-11-15T22:19:39", "msg": "  优化建议: 输出 9 条落地策略"}
 {"ts": "2026-11-15T22:19:39", "msg": "[9/9] 输出层：导出结果与报告"}
+{"ts": "2026-11-17T15:18:10", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-17T15:18:56", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-17T15:18:56", "msg": "============================================================"}
+{"ts": "2026-11-17T15:18:56", "msg": "  统一学习行为分析管线启动"}
+{"ts": "2026-11-17T15:18:56", "msg": "============================================================"}
+{"ts": "2026-11-17T15:18:56", "msg": "[1/9] 数据层：多源加载与统一（含人口属性）"}
+{"ts": "2026-11-17T15:18:56", "msg": "  [UCI Student Performance] 已加载 student-mat.csv  n=395"}
+{"ts": "2026-11-17T15:18:56", "msg": "  [UCI Student Performance] 已加载 student-por.csv  n=649"}
+{"ts": "2026-11-17T15:18:59", "msg": "  [清华短视频] 已加载 interaction_sampled.csv  用户 n=6654, 行为记录 794053 条"}
+{"ts": "2026-11-17T15:18:59", "msg": "  适配器 load_mooc_tianchi 加载失败: Missing optional dependency 'xlrd'. Install xlrd >= 2.0.1 for xls Excel support Use pip or conda to install xlrd."}
+{"ts": "2026-11-17T15:19:00", "msg": "  [HarvardX/MITx] 用户量 50000 超上限，随机抽样 50000 人"}
+{"ts": "2026-11-17T15:19:00", "msg": "  [HarvardX/MITx] 已加载 hmx_cleaned.csv  用户 n=50000"}
+{"ts": "2026-11-17T15:19:01", "msg": "  [EduData/ASSISTments] 已加载 skill_builder_data_corrected.csv  学生 n=4217, 答题记录 401756 条"}
+{"ts": "2026-11-17T15:19:01", "msg": "\n统一数据集: 61915 名学生 × 28 列, 来源分布: {'real:harvardx_mitx_person_course': 50000, 'real:thu_shortvideo': 6654, 'real:edudata_assistments_2009': 4217, 'real:uci_student_performance': 1044}"}
+{"ts": "2026-11-17T15:19:01", "msg": "  事件流来源 load_thu_shortvideo: 169097 条"}
+{"ts": "2026-11-17T15:19:01", "msg": "  事件流适配器 load_mooc_tianchi 失败: Missing optional dependency 'xlrd'. Install xlrd >= 2.0.1 for xls Excel support Use pip or conda to install xlrd."}
+{"ts": "2026-11-17T15:19:01", "msg": "[2/9] 特征层：EDA 与清洗完成"}
+{"ts": "2026-11-17T15:19:01", "msg": "  聚类特征（缺失率 ≤ 40%）: ['total_clicks', 'active_days', 'avg_session_min', 'forum_posts', 'resource_clicks', 'video_clicks', 'quiz_attempts', 'avg_quiz_score', 'help_requests', 'accuracy', 'avg_response_time', 'engagement_score', 'hint_usage', 'success_rate']"}
+{"ts": "2026-11-17T15:19:01", "msg": "[3/9] 分析层：命名主成分 + K-Means 聚类画像"}
+{"ts": "2026-11-17T15:19:02", "msg": "  PCA 主成分命名: PC1=学习投入度(23.5%), PC2=互动活跃度(22.5%), PC3=学业表现(13.6%), PC4=学习投入度(次要)(9.1%)"}
+{"ts": "2026-11-17T15:19:19", "msg": "  自动选择 K = 4（轮廓系数 0.558，肘部拐点 K=4，各 K 综合得分: {2: 0.46, 3: 0.91, 4: 1.0, 5: 0.99, 6: 0.67, 7: 0.12, 8: 0.27}）"}
+{"ts": "2026-11-17T15:19:21", "msg": "  K-Means(K=4, backend=torch)  Silhouette(基于 15000 样本) = 0.558"}
+{"ts": "2026-11-17T15:19:21", "msg": "  PCA 方差解释率: PC1=23.5%, PC2=22.5%"}
+{"ts": "2026-11-17T15:19:24", "msg": "[4/9] 挖掘层：SNA + LSA + 时序模式 + Apriori 路径挖掘 + 场景对比"}
+{"ts": "2026-11-17T15:21:31", "msg": "  SNA 完成: 6654 学习者 / 14791 资源节点; PageRank Top 资源: ['V97998', 'V32880', 'V10164']"}
+{"ts": "2026-11-17T15:21:32", "msg": "  LSA 完成: 行为模式分布 {'刷课': 6437, '正常': 217}"}
+{"ts": "2026-11-17T15:21:38", "msg": "  时序模式分布: {'常规型学习': 2661, '集中式周末学习': 2260, '碎片化高频学习': 1453, '夜间型学习': 280}"}
+{"ts": "2026-11-17T15:21:40", "msg": "  Apriori 规则 2 条; 只看短视频跳过完整慕课占比: 100.0%"}
+{"ts": "2026-11-17T15:21:42", "msg": "  场景对比: {'短视频': {'完播率': 0.347, '倍速使用率': 0.0, '平均拖拽次数': nan}}"}
+{"ts": "2026-11-17T15:21:42", "msg": "  人口结构: 核心群体 {'gender': '男', 'age_band': '26-30', 'region': '城市', 'education': '本科'}"}
+{"ts": "2026-11-17T15:21:43", "msg": "[5/9] 关联层：皮尔逊相关 + 异质性分析 + 投入度分层"}
+{"ts": "2026-11-17T15:21:43", "msg": "  相关性 Top3（成绩）: [{'indicator': 'avg_quiz_score', 'pearson_r': 0.654}, {'indicator': 'resource_clicks', 'pearson_r': 0.651}, {'indicator': 'active_days', 'pearson_r': 0.596}]"}
+{"ts": "2026-11-17T15:21:43", "msg": "  异质性分析: 各群体学习时长-成绩相关系数范围 [0.123, 0.225]"}
+{"ts": "2026-11-17T15:21:44", "msg": "  投入分层: 高投入组较低投入组 完成率 +49.0%, 成绩 +10.9 分"}
+{"ts": "2026-11-17T15:21:44", "msg": "[6/9] 预测层：RF/GBDT 学业表现 + 风险预警 + GM(1,1) 趋势预测"}
+{"ts": "2026-11-17T15:21:55", "msg": "  RF 学业表现预测: 最终成绩 R²=1.000 (MAE=0.01), 完成率 R²=0.849, 完成判定 acc=0.972"}
+{"ts": "2026-11-17T15:22:10", "msg": "  扩展建模: 最佳模型=GradientBoosting 成绩等级 acc=1.000 recall=1.000; 认证 acc=0.972; Top5 关键行为: ['avg_quiz_score', 'resource_clicks', 'success_rate', 'accuracy', 'active_days']"}
+{"ts": "2026-11-17T15:22:11", "msg": "  LogisticRegression 成功预测: acc=0.994 AUC=0.999"}
+{"ts": "2026-11-17T15:22:26", "msg": "  RandomForest 风险预测 5-fold AUC: 全特征=0.998  早期特征(['total_clicks', 'active_days', 'engagement_score', 'avg_session_min'])=0.873"}
+{"ts": "2026-11-17T15:22:36", "msg": "  RandomForest 由行为预测画像标签: acc=0.974 (classes=['At-Risk / Disengaged', 'At-Risk / Disengaged (Low Engagement)', 'Guided Learner', 'Independent Deep Learner'])"}
+{"ts": "2026-11-17T15:22:38", "msg": "  GM(1,1) 完成: 有效预测 6654/6654 人, 趋势分布 {'下降': 3757, '平稳': 1660, '上升': 1237}, 模型精度分布 {'优': 3462, '合格': 2962, '良': 230}"}
+{"ts": "2026-11-17T15:22:38", "msg": "[7/9] 评价层：AHP 模糊综合评判 + 系统动力学仿真"}
+{"ts": "2026-11-17T15:22:38", "msg": "  AHP 权重: {'学习行为': 0.32, '学习效果': 0.558, '互动参与': 0.122}  一致性 CR=0.016 (通过)"}
+{"ts": "2026-11-17T15:22:49", "msg": "  学习质量评分: 均值=42.8, 等级分布 {'差': 57081, '中': 3861, '良': 584, '优': 389}"}
+{"ts": "2026-11-17T15:22:49", "msg": "  SD 仿真: 52 周后最优策略 = 加强资源供给（投入水平 1.0）"}
+{"ts": "2026-11-17T15:22:49", "msg": "[8/9] 决策层：干预队列 + 内容推荐 + 优化建议"}
+{"ts": "2026-11-17T15:23:46", "msg": "  优化建议: 输出 9 条落地策略"}
+{"ts": "2026-11-17T15:23:46", "msg": "[9/9] 输出层：导出结果与报告"}
+{"ts": "2026-11-17T15:23:48", "msg": "\n============================================================"}
+{"ts": "2026-11-17T15:23:48", "msg": "  LEARNER PERSONA SUMMARY"}
+{"ts": "2026-11-17T15:23:48", "msg": "============================================================"}
+{"ts": "2026-11-17T15:23:48", "msg": "\n  At-Risk / Disengaged  (n=50235, 81.1%)"}
+{"ts": "2026-11-17T15:23:48", "msg": "  Profile : 点击与活跃天数极低、得分差、几乎无互动，流失风险高。"}
+{"ts": "2026-11-17T15:23:48", "msg": "  Content : 短微内容单元、游戏化激励、主动推送通知、导师早期介入。"}
+{"ts": "2026-11-17T15:23:48", "msg": "\n  At-Risk / Disengaged (Low Engagement)  (n=808, 1.3%)"}
+{"ts": "2026-11-17T15:23:48", "msg": "  Profile : 点击与活跃天数极低、得分差、几乎无互动，流失风险高。"}
+{"ts": "2026-11-17T15:23:48", "msg": "  Content : 短微内容单元、游戏化激励、主动推送通知、导师早期介入。"}
+{"ts": "2026-11-17T15:23:48", "msg": "\n  Guided Learner  (n=795, 1.3%)"}
+{"ts": "2026-11-17T15:23:48", "msg": "  Profile : 中等投入、偏好视频、频繁求助、依赖结构化指导。"}
+{"ts": "2026-11-17T15:23:48", "msg": "  Content : 分步视频教程、例题演示、即时反馈测验、脚手架式学习路径。"}
+{"ts": "2026-11-17T15:23:48", "msg": "\n  Independent Deep Learner  (n=10077, 16.3%)"}
+{"ts": "2026-11-17T15:23:48", "msg": "  Profile : 高投入、深度探索内容、测验得分高、极少求助。"}
+{"ts": "2026-11-17T15:23:48", "msg": "  Content : 研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。"}
+{"ts": "2026-11-17T15:23:48", "msg": "\n输出文件已保存至 out/:"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - apriori_rules.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - apriori_rules.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - behavior_baseline.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - correlation_results.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - correlation_top_factors.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - demographics_cross.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - demographics_distribution.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - early_warning_students.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - eda_summary.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - elbow_silhouette.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - engagement_tier_analysis.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - engagement_tiers.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - gm11_forecast.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - group_behavior_comparison.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - heatmap_features.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - heterogeneity_analysis.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - learner_profiles.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - learning_quality_scores.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - logreg_coefficients.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - lsa_behavior_patterns.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - lsa_transition_counts.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - lsa_transition_graph.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - lsa_transition_zscores.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - model_feature_importance.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - optimization_suggestions.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - pca_clusters.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - pca_component_scores.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - pca_loadings.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - pca_projection.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - persona_recommendations.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - pipeline_log.jsonl"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - quality_score_distribution.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - queues.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - radar_personas.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - report.md"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - rf_feature_importance.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - rf_feature_importance.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - rf_grade_feature_importance.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - scene_comparison.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - scene_comparison.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - scene_per_student.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - sd_simulation.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - sd_simulation_results.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - sna_learner_metrics.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - sna_network.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - sna_resource_metrics.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - sna_top_paths.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - teacher_reviews.csv"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - temporal_patterns.png"}
+{"ts": "2026-11-17T15:23:48", "msg": "  - temporal_student_patterns.csv"}
+{"ts": "2026-11-17T15:26:23", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-17T15:26:26", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-17T15:26:26", "msg": "============================================================"}
+{"ts": "2026-11-17T15:26:26", "msg": "  统一学习行为分析管线启动"}
+{"ts": "2026-11-17T15:26:26", "msg": "============================================================"}
+{"ts": "2026-11-17T15:26:26", "msg": "[1/9] 数据层：多源加载与统一（含人口属性）"}
+{"ts": "2026-11-17T15:26:26", "msg": "  [UCI Student Performance] 已加载 student-mat.csv  n=395"}
+{"ts": "2026-11-17T15:26:26", "msg": "  [UCI Student Performance] 已加载 student-por.csv  n=649"}
+{"ts": "2026-11-17T15:26:29", "msg": "  [清华短视频] 已加载 interaction_sampled.csv  用户 n=6654, 行为记录 794053 条"}
+{"ts": "2026-11-17T15:26:30", "msg": "  [天池慕课] 已加载 user_learning_behavior.xls  学习者 n=715, 行为事件 4985 条"}
+{"ts": "2026-11-17T15:26:30", "msg": "  [HarvardX/MITx] 用户量 50000 超上限，随机抽样 50000 人"}
+{"ts": "2026-11-17T15:26:30", "msg": "  [HarvardX/MITx] 已加载 hmx_cleaned.csv  用户 n=50000"}
+{"ts": "2026-11-17T15:26:31", "msg": "  [EduData/ASSISTments] 已加载 skill_builder_data_corrected.csv  学生 n=4217, 答题记录 401756 条"}
+{"ts": "2026-11-17T15:26:31", "msg": "\n统一数据集: 62630 名学生 × 28 列, 来源分布: {'real:harvardx_mitx_person_course': 50000, 'real:thu_shortvideo': 6654, 'real:edudata_assistments_2009': 4217, 'real:uci_student_performance': 1044, 'real:tianchi_mooc_2024_2025': 715}"}
+{"ts": "2026-11-17T15:26:31", "msg": "  事件流来源 load_thu_shortvideo: 169097 条"}
+{"ts": "2026-11-17T15:26:31", "msg": "  事件流来源 load_mooc_tianchi: 4985 条"}
+{"ts": "2026-11-17T15:26:31", "msg": "[2/9] 特征层：EDA 与清洗完成"}
+{"ts": "2026-11-17T15:26:31", "msg": "  聚类特征（缺失率 ≤ 40%）: ['total_clicks', 'active_days', 'avg_session_min', 'forum_posts', 'resource_clicks', 'video_clicks', 'quiz_attempts', 'avg_quiz_score', 'help_requests', 'accuracy', 'avg_response_time', 'engagement_score', 'hint_usage', 'success_rate']"}
+{"ts": "2026-11-17T15:26:32", "msg": "[3/9] 分析层：命名主成分 + K-Means 聚类画像"}
+{"ts": "2026-11-17T15:26:32", "msg": "  PCA 主成分命名: PC1=学习投入度(24.3%), PC2=互动活跃度(22.4%), PC3=学业表现(13.7%), PC4=学业表现(次要)(11.3%)"}
+{"ts": "2026-11-17T15:26:38", "msg": "  K-Means(K=5, backend=torch)  Silhouette(基于 15000 样本) = 0.579"}
+{"ts": "2026-11-17T15:26:38", "msg": "  PCA 方差解释率: PC1=24.3%, PC2=22.4%"}
+{"ts": "2026-11-17T15:26:41", "msg": "[4/9] 挖掘层：SNA + LSA + 时序模式 + Apriori 路径挖掘 + 场景对比"}
+{"ts": "2026-11-17T15:29:51", "msg": "  SNA 完成: 7369 学习者 / 19432 资源节点; PageRank Top 资源: ['V97998', 'V32880', 'V10164']"}
+{"ts": "2026-11-17T15:29:53", "msg": "  LSA 完成: 行为模式分布 {'刷课': 6479, '正常': 776, '跳步学习': 114}"}
+{"ts": "2026-11-17T15:29:59", "msg": "  时序模式分布: {'常规型学习': 3049, '集中式周末学习': 2471, '碎片化高频学习': 1453, '夜间型学习': 396}"}
+{"ts": "2026-11-17T15:30:01", "msg": "  Apriori 规则 9 条; 只看短视频跳过完整慕课占比: 90.3%"}
+{"ts": "2026-11-17T15:30:04", "msg": "  场景对比: {'慕课长视频': {'完播率': 0.375, '倍速使用率': 0.429, '平均拖拽次数': nan}, '短视频': {'完播率': 0.347, '倍速使用率': 0.0, '平均拖拽次数': nan}}"}
+{"ts": "2026-11-17T15:30:04", "msg": "  人口结构: 核心群体 {'gender': '男', 'age_band': '26-30', 'region': '城市', 'education': '本科'}"}
+{"ts": "2026-11-17T15:30:04", "msg": "[5/9] 关联层：皮尔逊相关 + 异质性分析 + 投入度分层"}
+{"ts": "2026-11-17T15:30:05", "msg": "  相关性 Top3（成绩）: [{'indicator': 'resource_clicks', 'pearson_r': 0.588}, {'indicator': 'avg_quiz_score', 'pearson_r': 0.554}, {'indicator': 'active_days', 'pearson_r': 0.54}]"}
+{"ts": "2026-11-17T15:30:05", "msg": "  异质性分析: 各群体学习时长-成绩相关系数范围 [0.123, 0.225]"}
+{"ts": "2026-11-17T15:30:05", "msg": "  投入分层: 高投入组较低投入组 完成率 +50.0%, 成绩 +12.5 分"}
+{"ts": "2026-11-17T15:30:05", "msg": "[6/9] 预测层：RF/GBDT 学业表现 + 风险预警 + GM(1,1) 趋势预测"}
+{"ts": "2026-11-17T15:30:16", "msg": "  RF 学业表现预测: 最终成绩 R²=0.793 (MAE=1.66), 完成率 R²=0.844, 完成判定 acc=0.966"}
+{"ts": "2026-11-17T15:30:34", "msg": "  扩展建模: 最佳模型=GradientBoosting 成绩等级 acc=0.970 recall=0.451; 认证 acc=0.966; Top5 关键行为: ['resource_clicks', 'avg_quiz_score', 'avg_session_min', 'avg_response_time', 'active_days']"}
+{"ts": "2026-11-17T15:30:35", "msg": "  LogisticRegression 成功预测: acc=0.974 AUC=0.993"}
+{"ts": "2026-11-17T15:30:46", "msg": "  RandomForest 风险预测 5-fold AUC: 全特征=0.981  早期特征(['total_clicks', 'active_days', 'engagement_score', 'avg_session_min'])=0.872"}
+{"ts": "2026-11-17T15:30:54", "msg": "  RandomForest 由行为预测画像标签: acc=0.969 (classes=['At-Risk / Disengaged', 'At-Risk / Disengaged (Low Engagement)', 'Guided Learner', 'Independent Deep Learner', 'Low-Engagement Strong-Performance Learner'])"}
+{"ts": "2026-11-17T15:31:00", "msg": "  GM(1,1) 完成: 有效预测 7369/7369 人, 趋势分布 {'平稳': 7311, '上升': 41, '下降': 17}, 模型精度分布 {'合格': 7367, '优': 2}"}
+{"ts": "2026-11-17T15:31:00", "msg": "[7/9] 评价层：AHP 模糊综合评判 + 系统动力学仿真"}
+{"ts": "2026-11-17T15:31:00", "msg": "  AHP 权重: {'学习行为': 0.32, '学习效果': 0.558, '互动参与': 0.122}  一致性 CR=0.016 (通过)"}
+{"ts": "2026-11-17T15:31:11", "msg": "  学习质量评分: 均值=45.0, 等级分布 {'差': 54255, '良': 4164, '中': 3820, '优': 391}"}
+{"ts": "2026-11-17T15:31:11", "msg": "  SD 仿真: 52 周后最优策略 = 加强资源供给（投入水平 1.0）"}
+{"ts": "2026-11-17T15:31:11", "msg": "[8/9] 决策层：干预队列 + 内容推荐 + 优化建议"}
+{"ts": "2026-11-17T15:32:05", "msg": "  优化建议: 输出 11 条落地策略"}
+{"ts": "2026-11-17T15:32:05", "msg": "[9/9] 输出层：导出结果与报告"}
+{"ts": "2026-11-17T15:32:07", "msg": "\n============================================================"}
+{"ts": "2026-11-17T15:32:07", "msg": "  LEARNER PERSONA SUMMARY"}
+{"ts": "2026-11-17T15:32:07", "msg": "============================================================"}
+{"ts": "2026-11-17T15:32:07", "msg": "\n  At-Risk / Disengaged  (n=50339, 80.4%)"}
+{"ts": "2026-11-17T15:32:07", "msg": "  Profile : 点击与活跃天数极低、得分差、几乎无互动，流失风险高。"}
+{"ts": "2026-11-17T15:32:07", "msg": "  Content : 短微内容单元、游戏化激励、主动推送通知、导师早期介入。"}
+{"ts": "2026-11-17T15:32:07", "msg": "\n  At-Risk / Disengaged (Low Engagement)  (n=783, 1.3%)"}
+{"ts": "2026-11-17T15:32:07", "msg": "  Profile : 点击与活跃天数极低、得分差、几乎无互动，流失风险高。"}
+{"ts": "2026-11-17T15:32:07", "msg": "  Content : 短微内容单元、游戏化激励、主动推送通知、导师早期介入。"}
+{"ts": "2026-11-17T15:32:07", "msg": "\n  Guided Learner  (n=931, 1.5%)"}
+{"ts": "2026-11-17T15:32:07", "msg": "  Profile : 中等投入、偏好视频、频繁求助、依赖结构化指导。"}
+{"ts": "2026-11-17T15:32:07", "msg": "  Content : 分步视频教程、例题演示、即时反馈测验、脚手架式学习路径。"}
+{"ts": "2026-11-17T15:32:07", "msg": "\n  Independent Deep Learner  (n=9826, 15.7%)"}
+{"ts": "2026-11-17T15:32:07", "msg": "  Profile : 高投入、深度探索内容、测验得分高、极少求助。"}
+{"ts": "2026-11-17T15:32:07", "msg": "  Content : 研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。"}
+{"ts": "2026-11-17T15:32:07", "msg": "\n  Low-Engagement Strong-Performance Learner  (n=751, 1.2%)"}
+{"ts": "2026-11-17T15:32:07", "msg": "  Profile : "}
+{"ts": "2026-11-17T15:32:07", "msg": "  Content : 按簇中心特征定制内容策略"}
+{"ts": "2026-11-17T15:32:07", "msg": "\n输出文件已保存至 out/:"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - apriori_rules.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - apriori_rules.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - behavior_baseline.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - correlation_results.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - correlation_top_factors.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - demographics_cross.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - demographics_distribution.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - early_warning_students.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - eda_summary.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - elbow_silhouette.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - engagement_tier_analysis.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - engagement_tiers.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - gm11_forecast.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - group_behavior_comparison.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - heatmap_features.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - heterogeneity_analysis.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - learner_profiles.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - learning_quality_scores.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - logreg_coefficients.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - lsa_behavior_patterns.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - lsa_transition_counts.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - lsa_transition_graph.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - lsa_transition_zscores.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - model_feature_importance.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - optimization_suggestions.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - pca_clusters.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - pca_component_scores.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - pca_loadings.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - pca_projection.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - persona_recommendations.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - pipeline_log.jsonl"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - quality_score_distribution.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - queues.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - radar_personas.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - report.md"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - rf_feature_importance.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - rf_feature_importance.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - rf_grade_feature_importance.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - scene_comparison.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - scene_comparison.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - scene_per_student.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - sd_simulation.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - sd_simulation_results.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - sna_learner_metrics.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - sna_network.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - sna_resource_metrics.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - sna_top_paths.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - teacher_reviews.csv"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - temporal_patterns.png"}
+{"ts": "2026-11-17T15:32:07", "msg": "  - temporal_student_patterns.csv"}

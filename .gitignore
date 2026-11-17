@@ -3,3 +3,4 @@ _repos/*
 out/*.csv
 *.csv
 notebooks/*
+__pycache__/*.pyc

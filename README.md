@@ -2,21 +2,17 @@
 
 从在线学习行为数据中识别学生画像（Learner Persona）的完整分析管线：融合**多个真实公开数据集**，覆盖数据清洗、EDA、聚类画像、行为模式挖掘、关联分析、预测预警、AHP 评价、干预决策与报告输出全流程，入口为单个可直接运行的 `main.py`。
 
-**本项目只使用真实公开数据集，不生成任何虚拟或合成数据。**
 
-本项目整合了 7 个开源学习分析项目的方法论：
+本项目整合了 4 个开源学习分析项目的方法论：
 
 | 来源仓库 | 主要方向 | 整合进本项目的功能 |
 |---|---|---|
 | [Learner-Persona-Detection-via-Behavioral-Clustering](https://github.com/najigit/Learner-Persona-Detection-via-Behavioral-Clustering) | 学习行为聚类识别学习者类型 | K-Means 画像管线、肘部拐点 + 轮廓系数综合选 K、PCA 散点 / 雷达图 / 特征热力图、4 类画像定义与内容推荐 |
 | [Learning-analytics-data-pipeline](https://github.com/AloneMask001/Learning-analytics-data-pipeline) | 学习数据清洗、EDA、成功预测与画像 | 数据清洗（去重、IQR 离群截断、中值填充）、LogisticRegression 成功/风险预测 |
-| [student-learning-analytics-dss](https://github.com/wyou0410/student-learning-analytics-dss) | 动态画像、教师复核和报告生成 | 规则引擎干预队列（support / enrichment / review）、教师复核闭环、Markdown 报告输出 |
 | [ai-personalized-learning](https://github.com/elmersonrajan/ai-personalized-learning) | 学习者画像与个性化学习推荐 | 交互指标（accuracy / hesitation / engagement / hint_usage）纳入统一 schema、分画像内容推荐 |
 | [MSc_Thesis_Learning_Analytics](https://github.com/shirgreif/MSc_Thesis_Learning_Analytics) | 行为日志分析与早期预测 | 事件流特征工程思路、RF 由行为特征预测画像标签、"早期特征 vs 全特征"对比预警 |
-| [Studylytics](https://github.com/shwetha-researcher/Studylytics) | 学习行为分析与认知画像（无代码，仅设计参考） | 响应延迟、engagement 等认知类指标纳入统一特征 schema |
-| [user2code2vec](https://github.com/dazcona/user2code2vec) | 从学生编程提交构建学习者画像 | 代码提交数据源：AST / token 统计特征（代码行数、函数数、调用数、注释率） |
 
-> **说明**：各仓库形态差异大（notebook / Streamlit 应用 / 仅 PDF 报告）且许可证不一，本项目**不搬运源码**，而是自研统一实现上述功能。参考仓库克隆在 `_repos/` 目录（其中天池慕课与 HarvardX/MITx 数据集也存放于此，见下文）。
+> **说明**：各仓库形态差异大且许可证不一，本项目不搬运源码，而是自研统一实现上述功能。参考仓库克隆在 `_repos/` 目录（其中天池慕课与 HarvardX/MITx 数据集也存放于此，见下文）。
 
 ---
 
@@ -55,7 +51,6 @@ python main.py --device cpu       # 强制 CPU（sklearn 多核并行）
 | 阿里云天池《中国高校慕课课程多维画像与学习行为脱敏样本(2024–2025)》 | 715 学习者 / 5,000 事件 | 视频播放/测验/作业/论坛/资源下载/课程评价 | `_repos/阿里云天池…/` |
 | HarvardX/MITx Person Course Dataset | 抽样 5 万用户（全量 32 万可调） | edX 2012-2013 两校课程：事件数/活跃天数/视频/论坛/章节/结业标签/人口属性 | `_repos/HarvardX_MITx…/` |
 | EduData 集成包（中科大）托管的 ASSISTments 2009 | 4,217 学生 / 40 万条答题 | 中学数学答题行为：正确性、首答时长、提示使用、知识技能 | `data/real/edudata/assistment_2009/` |
-| data/ 目录通用扫描 | — | CSV/XLSX 汇总表、JSONL 事件流、`submissions/<学生ID>/*.py` 代码提交 | `data/` |
 
 每个适配器实现统一接口，返回 `(features_frames, clicks_df|None)`：
 - 特征表含 `student_id`（加源前缀防冲突）/ `source` / 统一特征列 + 标签与人口属性列；
@@ -81,6 +76,8 @@ curl -o data/real/edudata/assistment_2009.zip \
 #    http://fi.ee.tsinghua.edu.cn/datasets/short-video-dataset
 
 # 4) 天池慕课 / HarvardX/MITx：已在 _repos/ 目录内
+
+# 5）OULAD data，无法下载，需要教职工才行 (download from [here](https://analyse.kmi.open.ac.uk/open_dataset))
 ```
 
 ### 1.3 统一特征 schema
