@@ -1,24 +1,13 @@
 {
   "meta": {
-    "title": "六维学习者画像建模结果",
-    "data": "OULAD 真实主表（20,105 条，英国）+ 清华 FIB 短视频 sampled（794,053 事件 / 6,654 用户，中国）+ 阿里云天池脱敏微课样本（5,000 事件 / 715 学习者，中国）",
-    "n_main": 20105,
     "no_simulation": true,
     "dimensions": [
-      "地区差异(英国)",
-      "专业背景",
-      "学习习惯",
+      "观看时段偏好",
       "兴趣爱好",
       "短视频人口与行为(国内)",
       "天池倍速与终端标签(国内)"
     ],
     "region_sources": [
-      {
-        "source": "OULAD",
-        "region": "英国 13 大区（locale）",
-        "n": 20105,
-        "domestic": false
-      },
       {
         "source": "清华 FIB 短视频",
         "region": "中国 365 城市 + 一线~五线等级",
@@ -33,439 +22,63 @@
       }
     ],
     "ethics": [
-      "地域有国内与英国两类：OULAD 为英国 13 大区（locale，非国籍）；短视频为中国 365 城市与城市等级，天池为国内脱敏微课。二者分层呈现，不合并、不互推。",
-      "专业背景以学历与课程模块代理，数据无专业自陈字段。",
       "兴趣由内容观看占比推断，属行为偏好代理，非心理测量。",
       "观看完成度为 watch_time/duration 截断 1 的代理，非真实完课率。",
       "倍速、设备、网络、预习均为观察性标签，关联非因果，不用于个体评价或惩戒。"
     ]
   },
-  "region": {
+  "time_of_day": {
     "rows": [
       {
-        "group": "爱尔兰",
-        "n": 789,
-        "share": 0.0392,
-        "pass_rate": 0.5805,
-        "visits": 516.63,
-        "active_days": 23.41,
-        "study_hours": 0.861
+        "group": "晚间 (18-21)",
+        "users": 2171,
+        "share": 0.3263
       },
       {
-        "group": "南部",
-        "n": 1883,
-        "share": 0.0937,
-        "pass_rate": 0.5374,
-        "visits": 498.61,
-        "active_days": 22.94,
-        "study_hours": 0.831
+        "group": "下午 (12-17)",
+        "users": 2145,
+        "share": 0.3224
       },
       {
-        "group": "东南",
-        "n": 1328,
-        "share": 0.0661,
-        "pass_rate": 0.5294,
-        "visits": 457.62,
-        "active_days": 21.96,
-        "study_hours": 0.763
+        "group": "上午 (6-11)",
+        "users": 1460,
+        "share": 0.2194
       },
       {
-        "group": "北部",
-        "n": 1102,
-        "share": 0.0548,
-        "pass_rate": 0.5218,
-        "visits": 573.03,
-        "active_days": 25.42,
-        "study_hours": 0.955
+        "group": "深夜 (22-23)",
+        "users": 629,
+        "share": 0.0945
       },
       {
-        "group": "苏格兰",
-        "n": 2285,
-        "share": 0.1137,
-        "pass_rate": 0.5195,
-        "visits": 554.96,
-        "active_days": 24.38,
-        "study_hours": 0.925
-      },
-      {
-        "group": "东盎格利亚",
-        "n": 2034,
-        "share": 0.1012,
-        "pass_rate": 0.5118,
-        "visits": 444.41,
-        "active_days": 21.37,
-        "study_hours": 0.741
-      },
-      {
-        "group": "西南",
-        "n": 1477,
-        "share": 0.0735,
-        "pass_rate": 0.5098,
-        "visits": 463.37,
-        "active_days": 22.08,
-        "study_hours": 0.773
-      },
-      {
-        "group": "东米德兰兹",
-        "n": 1454,
-        "share": 0.0723,
-        "pass_rate": 0.4842,
-        "visits": 446.86,
-        "active_days": 20.74,
-        "study_hours": 0.745
-      },
-      {
-        "group": "约克郡",
-        "n": 1211,
-        "share": 0.0602,
-        "pass_rate": 0.4748,
-        "visits": 429.77,
-        "active_days": 20.74,
-        "study_hours": 0.717
-      },
-      {
-        "group": "威尔士",
-        "n": 1329,
-        "share": 0.0661,
-        "pass_rate": 0.462,
-        "visits": 451.81,
-        "active_days": 20.64,
-        "study_hours": 0.753
-      },
-      {
-        "group": "西米德兰兹",
-        "n": 1564,
-        "share": 0.0778,
-        "pass_rate": 0.4527,
-        "visits": 429.84,
-        "active_days": 20.63,
-        "study_hours": 0.717
-      },
-      {
-        "group": "伦敦",
-        "n": 1883,
-        "share": 0.0937,
-        "pass_rate": 0.4493,
-        "visits": 449.06,
-        "active_days": 20.3,
-        "study_hours": 0.749
-      },
-      {
-        "group": "西北",
-        "n": 1766,
-        "share": 0.0878,
-        "pass_rate": 0.4281,
-        "visits": 444.76,
-        "active_days": 20.75,
-        "study_hours": 0.741
+        "group": "凌晨 (0-5)",
+        "users": 249,
+        "share": 0.0374
       }
     ],
-    "chi2": {
-      "chi2": 122.085,
-      "p": "<1e-6",
-      "dof": 12,
-      "cramers_v": 0.0779,
-      "n": 20105,
-      "significant": true
-    },
-    "kw_visits": {
-      "H": 205.71,
-      "p": "<1e-6",
-      "groups": 13,
-      "significant": true
-    },
-    "kw_hours": {
-      "H": 205.969,
-      "p": "<1e-6",
-      "groups": 13,
-      "significant": true
-    },
-    "note": "地区为英国开放大学学习者地域分类（locale），非国籍；差异为观察性关联，不作因果解释。"
-  },
-  "background": {
-    "education": [
+    "user_pref": [
       {
-        "group": "无正式学历",
-        "n": 198,
-        "share": 0.0098,
-        "pass_rate": 0.2778,
-        "visits": 295.09,
-        "active_days": 13.88,
-        "study_hours": 0.492
+        "group": "晚间 (18-21)",
+        "share": 0.3263
       },
       {
-        "group": "低于A-Level",
-        "n": 8048,
-        "share": 0.4003,
-        "pass_rate": 0.4122,
-        "visits": 431.93,
-        "active_days": 19.96,
-        "study_hours": 0.72
+        "group": "下午 (12-17)",
+        "share": 0.3224
       },
       {
-        "group": "A-Level或同等",
-        "n": 8703,
-        "share": 0.4329,
-        "pass_rate": 0.5421,
-        "visits": 472.61,
-        "active_days": 22.39,
-        "study_hours": 0.788
+        "group": "上午 (6-11)",
+        "share": 0.2194
       },
       {
-        "group": "高等教育学历",
-        "n": 2975,
-        "share": 0.148,
-        "pass_rate": 0.5795,
-        "visits": 590.49,
-        "active_days": 25.99,
-        "study_hours": 0.984
+        "group": "深夜 (22-23)",
+        "share": 0.0945
       },
       {
-        "group": "研究生学历",
-        "n": 181,
-        "share": 0.009,
-        "pass_rate": 0.6519,
-        "visits": 616.73,
-        "active_days": 27.25,
-        "study_hours": 1.028
+        "group": "凌晨 (0-5)",
+        "share": 0.0374
       }
     ],
-    "discipline": [
-      {
-        "group": "AAA",
-        "n": 748,
-        "share": 0.0372,
-        "pass_rate": 0.7099,
-        "visits": 661.63,
-        "active_days": 31.09,
-        "study_hours": 1.103
-      },
-      {
-        "group": "GGG",
-        "n": 1701,
-        "share": 0.0846,
-        "pass_rate": 0.6091,
-        "visits": 115.49,
-        "active_days": 9.98,
-        "study_hours": 0.193
-      },
-      {
-        "group": "EEE",
-        "n": 2240,
-        "share": 0.1114,
-        "pass_rate": 0.5772,
-        "visits": 596.66,
-        "active_days": 27.03,
-        "study_hours": 0.995
-      },
-      {
-        "group": "BBB",
-        "n": 4529,
-        "share": 0.2253,
-        "pass_rate": 0.4911,
-        "visits": 243.1,
-        "active_days": 14.7,
-        "study_hours": 0.405
-      },
-      {
-        "group": "FFF",
-        "n": 4648,
-        "share": 0.2312,
-        "pass_rate": 0.4759,
-        "visits": 848.02,
-        "active_days": 28.65,
-        "study_hours": 1.414
-      },
-      {
-        "group": "DDD",
-        "n": 3741,
-        "share": 0.1861,
-        "pass_rate": 0.4333,
-        "visits": 345.86,
-        "active_days": 23.91,
-        "study_hours": 0.577
-      },
-      {
-        "group": "CCC",
-        "n": 2498,
-        "share": 0.1242,
-        "pass_rate": 0.4063,
-        "visits": 461.05,
-        "active_days": 20.22,
-        "study_hours": 0.769
-      }
-    ],
-    "course_num": [
-      {
-        "group": "1 门",
-        "n": 17195,
-        "share": 0.8553,
-        "pass_rate": 0.5085,
-        "visits": 477.11,
-        "active_days": 21.94
-      },
-      {
-        "group": "2 门",
-        "n": 2814,
-        "share": 0.14,
-        "pass_rate": 0.4165,
-        "visits": 452.55,
-        "active_days": 21.88
-      },
-      {
-        "group": "≥3 门",
-        "n": 96,
-        "share": 0.0048,
-        "pass_rate": 0.1771,
-        "visits": 401.78,
-        "active_days": 17.81
-      }
-    ],
-    "chi2_edu": {
-      "chi2": 438.371,
-      "p": "<1e-6",
-      "dof": 4,
-      "cramers_v": 0.1477,
-      "n": 20105,
-      "significant": true
-    },
-    "chi2_disc": {
-      "chi2": 429.832,
-      "p": "<1e-6",
-      "dof": 6,
-      "cramers_v": 0.1462,
-      "n": 20105,
-      "significant": true
-    },
-    "kw_edu_visits": {
-      "H": 359.957,
-      "p": "<1e-6",
-      "groups": 5,
-      "significant": true
-    },
-    "note": "数据集无'专业'自陈字段，以入学学历与所选课程模块（学科方向）作为专业背景代理；课程模块为 OULAD 编码（AAA–GGG），原数据不提供学科中文名，故保留代码。"
-  },
-  "habit": {
-    "types": [
-      {
-        "group": "规律深耕型",
-        "n": 7271,
-        "share": 0.3617,
-        "pass_rate": 0.7571,
-        "lag": 1.05,
-        "active_days": 41.25,
-        "session_min": 2.34,
-        "video_rate": 0.322
-      },
-      {
-        "group": "稳定参与型",
-        "n": 1415,
-        "share": 0.0704,
-        "pass_rate": 0.6375,
-        "lag": 1.31,
-        "active_days": 32.43,
-        "session_min": 1.26,
-        "video_rate": 0.123
-      },
-      {
-        "group": "晚到追赶型",
-        "n": 320,
-        "share": 0.0159,
-        "pass_rate": 0.675,
-        "lag": 11.38,
-        "active_days": 28.56,
-        "session_min": 2.06,
-        "video_rate": 0.249
-      },
-      {
-        "group": "碎片专注型",
-        "n": 3853,
-        "share": 0.1916,
-        "pass_rate": 0.3966,
-        "lag": 4.96,
-        "active_days": 11.84,
-        "session_min": 2.37,
-        "video_rate": 0.215
-      },
-      {
-        "group": "浅触即离型",
-        "n": 7246,
-        "share": 0.3604,
-        "pass_rate": 0.2458,
-        "lag": 34.61,
-        "active_days": 5.5,
-        "session_min": 0.63,
-        "video_rate": 0.048
-      }
-    ],
-    "chi2": {
-      "chi2": 4104.439,
-      "p": "<1e-6",
-      "dof": 4,
-      "cramers_v": 0.4518,
-      "n": 20105,
-      "significant": true
-    },
-    "kw_lag": {
-      "H": 7498.003,
-      "p": "<1e-6",
-      "groups": 5,
-      "significant": true
-    },
-    "time_of_day": {
-      "rows": [
-        {
-          "group": "晚间 (18-21)",
-          "users": 2171,
-          "share": 0.3263
-        },
-        {
-          "group": "下午 (12-17)",
-          "users": 2145,
-          "share": 0.3224
-        },
-        {
-          "group": "上午 (6-11)",
-          "users": 1460,
-          "share": 0.2194
-        },
-        {
-          "group": "深夜 (22-23)",
-          "users": 629,
-          "share": 0.0945
-        },
-        {
-          "group": "凌晨 (0-5)",
-          "users": 249,
-          "share": 0.0374
-        }
-      ],
-      "user_pref": [
-        {
-          "group": "晚间 (18-21)",
-          "share": 0.3263
-        },
-        {
-          "group": "下午 (12-17)",
-          "share": 0.3224
-        },
-        {
-          "group": "上午 (6-11)",
-          "share": 0.2194
-        },
-        {
-          "group": "深夜 (22-23)",
-          "share": 0.0945
-        },
-        {
-          "group": "凌晨 (0-5)",
-          "share": 0.0374
-        }
-      ],
-      "n_users": 6654,
-      "note": "时段为用户主观看时段（短视频 p_hour，0–23 聚合）；OULAD 仅日粒度，二者分层呈现不合并。"
-    },
-    "note": "学习习惯分型由启动滞后、活跃密度、单次时长、资源覆盖四阈值规则生成，可解释、独立于成效；阈值来自真实分布分位，非仿真。"
+    "n_users": 6654,
+    "note": "时段为用户主观看时段（短视频 p_hour，0–23 聚合），国内真实数据。"
   },
   "interest": {
     "cat_watch": [
@@ -896,7 +509,7 @@
       }
     ],
     "finish_range": 0.035,
-    "note": "城市等级/城市/社区类型来自短视频数据 fre_city_level/fre_city/fre_community_type，为中国国内地域（非英国 OULAD）；性别年龄为用户自陈属性。观看完成度为 watch_time/duration 截断 1 的代理，非真实完课；全部为观察性关联。"
+    "note": "城市等级/城市/社区类型来自短视频数据 fre_city_level/fre_city/fre_community_type，为中国国内地域；性别年龄为用户自陈属性。观看完成度为 watch_time/duration 截断 1 的代理，非真实完课；全部为观察性关联。"
   },
   "tianchi": {
     "playback_speed": [
@@ -1144,6 +757,6 @@
     "n_learners": 715,
     "n_preview": 472,
     "n_video_events": 2614,
-    "note": "倍速/设备/操作系统/网络/预习标签来自天池脱敏微课样本（国内），全部真实。原始数据将非视频事件的倍速统一记为 1.0× 且其进度增益≈0，会造成虚假差异；故倍速与预习对照严格限定在 video_play 事件（2,614 条）内，避免该结构性伪影。设备/OS/网络为全事件分布；progress_delta=观看后进度−观看前进度；预习=remark 含‘课前预习’。均为观察性关联，非因果。"
+    "note": "倍速/设备/操作系统/网络/预习标签来自天池脱敏微课样本（国内），全部真实。原始数据将非视频事件的倍速统一记为 1.0× 且其进度增益≈0，会造成虚假差异；故倍速与预习对照严格限定在 video_play 事件内，避免该结构性伪影。设备/OS/网络为全事件分布；progress_delta=观看后进度−观看前进度；预习=remark 含‘课前预习’。均为观察性关联，非因果。"
   }
 }

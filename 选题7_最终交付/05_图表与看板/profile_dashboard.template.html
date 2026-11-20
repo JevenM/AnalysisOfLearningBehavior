@@ -64,8 +64,8 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:20px;border-t
 <header class="hero">
   <div class="hero-inner">
     <a class="back" href="persona_dashboard.html">← 形态画像看板</a>
-    <h1>四维学习者画像分析</h1>
-    <p class="sub">地区 · 专业背景 · 学习习惯 · 兴趣爱好 —— 从显性/隐性行为刻画群体，回答“不识其人，即知其理”</p>
+    <h1>内容级学习者画像分析</h1>
+    <p class="sub">观看时段 · 兴趣爱好 · 短视频人口属性 · 天池微课标签 —— 国内内容级真实数据，课程级行为由统一管线（主看板）分析</p>
     <nav class="tabs" id="tabs"></nav>
   </div>
 </header>
@@ -88,7 +88,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:20px;border-t
   <div class="note warn" id="ethics"></div>
 </div>
 <div id="tip"></div>
-<footer>全部数字来自真实公开数据（OULAD 英国 / 清华 FIB WWW2025 短视频·中国 / 阿里云天池微课·中国）· 由 profile_modeling.py 实算 · 群体关联非因果，不用于个体评价</footer>
+<footer>全部数字来自真实公开数据（清华 FIB WWW2025 短视频·中国 / 阿里云天池微课·中国）· 由 profile_modeling.py 实算 · 课程级行为见主看板（六源统一管线）· 群体关联非因果，不用于个体评价</footer>
 
 <script id="profile" type="application/json">__PROFILE_DATA__</script>
 <script>
@@ -110,47 +110,23 @@ function tipOff(){TIP.style.display='none';}
 
 const PALETTE=['#2E75B6','#2A9D8F','#D97706','#7B4FA8','#C0392B','#5B8C5A','#B7791F','#2E75B6','#1F5A94','#9A5B0B','#4A7C7E','#6C7A89','#8E6E53'];
 const DIMS=[
-  {id:'region', name:'地区差异', sub:'英国开放大学 13 类地域 · locale',
-   kpis:[['地区类别',d=>d.rows.length,'类'],['样本量',d=>d.rows.reduce((a,r)=>a+r.n,0).toLocaleString(),'条'],['通过率极差',d=>{const v=d.rows.map(r=>r.pass_rate);return pct(Math.max(...v)-Math.min(...v))},''],['Cramér’s V',d=>fx(d.chi2.cramers_v,3),'关联强度']],
-   chartTitle:'13 类地区的参与与成效对照', chartDesc:'按所选指标排序；条形长度=指标值，颜色区分高低。卡方检验显著但关联强度弱，说明地区携带信息但解释力有限。',
-   metrics:[['pass_rate','真实通过率'],['visits','访问次数'],['active_days','活跃天数'],['n','样本数']],
+  {id:'time_of_day', name:'观看时段偏好', sub:'短视频 p_hour 主观看时段（国内真实数据）',
+   kpis:[['用户数',d=>d.n_users.toLocaleString(),'人'],['时段档',d=>d.rows.length,'档'],
+         ['峰值时段',d=>d.rows.length?d.rows[0].group:'—',''],
+         ['晚间+下午占比',d=>{const g=d.rows.filter(r=>/晚间|下午/.test(r.group));return pct(g.reduce((a,r)=>a+r.share,0))},'']],
+   chartTitle:'用户主观看时段占比', chartDesc:'时段为用户主观看时段（p_hour 0–23 聚合），国内短视频真实数据。',
+   metrics:[['share','用户占比'],['users','用户数']],
    rows:d=>d.rows, label:r=>r.group,
-   stat:d=>`<div class="note"><b>差异检验</b>　卡方 χ²=${d.chi2.chi2}，df=${d.chi2.dof}，p${pv(d.chi2.p)} <span class="sig y">显著</span>；Cramér’s V=${d.chi2.cramers_v}（弱关联）。<br>地区间访问次数 Kruskal–Wallis H=${d.kw_visits.H}，p${pv(d.kw_visits.p)}。</div>`,
-   cols:[['group','地区'],['n','样本数'],['share','占比'],['pass_rate','通过率'],['visits','访问次数'],['active_days','活跃天数']],
-   fmt:(r,k)=>k==='n'?r.n.toLocaleString():(k==='share'||k==='pass_rate')?pct(r[k]):fx(r[k],k==='visits'?0:1),
-   extra:d=>''},
-  {id:'background', name:'专业背景', sub:'学历 + 课程模块 + 选课门数（代理口径）',
-   kpis:[['学历层次',d=>d.education.length,'类'],['学科模块',d=>d.discipline.length,'个'],['通过率跨度',d=>pct(d.education[d.education.length-1].pass_rate-d.education[0].pass_rate),'学历'],['最高通过率',d=>pct(Math.max(...d.education.map(r=>r.pass_rate))),'研究生']],
-   chartTitle:'学历层次与课程模块的成效梯度', chartDesc:'可切换“学历 / 课程模块 / 选课门数”。数据集无专业自陈字段，三者均为专业背景代理。',
-   metrics:[['pass_rate','真实通过率'],['visits','访问次数'],['n','样本数']],
-   rows:d=>d.education, label:r=>r.group,
-   stat:d=>`<div class="note"><b>差异检验</b>　学历×结果 χ²=${d.chi2_edu.chi2}（p${pv(d.chi2_edu.p)}，Cramér’s V=${d.chi2_edu.cramers_v}）；课程模块×结果 χ²=${d.chi2_disc.chi2}（p${pv(d.chi2_disc.p)}）。</div>`,
-   cols:[['group','分组'],['n','样本数'],['share','占比'],['pass_rate','通过率'],['visits','访问次数']],
-   fmt:(r,k)=>k==='n'?r.n.toLocaleString():(k==='share'||k==='pass_rate')?pct(r[k]):fx(r[k],0),
-   extra:d=>`<section class="card"><h2><span class="no">2</span>课程模块（学科方向）与选课门数</h2>
-     <p class="desc">课程模块为 OULAD 编码，原数据不提供学科中文名；选课门数为同一学习者注册的不同课程数（真实派生）。</p>
-     <div class="grid2"><div><h3>课程模块 × 通过率</h3><div class="chart" id="bgDisc"></div></div>
-     <div><h3>选课门数 × 通过率</h3><div class="chart" id="bgCnum"></div></div></div></section>`,
-   after:d=>{drawBars('bgDisc',d.discipline,'pass_rate',r=>r.group,v=>pct(v));drawBars('bgCnum',d.course_num,'pass_rate',r=>r.group,v=>pct(v));}},
-  {id:'habit', name:'学习习惯', sub:'行为节律分型（OULAD）+ 观看时段偏好（短视频）',
-   kpis:[['习惯分型',d=>d.types.length,'类'],['深耕型占比',d=>pct(d.types[0].share),''],['分型通过率差',d=>pct(d.types[0].pass_rate-d.types[d.types.length-1].pass_rate),''],['时段峰值',d=>{const p=d.time_of_day.user_pref;return p&&p.length?p[0].group:'—'},'']],
-   chartTitle:'五类学习习惯分型的规模与成效', chartDesc:'由启动滞后、活跃密度、单次时长、资源覆盖四阈值规则生成，可解释、独立于成效画像。可切换指标。',
-   metrics:[['pass_rate','真实通过率'],['share','人群占比'],['active_days','活跃天数'],['lag','启动滞后(天)'],['session_min','单次时长(分)']],
-   rows:d=>d.types, label:r=>r.group,
-   stat:d=>`<div class="note"><b>差异检验</b>　习惯分型×结果 χ²=${d.chi2.chi2}（p${pv(d.chi2.p)}）<span class="sig y">强关联</span>；启动滞后 Kruskal–Wallis H=${d.kw_lag.H}（p${pv(d.kw_lag.p)}）。四类维度中习惯信号最强。</div>`,
-   cols:[['group','习惯类型'],['n','人数'],['share','占比'],['pass_rate','通过率'],['lag','启动滞后'],['active_days','活跃天数'],['session_min','单次时长']],
-   fmt:(r,k)=>k==='n'?r.n.toLocaleString():(['share','pass_rate'].includes(k))?pct(r[k]):fx(r[k],k==='session_min'?2:1),
-   extra:d=>`<section class="card"><h2><span class="no">2</span>观看时段偏好 · 登录时间行为</h2>
-     <p class="desc">短视频小时级 p_hour（${d.sv_profile.n_users.toLocaleString()} 用户）显示观看高峰；OULAD 仅日粒度，二者分层呈现、不直接合并。</p>
-     <div class="grid2"><div><h3>用户主时段占比</h3><div class="chart" id="hbPref"></div></div>
-     <div><h3>各时段事件占比与完播代理</h3><div class="chart" id="hbTod"></div></div></div></section>`,
-   after:d=>{const t=d.time_of_day;if(t.user_pref){drawBars('hbPref',t.user_pref,'share',r=>r.group,v=>pct(v));}if(t.rows){drawBars('hbTod',t.rows,'share',r=>r.group,v=>pct(v));}}},
+   stat:d=>`<div class="note"><b>解读</b>　观看高峰集中在下午与晚间；知识内容做短并放入这些时段，才能被看到（"搭车"分发）。</div>`,
+   cols:[['group','时段'],['users','用户数'],['share','占比']],
+   fmt:(r,k)=>k==='users'?r.users.toLocaleString():pct(r.share),
+   extra:d=>'', after:null},
   {id:'interest', name:'兴趣爱好', sub:'短视频内容类目偏好（行为代理，非心理测量）',
    kpis:[['短视频用户',d=>d.n_users.toLocaleString(),'人'],['一级类目',d=>d.n_categories,'类'],['知识求知型',d=>{const r=d.interest_types.find(x=>x.group==='知识求知型');return r?pct(r.share):'—'},''],['多样性均值',d=>fx(d.diversity_mean,3),'归一化熵']],
    chartTitle:'内容类目观看时长占比', chartDesc:'按观看时长聚合的 Top 类目；切换到“兴趣画像”看用户分群。“兴趣”由观看占比推断，仅作人群描述。',
    metrics:[['watch_share','观看时长占比'],['events','交互事件数']],
    rows:d=>d.cat_watch, label:r=>r.cat,
-   stat:d=>`<div class="note"><b>兴趣画像</b>　知识求知型 ${pct((d.interest_types.find(x=>x.group==='知识求知型')||{}).share)}、均衡杂食型 ${pct((d.interest_types.find(x=>x.group==='均衡杂食型')||{}).share)}、娱乐休闲型 ${pct((d.interest_types.find(x=>x.group==='娱乐休闲型')||{}).share)}。教育类子群平均观看 ${d.edu_subgroup.education.avg_watch_sec}s，低于全平台 ${d.edu_subgroup.all.avg_watch_sec}s。</div>`,
+   stat:d=>`<div class="note"><b>兴趣画像</b>　知识求知型 ${pct((d.interest_types.find(x=>x.group==='知识求知型')||{}).share)}、均衡杂食型 ${pct((d.interest_types.find(x=>x.group==='均衡杂食型')||{}).share)}、娱乐休闲型 ${pct((d.interest_types.find(x=>x.group==='娱乐休闲型')||{}).share)}。教育类点赞率 ${pct((d.edu_subgroup.education||{}).like_rate)} vs 全平台 ${pct((d.edu_subgroup.all||{}).like_rate)}。</div>`,
    cols:[['cat','内容类目'],['watch_share','观看占比'],['events','事件数']],
    fmt:(r,k)=>k==='events'?r.events.toLocaleString():pct(r[k]),
    extra:d=>`<section class="card"><h2><span class="no">2</span>用户兴趣画像 · 知识 vs 娱乐</h2>
@@ -194,7 +170,7 @@ const DIMS=[
    chartTitle:'倍速 × 观看进度增益（仅视频事件）', chartDesc:'原始数据将非视频事件倍速统一记为 1.0× 且进度增益≈0，会造成虚假差异；此处严格限定在 video_play 事件内，避免结构性伪影。',
    metrics:[['progress_delta','进度增益(点)'],['interaction_cnt','交互次数'],['share','事件占比'],['n','事件数']],
    rows:d=>d.playback_speed, label:r=>r.group,
-   stat:d=>`<div class="note"><b>口径修正与检验</b>　倍速×进度增益 Kruskal–Wallis H=${d.kw_speed_progress.H}，p${pv(d.kw_speed_progress.p)} <span class="sig n">不显著</span>——各倍速进度增益接近（${d.playback_speed.map(r=>r.progress_delta).join(' / ')} 百分点），不存在“倍速越高学得越多”。<br>课前预习 vs 常规回看进度增益 16.84 vs 16.09（Mann–Whitney p${pv(d.mw_preview_progress.p)}），同为视频事件内对照，差异不显著。</div>`,
+   stat:d=>`<div class="note"><b>口径修正与检验</b>　倍速×进度增益 Kruskal–Wallis H=${d.kw_speed_progress.H}，p${pv(d.kw_speed_progress.p)} <span class="sig n">不显著</span>——各倍速进度增益接近（${d.playback_speed.map(r=>r.progress_delta).join(' / ')} 百分点），不存在“倍速越高学得越多”。<br>课前预习 vs 常规回看进度增益 ${(d.preview.find(r=>r.group==='课前预习')||{}).progress_delta} vs ${(d.preview.find(r=>r.group==='常规回看')||{}).progress_delta}（Mann–Whitney p${pv(d.mw_preview_progress.p)}），同为视频事件内对照。</div>`,
    cols:[['group','分组'],['n','事件数'],['share','占比'],['progress_delta','进度增益'],['interaction_cnt','交互次数'],['satisfaction','满意度']],
    fmt:(r,k)=>k==='n'?r.n.toLocaleString():(k==='share')?pct(r[k]):fx(r[k],k==='progress_delta'?2:1),
    extra:d=>`<section class="card"><h2><span class="no">2</span>预习 · 设备 · 操作系统 · 网络 · 测评标签</h2>
@@ -223,7 +199,7 @@ function drawBars(el,rows,key,labelFn,fmtFn){
   box.innerHTML=svg(w,arr.length*rowH+T+4,s);
 }
 
-let CUR='region', METRIC={}, SORT={};
+let CUR='time_of_day', METRIC={}, SORT={};
 function kpiHtml(dim){return dim.kpis.map(([name,fn,unit])=>`<div class="kpi"><b>${fn(D[dim.id])}</b><span>${name}${unit?' · '+unit:''}</span></div>`).join('');}
 function render(id){
   CUR=id; const dim=DIMS.find(d=>d.id===id), d=D[dim.id];
@@ -255,7 +231,7 @@ function drawMain(dim,d){
 
 $('tabs').innerHTML=DIMS.map(d=>`<div class="tab" data-id="${d.id}">${d.name}</div>`).join('');
 [...$('tabs').children].forEach(b=>b.onclick=()=>render(b.dataset.id));
-render('region');
+render('time_of_day');
 </script>
 </body>
 </html>
