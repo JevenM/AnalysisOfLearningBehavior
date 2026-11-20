@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多形态学习者画像分析 · 交互看板</title>
+<style>
+:root{
+  --navy:#1F3864; --blue:#2E75B6; --cyan:#2A9D8F; --orange:#D97706; --red:#C0392B;
+  --ink:#1B2733; --muted:#64748B; --line:#E2E8F0; --bg:#F4F7FB; --card:#FFFFFF; --soft:#EEF3F9;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;font-size:14px;line-height:1.6}
+code{background:var(--soft);color:var(--navy);padding:1px 5px;border-radius:4px;font-size:12px}
+a{color:var(--blue);text-decoration:none}
+header.hero{background:linear-gradient(120deg,#16294B 0%,#1F3864 52%,#2E75B6 100%);color:#fff;padding:26px 5vw 0;position:relative;overflow:hidden}
+header.hero:after{content:"";position:absolute;right:-60px;top:-90px;width:340px;height:340px;border:1px solid rgba(255,255,255,.12);border-radius:50%;box-shadow:0 0 0 55px rgba(255,255,255,.035),0 0 0 120px rgba(255,255,255,.025)}
+.hero-inner{max-width:1500px;margin:0 auto;position:relative;z-index:2}
+.hero h1{margin:0;font-size:24px;letter-spacing:.5px}
+.hero .sub{opacity:.85;font-size:12.5px;margin:5px 0 0}
+.tabs{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.tab{cursor:pointer;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#EAF2FB;
+  border-radius:9px 9px 0 0;padding:9px 20px;font-size:13px;font-weight:600;transition:.15s;border-bottom:none}
+.tab:hover{background:rgba(255,255,255,.16)}
+.tab.active{background:var(--card);color:var(--navy);border-color:var(--line)}
+.tab .n{font-size:11px;opacity:.7;margin-left:5px;font-weight:400}
+.wrap{max-width:1500px;margin:0 auto;padding:18px 5vw 70px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 16px;box-shadow:0 2px 9px rgba(31,56,100,.05)}
+.kpi b{display:block;font-size:23px;color:var(--navy);line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi span{font-size:11.5px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(31,56,100,.05);padding:18px 20px;margin-bottom:16px}
+.card h2{margin:0 0 3px;font-size:16px;color:var(--navy);display:flex;align-items:center;gap:9px}
+.card h2 .no{width:25px;height:25px;border-radius:7px;background:var(--soft);color:var(--navy);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.card .desc{color:var(--muted);font-size:12px;margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-persona{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px}
+@media(max-width:1100px){.grid2,.grid-persona{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+h3{font-size:13px;margin:14px 0 8px;color:var(--navy)}
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.ctrl label{font-size:11.5px;color:var(--muted);font-weight:600}
+select{border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-family:inherit;font-size:12px;background:#fff;color:var(--ink)}
+.chip{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600}
+.chip.g{background:#E6F4EF;color:#1E7A63;border:1px solid #BFE3D7}
+.chip.o{background:#FDF1E3;color:#9A5B0B;border:1px solid #F2D9B6}
+.chip.b{background:#E7F0FA;color:#1F5A94;border:1px solid #C6DDF2}
+.chip.r{background:#FBEAE8;color:#A5312A;border:1px solid #F0C7C2}
+.note{background:var(--soft);border-left:3px solid var(--blue);padding:9px 13px;font-size:11.5px;color:#3E5670;border-radius:0 7px 7px 0;margin:10px 0}
+.note.warn{background:#FFF8EC;border-left-color:var(--orange);color:#7A4E12}
+.persona-list{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow:auto}
+.pcard{border:1px solid var(--line);border-left-width:5px;border-radius:9px;padding:9px 11px;cursor:pointer;transition:.15s;background:#fff}
+.pcard:hover{background:#F8FBFE;transform:translateX(2px)}
+.pcard.sel{background:var(--soft);box-shadow:0 0 0 2px rgba(46,117,182,.25)}
+.pcard .top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.pcard .nm{font-weight:700;font-size:12.5px}
+.pcard .meta{font-size:10.5px;color:var(--muted);margin-top:3px}
+.pcard .rate{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.mini{height:5px;border-radius:4px;background:#EEF2F7;margin-top:6px;overflow:hidden}
+.mini i{display:block;height:100%;border-radius:4px}
+.detail{background:linear-gradient(180deg,#FBFDFF,#F5F9FD);border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:10px}
+.detail .dt{font-size:15px;font-weight:700;color:var(--navy)}
+.detail .dd{font-size:12px;color:#405468;margin:6px 0 2px}
+.legend{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.9}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin:0 5px 0 12px;vertical-align:middle}
+.legend i:first-child{margin-left:0}
+.chart{width:100%;overflow:auto}
+.chart svg{display:block;max-width:100%;height:auto}
+#tip{position:fixed;pointer-events:none;background:rgba(16,32,56,.94);color:#fff;font-size:11px;line-height:1.6;
+  padding:7px 10px;border-radius:7px;z-index:99;display:none;box-shadow:0 6px 18px rgba(0,0,0,.2);white-space:nowrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+thead th{background:var(--soft);color:var(--navy);font-weight:700}
+tbody tr:hover{background:#F8FBFE}
+.tblwrap{overflow-x:auto}
+.cmp-note{font-size:11.5px;color:#7A4E12;background:#FFF8EC;border:1px solid #F5E2C0;border-radius:8px;padding:9px 12px;margin-bottom:12px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:20px;border-top:1px solid var(--line);background:#fff}
+.back{font-size:12px;color:#fff;opacity:.85}
+.back:hover{opacity:1;text-decoration:underline}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div>
+        <h1>多形态学习者画像分析看板</h1>
+        <p class="sub">慕课 · 微课 · 短视频 —— 基于真实公开数据的分群刻画与跨平台对比　|　五维行为指标为形态内标准化 z 值</p>
+      </div>
+      <a class="back" href="profile_dashboard.html" style="margin-right:16px">四维画像 →</a>
+      <a class="back" href="dashboard.html">← 主看板（总览）</a>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="kpis" id="kpis"></div>
+
+  <!-- 画像探索 -->
+  <section class="card">
+    <h2><span class="no">1</span><span id="h1">学习者群体画像</span></h2>
+    <p class="desc" id="desc1"></p>
+    <div class="grid-persona">
+      <div>
+        <h3>画像群（点击查看详情 · 按规模排序）</h3>
+        <div class="persona-list" id="plist"></div>
+      </div>
+      <div>
+        <div class="detail" id="detail"></div>
+        <div class="grid2">
+          <div><h3>画像五维行为中心（z 值）</h3><div class="chart" id="radar"></div></div>
+          <div><h3>达标驱动系数（Logistic β，标准化）</h3><div class="chart" id="coef"></div>
+            <div class="legend" id="coefNote"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 散点探索 -->
+  <section class="card">
+    <h2><span class="no">2</span>个体分布探索 · 行为空间散点</h2>
+    <p class="desc">每个点是一名学习者（分层抽样展示，统计基于全量）。切换坐标轴观察群体在行为空间中的分离，颜色对应画像群，空心点为未达标、实心为达标；悬停查看完整五维取值。</p>
+    <div class="ctrl">
+      <label>X 轴</label><select id="sx"></select>
+      <label>Y 轴</label><select id="sy"></select>
+      <label>着色</label>
+      <select id="colorBy"><option value="persona">画像群</option><option value="label">是否达标</option></select>
+      <label style="margin-left:auto"><label style="display:inline"><input type="checkbox" id="onlyPos"> 仅看达标</label></label>
+    </div>
+    <div class="grid2">
+      <div><div class="chart" id="scatter"></div><div class="legend" id="scLegend"></div></div>
+      <div><h3 id="unitTitle">来源平台 / 单元分布</h3><div class="chart" id="unitChart"></div>
+        <div class="note" id="srcNote"></div></div>
+    </div>
+  </section>
+
+  <!-- 跨形态对比 -->
+  <section class="card">
+    <h2><span class="no">3</span>跨形态对比 · 结构差异与迁移</h2>
+    <p class="desc">统一五维指标使不同形态可在标准化空间比较；由于标签语义不同，达标率与预测 AUC 仅作结构参照，不作为同一指标排名。</p>
+    <div class="cmp-note" id="cmpCaveat"></div>
+    <div class="grid2">
+      <div><h3>四类形态平均行为画像（z 值）</h3><div class="chart" id="cmpRadar"></div>
+        <div class="legend" id="cmpLegend"></div></div>
+      <div><h3>分形态预测力（5 折 CV-AUC）</h3><div class="chart" id="cmpAuc"></div>
+        <div class="legend" id="cmpAucNote"></div></div>
+    </div>
+    <h3>形态口径一览</h3>
+    <div class="tblwrap"><table id="cmpTable"></table></div>
+  </section>
+</div>
+
+<div id="tip"></div>
+<footer>全部数据来自真实公开数据集（OULAD / edX / 学堂在线 / 天池微课 / 清华 FIB WWW2025 / UCI #320）· seed=20260101 仅用于抽样与可复现 · 单文件离线可用</footer>
+
+<script id="persona" type="application/json">__PERSONA_DATA__</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById('persona').textContent);
+const P = ['#1F3864','#C0392B','#2A9D8F','#D97706','#7B4FA8','#2E75B6','#B7791F','#5B8C5A'];
+const F = D.meta.dims, DIMCN = D.meta.dim_cn, FORMS = Object.keys(D.forms);
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fx = (v,n=2)=> (v===null||v===undefined||isNaN(Number(v)))?'—':Number(v).toFixed(n);
+const pct = (v,n=1)=> (v*100).toFixed(n)+'%';
+const svg=(w,h,inner)=>`<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="${NS}" font-family="Microsoft YaHei,PingFang SC,sans-serif">${inner}</svg>`;
+const ln=(x1,y1,x2,y2,c='#E2E8F0',d='')=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="1" ${d?`stroke-dasharray="${d}"`:''}/>`;
+const tx=(x,y,s,z=10,c='#64748B',a='start',w='normal')=>`<text x="${x}" y="${y}" font-size="${z}" fill="${c}" text-anchor="${a}" font-weight="${w}">${esc(s)}</text>`;
+const rc=(x,y,w,h,f,r=5,extra='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${f}" ${extra}/>`;
+let CUR='MOOC', SEL=null, TIP=$('tip');
+
+function tipOn(e,html){TIP.innerHTML=html;TIP.style.display='block';tipMove(e);}
+function tipMove(e){let x=e.clientX+14,y=e.clientY+14;if(x+240>innerWidth)x=e.clientX-250;if(y+120>innerHeight)y=e.clientY-130;TIP.style.left=x+'px';TIP.style.top=y+'px';}
+function tipOff(){TIP.style.display='none';}
+
+/* ---------- 雷达图：多组五维中心 ---------- */
+function radar(series,{w=430,h=300,R=92}={}){
+  const cx=w/2, cy=h/2+2, n=F.length, ang=i=>-Math.PI/2+i*2*Math.PI/n;
+  // 五维为形态内 z 值，需同时容纳正负：以固定对称域 [-Z,Z] 映射到半径，
+  // 中心为 -Z、外圈为 +Z、+0 位于半径中点，避免把负值折叠到圆心造成画像混同。
+  const allv=series.flatMap(s=>s.vals);
+  const Z=Math.max(2.5,Math.ceil(Math.max(...allv.map(Math.abs))));
+  const rad=v=>Math.max(0.04,Math.min(1,(v+Z)/(2*Z)))*R;
+  let s='';
+  [0.25,0.5,0.75,1].forEach(f=>{const pts=F.map((_,i)=>`${cx+Math.cos(ang(i))*R*f},${cy+Math.sin(ang(i))*R*f}`).join(' ');s+=`<polygon points="${pts}" fill="none" stroke="#E2E8F0" stroke-width="1"/>`;});
+  const zeroPts=F.map((_,i)=>`${cx+Math.cos(ang(i))*rad(0)},${cy+Math.sin(ang(i))*rad(0)}`).join(' ');
+  s+=`<polygon points="${zeroPts}" fill="none" stroke="#94A3B8" stroke-width="1" stroke-dasharray="3 3"/>`;
+  F.forEach((d,i)=>{s+=ln(cx,cy,cx+Math.cos(ang(i))*R,cy+Math.sin(ang(i))*R,'#E2E8F0');
+    const lx=cx+Math.cos(ang(i))*(R+20), ly=cy+Math.sin(ang(i))*(R+20)+3;
+    s+=tx(lx,ly,DIMCN[d],10,'#475569',Math.cos(ang(i))>0.3?'start':(Math.cos(ang(i))<-0.3?'end':'middle'));});
+  s+=tx(cx,cy-R-16,'外圈 z=+'+Z+'　虚线 z=0　圆心 z=-'+Z,9,'#94A3B8','middle');
+  series.forEach((se)=>{
+    const pts=se.vals.map((v,i)=>{const r=rad(v);return `${cx+Math.cos(ang(i))*r},${cy+Math.sin(ang(i))*r}`}).join(' ');
+    const op=se.dim?0.14:0.09;
+    s+=`<polygon points="${pts}" fill="${se.color}" fill-opacity="${op}" stroke="${se.color}" stroke-width="${se.dim?2.4:1.5}" ${se.dim?'':`stroke-dasharray="4 3"`}/>`;
+    se.vals.forEach((v,i)=>{const r=rad(v);const x=cx+Math.cos(ang(i))*r,y=cy+Math.sin(ang(i))*r;
+      s+=`<circle cx="${x}" cy="${y}" r="${se.dim?3.4:2.4}" fill="${se.color}"><title>${esc(se.name)} · ${DIMCN[F[i]]}: ${v>0?'+':''}${v}</title></circle>`;});
+  });
+  return svg(w,h,s);
+}
+
+/* ---------- 分叉条形：驱动系数 ---------- */
+function coefChart(coef){
+  const w=430,rowH=34,L=72,R=16,T=18,plot=w-L-R;
+  const mx=Math.max(...coef.map(c=>Math.abs(c.v)),0.3)*1.15;
+  const zero=L+plot/2, half=plot/2;
+  let s=ln(zero,T-4,zero,coef.length*rowH+T-8,'#94A3B8','3 3');
+  s+=tx(zero,T-8,'0',9,'#94A3B8','middle');
+  s+=tx(L,T-8,'← 抑制达标',9,'#C0392B','start')+tx(w-R,T-8,'提升达标 →',9,'#1E7A63','end');
+  coef.forEach((c,i)=>{
+    const y=T+i*rowH, len=Math.abs(c.v)/mx*half, pos=c.v>=0;
+    s+=tx(L-7,y+15,c.cn,10.5,'#334155','end');
+    s+=rc(pos?zero:zero-len,y+4,len,16,pos?'#2A9D8F':'#C0392B',3,'opacity=".88"');
+    s+=tx(pos?zero+len+4:zero-len-4,y+16,(c.v>0?'+':'')+fx(c.v,3),10,pos?'#1E7A63':'#C0392B',pos?'start':'end','bold');
+  });
+  return svg(w,coef.length*rowH+T+4,s);
+}
+
+/* ---------- 水平条：平台/单元 ---------- */
+function hbars(items,{w=430,rowH=30,color='#2E75B6',fmtFn=v=>fx(v,3)}={}){
+  const L=96,R=54,T=8,plot=w-L-R, mx=Math.max(...items.map(d=>d.value),0.0001);
+  let s='';
+  items.forEach((d,i)=>{
+    const y=T+i*rowH, len=Math.max(2,d.value/mx*plot), c=d.color||color;
+    s+=tx(L-7,y+rowH/2+1,d.label,10.5,'#334155','end');
+    s+=rc(L,y+4,len,rowH-12,c,3,'opacity=".9"');
+    s+=tx(L+len+5,y+rowH/2+1,d.disp!==undefined?d.disp:fmtFn(d.value),10,'#334155','start','bold');
+  });
+  return svg(w,items.length*rowH+T+8,s);
+}
+
+/* ---------- 交互散点 ---------- */
+function scatter(form){
+  const f=D.forms[form]; const w=560,h=400,L=48,R=16,T=14,B=46,pw=w-L-R,ph=h-T-B;
+  const xi=F.indexOf($('sx').value), yi=F.indexOf($('sy').value), by=$('colorBy').value;
+  const onlyPos=$('onlyPos').checked;
+  let pts=f.points.filter(p=>!onlyPos||p[5]===1);
+  const xs=pts.map(p=>p[xi]), ys=pts.map(p=>p[yi]);
+  let xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);
+  const pad=(a,b)=>{const m=(b-a)||1;return [a-m*0.06,b+m*0.06];};
+  [xmin,xmax]=pad(xmin,xmax);[ymin,ymax]=pad(ymin,ymax);
+  const X=v=>L+(v-xmin)/(xmax-xmin)*pw, Y=v=>T+ph-(v-ymin)/(ymax-ymin)*ph;
+  let s='';
+  for(let i=0;i<=4;i++){const gy=T+ph*i/4; s+=ln(L,gy,L+pw,gy,'#EFF3F8'); s+=tx(L-6,gy+3,fx(ymax-(ymax-ymin)*i/4,1),9,'#94A3B8','end');}
+  for(let i=0;i<=4;i++){const gx=L+pw*i/4; s+=tx(gx,T+ph+15,fx(xmin+(xmax-xmin)*i/4,1),9,'#94A3B8','middle');}
+  s+=ln(L,T,L,T+ph,'#94A3B8')+ln(L,T+ph,L+pw,T+ph,'#94A3B8');
+  s+=tx(L+pw/2,h-4,DIMCN[F[xi]],10.5,'#475569','middle')+tx(11,T+ph/2,DIMCN[F[yi]],10.5,'#475569','middle');
+  // 网格零线
+  if(xmin<0&&xmax>0) s+=ln(X(0),T,X(0),T+ph,'#CBD5E1','3 3');
+  if(ymin<0&&ymax>0) s+=ln(L,Y(0),L+pw,Y(0),'#CBD5E1','3 3');
+  // 按着色方式绘制：画像群分组（便于高亮）或按达标与否
+  const groups = by==='persona'
+    ? f.personas.map(p=>({key:p.idx, pts:pts.filter(q=>q[6]===p.idx), color:P[p.idx%P.length]}))
+    : [{key:'pos', pts:pts.filter(q=>q[5]===1), color:'#2A9D8F'},
+       {key:'neg', pts:pts.filter(q=>q[5]===0), color:'#94A3B8'}];
+  groups.forEach(g=>{
+    g.pts.forEach(q=>{
+      const isPos=q[5]===1;
+      const pp=f.personas.find(p=>p.idx===q[6]);
+      const dimByPersona=(by==='persona'&&SEL!==null&&SEL!==g.key);
+      const op=dimByPersona?0.12:(isPos?0.72:0.42);
+      const r=isPos?3.4:2.8;
+      const fill=isPos?g.color:'#fff';
+      s+=`<circle cx="${fx(X(q[xi]),1)}" cy="${fx(Y(q[yi]),1)}" r="${r}" fill="${fill}" stroke="${g.color}" stroke-width="${isPos?0:1.1}" opacity="${op}" data-pt="${q[xi]},${q[yi]},${q[5]},${q[6]}" style="cursor:pointer"><title>${esc(pp?pp.name:'—')} · ${isPos?'达标':'未达标'} · ${DIMCN[F[xi]]} ${q[xi]>0?'+':''}${q[xi]} / ${DIMCN[F[yi]]} ${q[yi]>0?'+':''}${q[yi]}</title></circle>`;
+    });
+  });
+  const out=svg(w,h,s);
+  $('scatter').innerHTML=out;
+  // 图例
+  if(by==='persona'){
+    $('scLegend').innerHTML=f.personas.map(p=>`<span><i style="background:${P[p.idx%P.length]}"></i>${esc(p.name)}</span>`).join('')+'<div style="margin-top:4px">实心＝达标　空心＝未达标　可点击左侧画像卡片高亮</div>';
+  }else{
+    $('scLegend').innerHTML='<span><i style="background:#2A9D8F"></i>达标</span><span><i style="background:#fff;border:1px solid #94A3B8"></i>未达标</span>';
+  }
+  // 悬停
+  $('scatter').querySelectorAll('[data-pt]').forEach(c=>{
+    c.addEventListener('mousemove',e=>{
+      const v=c.getAttribute('data-pt').split(',').map(Number);
+      const pp=f.personas.find(p=>p.idx===v[3]);
+      tipOn(e,`<b>${esc(pp?pp.name:'—')}</b>　${v[2]?'达标':'未达标'}<br>${DIMCN[F[xi]]}: ${v[0]>0?'+':''}${v[0]}　${DIMCN[F[yi]]}: ${v[1]>0?'+':''}${v[1]}`);
+    });
+    c.addEventListener('mouseleave',tipOff);
+  });
+}
+
+function renderForm(form){
+  CUR=form; const f=D.forms[form];
+  [...$('tabs').children].forEach(b=>b.classList.toggle('active',b.dataset.f===form));
+  // KPI
+  $('kpis').innerHTML=[
+    [f.n.toLocaleString(),'样本量 / 条'],
+    [pct(f.positive_rate),'达标（标签为正）比例'],
+    [fx(f.auc,3),`预测力 CV-AUC · ${esc(f.auc_model)}`],
+    [f.k+' 类',`画像群 · 轮廓 ${fx(f.silhouette,3)}`],
+    [(f.sampled).toLocaleString(),'散点展示抽样数'],
+  ].map(([b,s],i)=>`<div class="kpi"><b style="color:${i===2?'#1E7A63':'#1F3864'}">${b}</b><span>${s}</span></div>`).join('');
+  $('h1').textContent=f.cn+' · 学习者群体画像';
+  $('desc1').textContent=`K-means 将 ${f.n.toLocaleString()} 条${f.cn}样本按五维行为划分为 ${f.k} 类画像群；标签语义：${f.label_name}。点击画像群查看刻画并联动右侧雷达与散点。`;
+  // 画像卡片
+  $('plist').innerHTML=f.personas.map((p,i)=>{
+    const sel=i===SEL;
+    return `<div class="pcard ${sel?'sel':''}" data-i="${i}" style="border-left-color:${P[p.idx%P.length]}">
+      <div class="top"><span class="nm" style="color:${P[p.idx%P.length]}">${esc(p.name)}</span><span class="rate">${pct(p.label_rate)}</span></div>
+      <div class="meta">${p.n.toLocaleString()} 人 · 占比 ${pct(p.share)} <span class="chip ${p.tier==='高转化'?'g':(p.tier==='低转化'?'r':'b')}" style="margin-left:5px">${p.tier}</span></div>
+      <div class="mini"><i style="width:${(p.share*100/Math.max(...f.personas.map(x=>x.share))*100).toFixed(0)}%;background:${P[p.idx%P.length]}"></i></div>
+    </div>`;}).join('');
+  $('plist').querySelectorAll('.pcard').forEach(c=>c.addEventListener('click',()=>{
+    const i=+c.dataset.i; SEL=(SEL===i?null:i); renderForm(form);
+  }));
+  const sel=SEL===null?null:f.personas[Math.min(SEL,f.personas.length-1)];
+  if(sel){
+    $('detail').innerHTML=`<div class="dt"><span class="dot" style="background:${P[sel.idx%P.length]}"></span>${esc(sel.name)} <span class="chip ${sel.tier==='高转化'?'g':(sel.tier==='低转化'?'r':'b')}">${sel.tier}</span> <span style="font-size:11px;color:#64748B;font-weight:400">· 再次点击卡片可取消聚焦</span></div>
+      <div class="dd">${esc(sel.desc)}</div>
+      <div class="dd" style="color:#64748B">规模 ${sel.n.toLocaleString()} 人（${pct(sel.share)}）　·　达标率 <b style="color:${sel.label_rate>=f.positive_rate?'#1E7A63':'#C0392B'}">${pct(sel.label_rate)}</b></div>`;
+  }else{
+    const hi=f.personas.reduce((a,b)=>a.label_rate>b.label_rate?a:b);
+    const lo=f.personas.reduce((a,b)=>a.label_rate<b.label_rate?a:b);
+    $('detail').innerHTML=`<div class="dt">全部 ${f.personas.length} 类画像群 · 总体一览</div>
+      <div class="dd">点击左侧任一画像群，可在此查看其行为刻画，并在雷达图与散点图中高亮该群。</div>
+      <div class="dd" style="color:#64748B">达标率最高：<b style="color:#1E7A63">${esc(hi.name)} ${pct(hi.label_rate)}</b>　·　最低：<b style="color:#C0392B">${esc(lo.name)} ${pct(lo.label_rate)}</b></div>`;
+  }
+  // 雷达（全部画像；选中时高亮其一）
+  $('radar').innerHTML=radar(f.personas.map(p=>({name:p.name,vals:p.dims,color:P[p.idx%P.length],dim:!!sel&&p===sel})));
+  $('coef').innerHTML=coefChart(f.coef);
+  $('coefNote').innerHTML=`正向系数表示该维度标准化值越高、达标几率越大；该形态最优模型 <b>${esc(f.auc_model)}</b> 的 5 折 AUC=${fx(f.auc,3)}，Logistic F1=${fx(f.f1,3)}。系数仅刻画关联，不等同因果。`;
+  // 散点轴选项
+  ['sx','sy'].forEach(id=>{const el=$(id);el.innerHTML=F.map(d=>`<option value="${d}" ${el.value===d?'selected':''}>${DIMCN[d]}</option>`).join('');});
+  if($('sx').value===$('sy').value){$('sy').value = ($('sx').value==='engage'?'persist':'engage');}
+  scatter(form);
+  // 来源细分（各形态真实可得维度不同）
+  const bd=f.breakdown;
+  $('unitTitle').textContent=bd.title;
+  $('unitChart').innerHTML=hbars(bd.items.map((u,i)=>({label:u.label,value:u.value,color:i===0?'#2E75B6':'#7FA8D0',disp:u.disp})),
+    {fmtFn:v=>fx(v,3)});
+  $('srcNote').innerHTML=`<b>数据来源：</b>${esc(f.dataset)}<br><b>观测窗口：</b>${esc(f.window)}<br><b>口径提示：</b>${esc(f.caveat)}`;
+}
+
+function renderCompare(){
+  const cf=D.compare;
+  $('cmpCaveat').innerHTML='<b>重要：</b>'+esc(D.meta.label_note)+'　'+esc(cf.note);
+  // 各形态平均画像：用画像群按规模加权的五维中心近似形态平均
+  const series=FORMS.map((f,i)=>{
+    const o=D.forms[f], n=o.personas.reduce((a,p)=>a+p.n,0);
+    const vals=F.map((_,d)=>o.personas.reduce((a,p)=>a+p.dims[d]*p.n,0)/n);
+    return {name:o.cn,vals:vals.map(v=>+v.toFixed(2)),color:P[i]};
+  });
+  $('cmpRadar').innerHTML=radar(series,{w:430,h:300,R:92});
+  $('cmpLegend').innerHTML=series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('');
+  $('cmpAuc').innerHTML=hbars(FORMS.map((f,i)=>({label:D.forms[f].cn,value:D.forms[f].auc,color:P[i]})),{rowH:36,fmtFn:v=>fx(v,3)});
+  const pm=cf.platform.mixed_auc||0, pw=cf.platform.within_platform_auc||0;
+  const rel=pm>pw?'高于':(pm<pw?'低于':'等于');
+  $('cmpAucNote').innerHTML=`跨域迁移平均 AUC ${fx(cf.transfer.mean_transfer,3)}，低于域内 ${fx(cf.transfer.mean_indomain,3)}；`
+    +`平台混合口径 AUC ${fx(pm,3)} ${rel}平台内 ${fx(pw,3)}，`
+    +`两种情形都指向按平台分层建模的必要性，结论以平台内口径为准。`;
+  $('cmpTable').innerHTML='<thead><tr><th>形态</th><th>样本量</th><th>标签语义</th><th>达标率</th><th>画像群</th><th>CV-AUC</th><th>来源</th></tr></thead><tbody>'
+    +FORMS.map(f=>{const o=D.forms[f];return `<tr><td><span class="dot" style="background:${P[FORMS.indexOf(f)]}"></span>${esc(o.cn)}</td><td>${o.n.toLocaleString()}</td><td style="text-align:left">${esc(o.label_name)}</td><td>${pct(o.positive_rate)}</td><td>${o.k}</td><td>${fx(o.auc,3)}</td><td style="text-align:left;font-size:10.5px">${esc(o.dataset.split('（')[0].split('(')[0].slice(0,26))}</td></tr>`}).join('')+'</tbody>';
+}
+
+function init(){
+  $('tabs').innerHTML=FORMS.map(f=>`<div class="tab" data-f="${f}">${esc(D.forms[f].cn)}<span class="n">${D.forms[f].n.toLocaleString()}</span></div>`).join('');
+  [...$('tabs').children].forEach(b=>b.addEventListener('click',()=>{SEL=null;renderForm(b.dataset.f);}));
+  ['sx','sy','colorBy'].forEach(id=>$(id).addEventListener('change',()=>scatter(CUR)));
+  $('onlyPos').addEventListener('change',()=>scatter(CUR));
+  renderForm('MOOC');
+  renderCompare();
+}
+init();
+</script>
+</body>
+</html>

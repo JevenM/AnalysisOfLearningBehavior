@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
-"""把 analysis.py 实跑的 results.json 精简后内联进看板模板，产出单文件离线 HTML。"""
+"""把 analysis.py 实跑的 results.json 精简后内联进看板模板，产出单文件离线 HTML。
+
+数据来源（均真实实跑，落盘于 04_运行结果/）：
+  - results.json              同事 OULAD 主链（清洗/聚类/预测/评价/决策）
+  - profile_results.json      四维画像（地区/背景/习惯/兴趣）
+  - forecast_results.json     GM(1,1) 与早期预警
+  - fuzzy_results.json        模糊综合评价
+  - up_*.json（合并新增）     统一管线：六源真实数据集融合分析（聚类/挖掘/关联/预测/评价）
+"""
 import json
+import math
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -66,6 +75,41 @@ for fname, key in (("forecast_results.json", "forecast"), ("fuzzy_results.json",
     p = os.path.join(ROOT, "04_运行结果", fname)
     if os.path.isfile(p):
         bench[key] = json.load(open(p, encoding="utf-8"))
+
+
+# ---------------------------------------------------------------- 统一管线数据块（合并新增）
+# 六源真实数据集融合分析结果（up_metrics / up_mining / up_association / up_eval），
+# 以"人话叙事"口径精简后进 INSIGHT；统一管线未跑（--skip-unified）时整块缺失、看板自动降级。
+def _drop_nan(x):
+    """NaN 不是合法 JSON（模板用 JSON.parse 解析会整体失败），递归替换为 None。"""
+    if isinstance(x, dict):
+        return {k: _drop_nan(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_drop_nan(v) for v in x]
+    if isinstance(x, float) and math.isnan(x):
+        return None
+    return x
+
+
+def _load_up():
+    uni = {}
+    for fname, key in (("up_metrics.json", "metrics"),
+                       ("up_mining_summary.json", "mining"),
+                       ("up_association_summary.json", "association"),
+                       ("up_eval_summary.json", "eval")):
+        p = os.path.join(ROOT, "04_运行结果", fname)
+        if os.path.isfile(p):
+            uni[key] = _drop_nan(json.load(open(p, encoding="utf-8")))
+    return uni
+
+
+def _count_learners():
+    """统计统一管线逐学习者画像表行数（无表头，1 行 = 1 名学习者）。"""
+    p = os.path.join(ROOT, "04_运行结果", "up_learners.csv")
+    if not os.path.isfile(p):
+        return 0
+    with open(p, encoding="utf-8") as f:
+        return max(sum(1 for _ in f) - 1, 0)
 
 
 # ---------------------------------------------------------------- 人话叙事数据块
@@ -166,12 +210,37 @@ insight = {
         "records": R["clean_log"]["clean_rows"], "learners": R["clean_log"]["learners"],
         "courses": R["clean_log"]["courses"],
         "sv_users": P["sv_profile"]["n_users"], "sv_cities": P["sv_profile"]["n_cities"],
-        "mm_samples": 9236, "persona_k": R["cluster"]["k"],
+        # 多形态样本总数：取自 multimodal_results.json 实跑结果（不硬编码）
+        "mm_samples": R.get("multimodal", {}).get("headline", {}).get("n_total", 0),
+        "persona_k": R["cluster"]["k"],
     },
     "personas": _personas, "habits": _habits, "cats": _cats, "itypes": _itypes,
     "tod": _tod, "city": _city, "gender": _gender, "age": _age,
     "edu": _edu, "region": _region, "warn": _warn, "decision": _decision, "sig": _sig,
 }
+
+# 统一管线叙事块（合并新增）：只取"结论级"字段；未跑统一管线时整块缺失，JS 端自动隐藏第 8 节
+UNI = _load_up()
+if UNI:
+    _m = UNI.get("metrics", {})
+    _mi = UNI.get("mining", {})
+    _as = UNI.get("association", {})
+    _ev = UNI.get("eval", {})
+    insight["unified"] = {
+        # 只保留看板第 8 屏实际渲染的字段，不堆未使用数据
+        "n": _count_learners(),
+        "k": _m.get("k"), "sil": _m.get("silhouette"), "backend": _m.get("backend"),
+        "cert_acc": _m.get("cert_acc"),
+        "auc_early": _m.get("rf_auc_early"), "auc_full": _m.get("rf_auc_full"),
+        "top5_features": _m.get("top5_features"),
+        "gm_trends": _m.get("gm_trends"),
+        "lsa_patterns": _mi.get("lsa_patterns"), "time_patterns": _mi.get("time_patterns"),
+        "apriori_top": (_mi.get("apriori_top") or [])[:3],
+        "tier_lift": _as.get("tier_lift"),
+        "ahp_weights": _ev.get("ahp_weights"), "ahp_cr": _ev.get("ahp_cr"),
+        "quality_levels": _ev.get("quality_levels"),
+        "sd_results": _ev.get("sd_results"), "sd_best": _ev.get("sd_best"),
+    }
 
 tpl = open(os.path.join(HERE, "dashboard.template.html"), encoding="utf-8").read()
 data = json.dumps(bench, ensure_ascii=False, separators=(",", ":"))
@@ -183,3 +252,8 @@ with open(os.path.join(HERE, "dashboard.html"), "w", encoding="utf-8") as f:
     f.write(out)
 print(f"[OK] dashboard.html 已生成：{len(out):,} 字符，内联基准数据 {len(data):,} / 叙事数据 {len(idata):,} 字符")
 print(f"     画像 {len(_personas)} 类、习惯 {len(_habits)} 型、地区 {len(_region)} 个、预警窗口 {len(_warn)} 个")
+if insight.get("unified"):
+    u = insight["unified"]
+    print(f"     统一管线叙事块已内联：六源 {u['n']:,} 名学习者 / K={u['k']} / 轮廓系数 {u['sil']:.3f}（{u['backend']} 后端）")
+else:
+    print("     统一管线产物缺失（未跑 up_ 阶段），看板自动降级为仅主链数据")

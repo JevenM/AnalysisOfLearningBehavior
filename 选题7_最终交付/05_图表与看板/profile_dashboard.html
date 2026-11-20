@@ -141,7 +141,7 @@ const DIMS=[
    cols:[['group','习惯类型'],['n','人数'],['share','占比'],['pass_rate','通过率'],['lag','启动滞后'],['active_days','活跃天数'],['session_min','单次时长']],
    fmt:(r,k)=>k==='n'?r.n.toLocaleString():(['share','pass_rate'].includes(k))?pct(r[k]):fx(r[k],k==='session_min'?2:1),
    extra:d=>`<section class="card"><h2><span class="no">2</span>观看时段偏好 · 登录时间行为</h2>
-     <p class="desc">短视频小时级 p_hour（6,654 用户）显示观看高峰；OULAD 仅日粒度，二者分层呈现、不直接合并。</p>
+     <p class="desc">短视频小时级 p_hour（${d.sv_profile.n_users.toLocaleString()} 用户）显示观看高峰；OULAD 仅日粒度，二者分层呈现、不直接合并。</p>
      <div class="grid2"><div><h3>用户主时段占比</h3><div class="chart" id="hbPref"></div></div>
      <div><h3>各时段事件占比与完播代理</h3><div class="chart" id="hbTod"></div></div></div></section>`,
    after:d=>{const t=d.time_of_day;if(t.user_pref){drawBars('hbPref',t.user_pref,'share',r=>r.group,v=>pct(v));}if(t.rows){drawBars('hbTod',t.rows,'share',r=>r.group,v=>pct(v));}}},

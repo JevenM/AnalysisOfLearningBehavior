@@ -138,10 +138,13 @@ def hbar(ax, labels, values, colors, fmt="{:.1%}", xlabel="", title="", vmax=Non
     ax.set_yticks(y); ax.set_yticklabels(labels, fontsize=8)
     ax.set_title(title, fontsize=10, fontweight="bold", color="#1F4E79", loc="left")
     ax.set_xlabel(xlabel, fontsize=8)
-    ax.set_xlim(0, (vmax or 1) * (1.02 if vmax else 1.12))
+    # x 上限自适应：显式 vmax 给定时按原口径，否则取数据最大值的 1.12 倍——
+    # 修复非百分比指标（进度增益/交互次数）被硬编码 1.12 裁剪、标签溢出画布的问题
+    xmax = float(vmax) * 1.02 if vmax is not None else max(float(vals.max()) * 1.12, 1e-9)
+    ax.set_xlim(0, xmax)
     ax.xaxis.grid(True, color=C["grid"], zorder=0); ax.set_axisbelow(True)
     for i, v in enumerate(vals):
-        ax.text(v + (vmax or 1) * 0.012, i, fmt.format(v), va="center", fontsize=7.4, color="#334155")
+        ax.text(v + xmax * 0.012, i, fmt.format(v), va="center", fontsize=7.4, color="#334155")
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
 

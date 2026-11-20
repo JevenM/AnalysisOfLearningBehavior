@@ -147,7 +147,7 @@
     "auc_mean": 0.7436,
     "auc_std": 0.0059,
     "f1_mean": 0.6687,
-    "holdout_auc": 0.7519,
+    "holdout_auc": 0.7518,
     "holdout_f1": 0.6697
    },
    "w4": {
@@ -164,7 +164,7 @@
     ],
     "auc_mean": 0.7619,
     "auc_std": 0.0049,
-    "f1_mean": 0.6863,
+    "f1_mean": 0.6859,
     "holdout_auc": 0.7722,
     "holdout_f1": 0.6916
    },
@@ -182,7 +182,7 @@
     ],
     "auc_mean": 0.776,
     "auc_std": 0.0046,
-    "f1_mean": 0.6969,
+    "f1_mean": 0.697,
     "holdout_auc": 0.7884,
     "holdout_f1": 0.7065
    }

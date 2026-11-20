@@ -507,11 +507,24 @@ def sna_analysis(clicks: pd.DataFrame, out_dir: str, top_k: int = 15):
     return lm, rm, path_edges
 
 
+def _to_dt(series: pd.Series) -> pd.Series:
+    """混合格式时间戳解析：up_clicks.csv 中既有 '2013-02-01' 又有
+    '2013-02-01 00:00:00'（不同来源落盘格式不一）。
+
+    pandas>=2.0 用 format='mixed' 逐元素推断；旧版 pandas 退回自动解析
+    （errors='coerce' 把无法解析的脏值置 NaT，不中断管线）。
+    """
+    try:
+        return pd.to_datetime(series, format="mixed", errors="coerce")
+    except (ValueError, TypeError):
+        return pd.to_datetime(series, errors="coerce")
+
+
 def lsa_analysis(clicks: pd.DataFrame, out_dir: str):
     """滞后序列分析：点击流行为编码 → lag-1 转换频次 → 调整残差 z 分数
     → 行为转换图谱；并识别 刷课 / 跳步学习 异常模式。"""
     ev = clicks.copy()
-    ev["timestamp"] = pd.to_datetime(ev["timestamp"])
+    ev["timestamp"] = _to_dt(ev["timestamp"])
     ev["action"] = ev["action"].astype(str).str.lower()
     ev = ev[ev["action"].isin(LSA_ACTIONS)].sort_values(["student_id", "timestamp"])
     ev["prev"] = ev.groupby("student_id")["action"].shift(1)
@@ -599,6 +612,7 @@ def lsa_analysis(clicks: pd.DataFrame, out_dir: str):
 def temporal_analysis(clicks: pd.DataFrame, out_dir: str):
     """时序模式：登录时间分布（早/中/晚/深夜）、周度周期性、时间行为模式标记。"""
     ev = clicks.copy()
+    ev["timestamp"] = _to_dt(ev["timestamp"])   # 点击流自 CSV 读入为字符串，需先解析
     ev["hour"] = ev["timestamp"].dt.hour
     ev["weekday"] = ev["timestamp"].dt.weekday  # 0=周一 ... 6=周日
 
@@ -1137,7 +1151,7 @@ def gm11_forecast(clicks: pd.DataFrame, out_dir: str, horizon: int = 2,
     （每用户最多 7 个日序列点），周粒度序列过短会导致全员数据不足。
     """
     ev = clicks.copy()
-    ev["day"] = pd.to_datetime(ev["timestamp"]).dt.normalize()
+    ev["day"] = _to_dt(ev["timestamp"]).dt.normalize()
     daily = ev.groupby(["student_id", "day"]).size().unstack(fill_value=0)
     rows = []
     for sid, series in daily.iterrows():

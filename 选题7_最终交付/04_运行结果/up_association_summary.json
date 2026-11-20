@@ -1,0 +1,40 @@
+{
+  "corr_top": [
+    {
+      "indicator": "active_days",
+      "target": "final_grade",
+      "pearson_r": 0.715,
+      "p_value": 0.0,
+      "significant": "是"
+    },
+    {
+      "indicator": "avg_quiz_score",
+      "target": "final_grade",
+      "pearson_r": 0.711,
+      "p_value": 0.0,
+      "significant": "是"
+    },
+    {
+      "indicator": "total_clicks",
+      "target": "final_grade",
+      "pearson_r": 0.537,
+      "p_value": 0.0,
+      "significant": "是"
+    },
+    {
+      "indicator": "resource_clicks",
+      "target": "final_grade",
+      "pearson_r": 0.35,
+      "p_value": 0.0,
+      "significant": "是"
+    },
+    {
+      "indicator": "forum_posts",
+      "target": "final_grade",
+      "pearson_r": 0.313,
+      "p_value": 0.0,
+      "significant": "是"
+    }
+  ],
+  "tier_lift": "完成率 +50.0%, 成绩 +23.7 分"
+}

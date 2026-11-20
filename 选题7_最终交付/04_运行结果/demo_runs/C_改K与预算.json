@@ -38,14 +38,14 @@
   ]
  },
  "decide": {
-  "budget": 612718.0,
+  "budget": 612721.0,
   "opt_gain": 1687.8,
-  "heur_gain": 939.7,
-  "uniform_gain": 723.1,
-  "opt_cost": 605354.0,
+  "heur_gain": 939.6,
+  "uniform_gain": 723.2,
+  "opt_cost": 605358.0,
   "chosen": 3,
   "status": "optimal"
  },
- "elapsed_sec": 64.23,
+ "elapsed_sec": 35.33,
  "case": "C_改K与预算"
 }

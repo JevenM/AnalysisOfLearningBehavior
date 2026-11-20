@@ -1,0 +1,84 @@
+{
+  "sna_top_resources": [
+    "S542811",
+    "S703721",
+    "S703737",
+    "S542864",
+    "S542807"
+  ],
+  "lsa_patterns": {
+    "刷课": 6298,
+    "正常": 4830,
+    "跳步学习": 229
+  },
+  "lsa_top_transitions": [
+    {
+      "transition": "video→video",
+      "z": 427.68
+    },
+    {
+      "transition": "resource→video",
+      "z": -283.1
+    },
+    {
+      "transition": "video→resource",
+      "z": -281.02
+    },
+    {
+      "transition": "resource→resource",
+      "z": 238.44
+    },
+    {
+      "transition": "video→forum",
+      "z": -226.5
+    }
+  ],
+  "time_patterns": {
+    "常规型学习": 4439,
+    "夜间型学习": 3517,
+    "集中式周末学习": 3309,
+    "碎片化高频学习": 92
+  },
+  "apriori_top": [
+    {
+      "antecedent": "论坛互动、读资源",
+      "consequent": "OULAD 课程资源",
+      "support": 0.319,
+      "confidence": 0.988,
+      "lift": 2.8
+    },
+    {
+      "antecedent": "OULAD 课程资源、论坛互动",
+      "consequent": "读资源",
+      "support": 0.319,
+      "confidence": 0.998,
+      "lift": 2.75
+    },
+    {
+      "antecedent": "OULAD 课程资源、做测验",
+      "consequent": "读资源",
+      "support": 0.084,
+      "confidence": 0.996,
+      "lift": 2.74
+    }
+  ],
+  "short_only_pct": 58.5,
+  "scene": {
+    "慕课长视频": {
+      "完播率": 0.39,
+      "倍速使用率": 0.424,
+      "平均拖拽次数": NaN
+    },
+    "短视频": {
+      "完播率": 0.348,
+      "倍速使用率": 0.0,
+      "平均拖拽次数": NaN
+    }
+  },
+  "core_groups": {
+    "gender": "男",
+    "age_band": "26-30",
+    "region": "城市",
+    "education": "本科"
+  }
+}

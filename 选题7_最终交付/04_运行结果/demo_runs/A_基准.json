@@ -11,7 +11,7 @@
  "clean_rows": 20105,
  "cluster": {
   "k": 4,
-  "silhouette": 0.3684,
+  "silhouette": 0.3681,
   "ari": null,
   "archetypes": [
    "社交深耕型",
@@ -39,14 +39,14 @@
   ]
  },
  "decide": {
-  "budget": 416826.0,
-  "opt_gain": 1125.6,
-  "heur_gain": 704.8,
-  "uniform_gain": 553.5,
-  "opt_cost": 415340.0,
+  "budget": 416666.0,
+  "opt_gain": 1123.4,
+  "heur_gain": 704.2,
+  "uniform_gain": 552.8,
+  "opt_cost": 414686.0,
   "chosen": 3,
   "status": "optimal"
  },
- "elapsed_sec": 91.54,
+ "elapsed_sec": 39.44,
  "case": "A_基准"
 }
