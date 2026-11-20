@@ -1,0 +1,1647 @@
+{
+  "meta": {
+    "seed": 20260101,
+    "dims": [
+      "engage",
+      "persist",
+      "complete",
+      "interact",
+      "context"
+    ],
+    "dim_cn": {
+      "engage": "投入强度",
+      "persist": "持续性",
+      "complete": "内容完成度",
+      "interact": "互动深度",
+      "context": "情境支持度"
+    },
+    "forms": [
+      "MOOC",
+      "微课",
+      "短视频",
+      "课堂对照"
+    ],
+    "label_cn": {
+      "MOOC": "取得认证 / 通过（结果性标签）",
+      "微课": "单元测验通过 is_passed（过程—结果性标签）",
+      "短视频": "后 2 日知识类内容回访（按时间切分的行为持续性标签）",
+      "课堂对照": "期末成绩 G3 ≥ 12（结果性标签，无在线行为）"
+    },
+    "n_total": 9236
+  },
+  "sources": [
+    {
+      "form": "MOOC",
+      "dataset": "HMXPC13 (edX) / OULAD / KDD Cup 2015 学堂在线",
+      "unit": "人—课",
+      "raw_rows": 24000,
+      "sample_rows": 6000,
+      "label": "取得认证 / 通过（结果性标签）",
+      "positive_rate": 0.1895,
+      "field_availability": {
+        "visit_count": 0.857,
+        "active_days": 0.875,
+        "video_events": 0.428,
+        "forum_posts": 0.966,
+        "quiz_avg": 0.58,
+        "engagement_span_days": 0.868
+      },
+      "window": "edX 2012—2013 学年 / OULAD 2013—2014 / 学堂在线 2015",
+      "caveat": "三平台量纲与缺失结构不同；先平台内填补与标准化，再进入统一框架，禁止直接合并原始计数；已剔除与 certified 同源的考核成绩字段及记录完整度偏差项以防结果泄漏；edX/OULAD/学堂在线仅有课程级聚合、无事件时间戳，无法做时序切分，所得 AUC 只能解释为关联强度而非可部署的早期预警性能"
+    },
+    {
+      "form": "微课",
+      "dataset": "中国高校慕课课程多维画像与学习行为脱敏样本（阿里云天池）",
+      "unit": "人—课（章节级微资源会话）",
+      "raw_rows": 5000,
+      "sample_rows": 723,
+      "label": "单元测验通过 is_passed（过程—结果性标签）",
+      "positive_rate": 0.852,
+      "median_resource_sec": 424.0,
+      "n_resources": 4655,
+      "n_sessions": 816,
+      "alt_label_coverage": 1.0,
+      "bad_timestamp_rows": 15,
+      "window": "课程开课周期内单次会话（duration_sec 中位数约 7 min）",
+      "caveat": "微课是资源粒度而非独立平台；occur_time 存在 15 条未来年份脏数据，仅用于跨度时剔除；主标签为单元测验通过，特征剔除 score/is_passed/进度增益以防标签泄漏，进度增益上四分位仅作稳健性替代标签"
+    },
+    {
+      "form": "短视频",
+      "dataset": "清华 FIB 实验室 WWW 2025 移动短视频行为、属性与内容数据集",
+      "unit": "用户 × 7 日观测窗口（前 5 日特征 → 后 2 日标签）",
+      "raw_rows": 794053,
+      "filtered_rows": 17402,
+      "early_rows": 13587,
+      "late_rows": 3815,
+      "sample_rows": 1469,
+      "label": "后 2 日知识类内容回访（按时间切分的行为持续性标签）",
+      "positive_rate": 0.1967,
+      "filter_rule": "泛知识类：一级类目 教育14 / 科学29 / 读书38 / 历史21",
+      "root_counts": {
+        "读书": 6449,
+        "历史": 4147,
+        "教育": 3726,
+        "科学": 3080
+      },
+      "dli_mean": 0.4657,
+      "edu_share_of_all": 0.0219,
+      "n_users_all": 6654,
+      "n_videos_all": 31496,
+      "window": "20220916—20220922（7 天；切分点 20220920）",
+      "caveat": "开放的是 sampled 版而非论文全量；教育类子样本并非官方预筛，需按 root_id 自行筛选；仅 7 天窗口、无课程结构与学业结果，采用前 5 日预测后 2 日回访的时间切分，标签为行为持续性而非学习成效，不得解释为完课率或达标率"
+    },
+    {
+      "form": "课堂对照",
+      "dataset": "UCI #320 Student Performance（葡萄牙两所中学）",
+      "unit": "人—学科（传统课堂）",
+      "raw_rows": 1044,
+      "sample_rows": 1044,
+      "label": "期末成绩 G3 ≥ 12（结果性标签，无在线行为）",
+      "positive_rate": 0.4885,
+      "window": "2005—2006 学年问卷与成绩单",
+      "caveat": "该数据集不是微课、也不含任何在线行为日志；本课题仅将其作为零在线对照端点，用于检验投入—成效关联的形态无关性，严禁当作微课数据或与前三类合并训练；建模不使用 G1/G2 以避免结果泄漏"
+    }
+  ],
+  "models": {
+    "MOOC": {
+      "n": 6000,
+      "positive_rate": 0.1895,
+      "metrics": {
+        "Logistic": {
+          "cv_auc": 0.9408,
+          "cv_std": 0.0064,
+          "insample_auc": 0.9414,
+          "f1": 0.655
+        },
+        "RandomForest": {
+          "cv_auc": 0.9767,
+          "cv_std": 0.0048,
+          "insample_auc": 0.9835,
+          "f1": 0.8471
+        },
+        "coef": {
+          "engage": 2.4067,
+          "persist": 0.03,
+          "complete": 0.1399,
+          "interact": -0.2166,
+          "context": -0.7712
+        },
+        "best_model": "RandomForest",
+        "best_cv_auc": 0.9767
+      },
+      "cluster": {
+        "best_k": 6,
+        "silhouette": 0.4714,
+        "scan": [
+          {
+            "k": 2,
+            "silhouette": 0.438
+          },
+          {
+            "k": 3,
+            "silhouette": 0.4445
+          },
+          {
+            "k": 4,
+            "silhouette": 0.437
+          },
+          {
+            "k": 5,
+            "silhouette": 0.4614
+          },
+          {
+            "k": 6,
+            "silhouette": 0.4714
+          }
+        ],
+        "profile": [
+          {
+            "cluster": 0,
+            "n": 1295,
+            "label_rate": 0.0093,
+            "投入强度": -0.902,
+            "持续性": -0.126,
+            "内容完成度": -1.528,
+            "互动深度": -0.616,
+            "情境支持度": -0.555
+          },
+          {
+            "cluster": 1,
+            "n": 1640,
+            "label_rate": 0.564,
+            "投入强度": 1.371,
+            "持续性": 1.066,
+            "内容完成度": 0.478,
+            "互动深度": 1.467,
+            "情境支持度": -0.559
+          },
+          {
+            "cluster": 2,
+            "n": 669,
+            "label_rate": 0.0075,
+            "投入强度": -0.463,
+            "持续性": -0.2,
+            "内容完成度": 0.325,
+            "互动深度": -0.709,
+            "情境支持度": 1.984
+          },
+          {
+            "cluster": 3,
+            "n": 1599,
+            "label_rate": 0.0982,
+            "投入强度": -0.201,
+            "持续性": -0.093,
+            "内容完成度": 0.331,
+            "互动深度": -0.362,
+            "情境支持度": -0.323
+          },
+          {
+            "cluster": 4,
+            "n": 643,
+            "label_rate": 0.0,
+            "投入强度": -0.921,
+            "持续性": -2.14,
+            "内容完成度": 0.031,
+            "互动深度": -0.702,
+            "情境支持度": 1.04
+          },
+          {
+            "cluster": 5,
+            "n": 154,
+            "label_rate": 0.2468,
+            "投入强度": 0.929,
+            "持续性": 0.482,
+            "内容完成度": 2.785,
+            "互动深度": -0.674,
+            "情境支持度": 1.015
+          }
+        ]
+      }
+    },
+    "微课": {
+      "n": 723,
+      "positive_rate": 0.852,
+      "metrics": {
+        "Logistic": {
+          "cv_auc": 0.5369,
+          "cv_std": 0.0337,
+          "insample_auc": 0.5903,
+          "f1": 0.9201
+        },
+        "RandomForest": {
+          "cv_auc": 0.493,
+          "cv_std": 0.054,
+          "insample_auc": 0.9501,
+          "f1": 0.9201
+        },
+        "coef": {
+          "engage": 0.5017,
+          "persist": -0.2973,
+          "complete": -0.0066,
+          "interact": 0.0495,
+          "context": 0.0748
+        },
+        "best_model": "Logistic",
+        "best_cv_auc": 0.5369
+      },
+      "cluster": {
+        "best_k": 2,
+        "silhouette": 0.2855,
+        "scan": [
+          {
+            "k": 2,
+            "silhouette": 0.2855
+          },
+          {
+            "k": 3,
+            "silhouette": 0.199
+          },
+          {
+            "k": 4,
+            "silhouette": 0.2099
+          },
+          {
+            "k": 5,
+            "silhouette": 0.2022
+          },
+          {
+            "k": 6,
+            "silhouette": 0.2034
+          }
+        ],
+        "profile": [
+          {
+            "cluster": 0,
+            "n": 412,
+            "label_rate": 0.8714,
+            "投入强度": 0.64,
+            "持续性": 0.64,
+            "内容完成度": 0.38,
+            "互动深度": 0.535,
+            "情境支持度": -0.042
+          },
+          {
+            "cluster": 1,
+            "n": 311,
+            "label_rate": 0.8264,
+            "投入强度": -0.848,
+            "持续性": -0.848,
+            "内容完成度": -0.503,
+            "互动深度": -0.709,
+            "情境支持度": 0.056
+          }
+        ]
+      }
+    },
+    "短视频": {
+      "n": 1469,
+      "positive_rate": 0.1967,
+      "metrics": {
+        "Logistic": {
+          "cv_auc": 0.6123,
+          "cv_std": 0.0199,
+          "insample_auc": 0.6302,
+          "f1": 0.0338
+        },
+        "RandomForest": {
+          "cv_auc": 0.5946,
+          "cv_std": 0.0415,
+          "insample_auc": 0.8422,
+          "f1": 0.2342
+        },
+        "coef": {
+          "engage": 0.1867,
+          "persist": 0.3848,
+          "complete": -0.1559,
+          "interact": -0.0334,
+          "context": 0.0335
+        },
+        "best_model": "Logistic",
+        "best_cv_auc": 0.6123
+      },
+      "cluster": {
+        "best_k": 4,
+        "silhouette": 0.3319,
+        "scan": [
+          {
+            "k": 2,
+            "silhouette": 0.2674
+          },
+          {
+            "k": 3,
+            "silhouette": 0.3018
+          },
+          {
+            "k": 4,
+            "silhouette": 0.3319
+          },
+          {
+            "k": 5,
+            "silhouette": 0.303
+          },
+          {
+            "k": 6,
+            "silhouette": 0.2896
+          }
+        ],
+        "profile": [
+          {
+            "cluster": 0,
+            "n": 391,
+            "label_rate": 0.289,
+            "投入强度": 0.617,
+            "持续性": 1.286,
+            "内容完成度": -0.116,
+            "互动深度": -0.22,
+            "情境支持度": 0.059
+          },
+          {
+            "cluster": 1,
+            "n": 482,
+            "label_rate": 0.1598,
+            "投入强度": 0.465,
+            "持续性": -0.521,
+            "内容完成度": 1.096,
+            "互动深度": -0.22,
+            "情境支持度": -0.055
+          },
+          {
+            "cluster": 2,
+            "n": 521,
+            "label_rate": 0.1593,
+            "投入强度": -0.957,
+            "持续性": -0.534,
+            "内容完成度": -0.974,
+            "互动深度": -0.221,
+            "情境支持度": 0.007
+          },
+          {
+            "cluster": 3,
+            "n": 75,
+            "label_rate": 0.2133,
+            "投入强度": 0.444,
+            "持续性": 0.358,
+            "内容完成度": 0.331,
+            "互动深度": 4.097,
+            "情境支持度": -0.003
+          }
+        ]
+      }
+    },
+    "课堂对照": {
+      "n": 1044,
+      "positive_rate": 0.4885,
+      "metrics": {
+        "Logistic": {
+          "cv_auc": 0.7422,
+          "cv_std": 0.01,
+          "insample_auc": 0.7499,
+          "f1": 0.7149
+        },
+        "RandomForest": {
+          "cv_auc": 0.7533,
+          "cv_std": 0.02,
+          "insample_auc": 0.8189,
+          "f1": 0.7699
+        },
+        "coef": {
+          "engage": 0.2259,
+          "persist": 0.2902,
+          "complete": 1.0828,
+          "interact": -0.1279,
+          "context": 0.3905
+        },
+        "best_model": "RandomForest",
+        "best_cv_auc": 0.7533
+      },
+      "cluster": {
+        "best_k": 6,
+        "silhouette": 0.2561,
+        "scan": [
+          {
+            "k": 2,
+            "silhouette": 0.2349
+          },
+          {
+            "k": 3,
+            "silhouette": 0.2008
+          },
+          {
+            "k": 4,
+            "silhouette": 0.2194
+          },
+          {
+            "k": 5,
+            "silhouette": 0.2476
+          },
+          {
+            "k": 6,
+            "silhouette": 0.2561
+          }
+        ],
+        "profile": [
+          {
+            "cluster": 0,
+            "n": 185,
+            "label_rate": 0.6649,
+            "投入强度": 1.637,
+            "持续性": 0.239,
+            "内容完成度": 0.346,
+            "互动深度": 0.242,
+            "情境支持度": 0.202
+          },
+          {
+            "cluster": 1,
+            "n": 196,
+            "label_rate": 0.352,
+            "投入强度": -0.399,
+            "持续性": 0.241,
+            "内容完成度": 0.131,
+            "互动深度": -0.53,
+            "情境支持度": -1.413
+          },
+          {
+            "cluster": 2,
+            "n": 291,
+            "label_rate": 0.6254,
+            "投入强度": -0.376,
+            "持续性": 0.181,
+            "内容完成度": 0.351,
+            "互动深度": -0.612,
+            "情境支持度": 0.629
+          },
+          {
+            "cluster": 3,
+            "n": 83,
+            "label_rate": 0.0482,
+            "投入强度": -0.499,
+            "持续性": 0.002,
+            "内容完成度": -2.892,
+            "互动深度": -0.221,
+            "情境支持度": -0.375
+          },
+          {
+            "cluster": 4,
+            "n": 217,
+            "label_rate": 0.4977,
+            "投入强度": -0.257,
+            "持续性": 0.19,
+            "内容完成度": 0.31,
+            "互动深度": 1.218,
+            "情境支持度": 0.255
+          },
+          {
+            "cluster": 5,
+            "n": 72,
+            "label_rate": 0.3333,
+            "投入强度": -0.248,
+            "持续性": -2.575,
+            "内容完成度": -0.263,
+            "互动深度": -0.123,
+            "情境支持度": 0.447
+          }
+        ]
+      }
+    }
+  },
+  "distribution": {
+    "detail": [
+      {
+        "form": "MOOC",
+        "dim": "投入强度",
+        "ks": 0.0,
+        "p": 1.0,
+        "psi": 0.0,
+        "w1": 0.0
+      },
+      {
+        "form": "MOOC",
+        "dim": "持续性",
+        "ks": 0.0,
+        "p": 1.0,
+        "psi": 0.0,
+        "w1": 0.0
+      },
+      {
+        "form": "MOOC",
+        "dim": "内容完成度",
+        "ks": 0.0,
+        "p": 1.0,
+        "psi": 0.0,
+        "w1": 0.0
+      },
+      {
+        "form": "MOOC",
+        "dim": "互动深度",
+        "ks": 0.0,
+        "p": 1.0,
+        "psi": 0.0,
+        "w1": 0.0
+      },
+      {
+        "form": "MOOC",
+        "dim": "情境支持度",
+        "ks": 0.0,
+        "p": 1.0,
+        "psi": 0.0,
+        "w1": 0.0
+      },
+      {
+        "form": "微课",
+        "dim": "投入强度",
+        "ks": 0.2027,
+        "p": 0.0,
+        "psi": 0.6049,
+        "w1": 0.3705
+      },
+      {
+        "form": "微课",
+        "dim": "持续性",
+        "ks": 0.2317,
+        "p": 0.0,
+        "psi": 2.2868,
+        "w1": 0.3433
+      },
+      {
+        "form": "微课",
+        "dim": "内容完成度",
+        "ks": 0.1734,
+        "p": 0.0,
+        "psi": 0.8243,
+        "w1": 0.2891
+      },
+      {
+        "form": "微课",
+        "dim": "互动深度",
+        "ks": 0.3471,
+        "p": 0.0,
+        "psi": 0.5532,
+        "w1": 0.4981
+      },
+      {
+        "form": "微课",
+        "dim": "情境支持度",
+        "ks": 0.4323,
+        "p": 0.0,
+        "psi": 0.4767,
+        "w1": 0.6613
+      },
+      {
+        "form": "短视频",
+        "dim": "投入强度",
+        "ks": 0.1829,
+        "p": 0.0,
+        "psi": 0.5196,
+        "w1": 0.3269
+      },
+      {
+        "form": "短视频",
+        "dim": "持续性",
+        "ks": 0.3861,
+        "p": 0.0,
+        "psi": 3.8646,
+        "w1": 0.4758
+      },
+      {
+        "form": "短视频",
+        "dim": "内容完成度",
+        "ks": 0.2296,
+        "p": 0.0,
+        "psi": 2.5573,
+        "w1": 0.5582
+      },
+      {
+        "form": "短视频",
+        "dim": "互动深度",
+        "ks": 0.6168,
+        "p": 0.0,
+        "psi": 11.1863,
+        "w1": 0.7628
+      },
+      {
+        "form": "短视频",
+        "dim": "情境支持度",
+        "ks": 0.3864,
+        "p": 0.0,
+        "psi": 0.3097,
+        "w1": 0.5347
+      },
+      {
+        "form": "课堂对照",
+        "dim": "投入强度",
+        "ks": 0.3027,
+        "p": 0.0,
+        "psi": 8.2613,
+        "w1": 0.3417
+      },
+      {
+        "form": "课堂对照",
+        "dim": "持续性",
+        "ks": 0.2974,
+        "p": 0.0,
+        "psi": 7.2025,
+        "w1": 0.3668
+      },
+      {
+        "form": "课堂对照",
+        "dim": "内容完成度",
+        "ks": 0.4979,
+        "p": 0.0,
+        "psi": 8.7531,
+        "w1": 0.4074
+      },
+      {
+        "form": "课堂对照",
+        "dim": "互动深度",
+        "ks": 0.4396,
+        "p": 0.0,
+        "psi": 2.4284,
+        "w1": 0.4973
+      },
+      {
+        "form": "课堂对照",
+        "dim": "情境支持度",
+        "ks": 0.4279,
+        "p": 0.0,
+        "psi": 2.6114,
+        "w1": 0.7751
+      }
+    ],
+    "matrix": {
+      "MOOC": {
+        "engage": {
+          "ks": 0.0,
+          "p": 1.0,
+          "psi": 0.0,
+          "w1": 0.0
+        },
+        "persist": {
+          "ks": 0.0,
+          "p": 1.0,
+          "psi": 0.0,
+          "w1": 0.0
+        },
+        "complete": {
+          "ks": 0.0,
+          "p": 1.0,
+          "psi": 0.0,
+          "w1": 0.0
+        },
+        "interact": {
+          "ks": 0.0,
+          "p": 1.0,
+          "psi": 0.0,
+          "w1": 0.0
+        },
+        "context": {
+          "ks": 0.0,
+          "p": 1.0,
+          "psi": 0.0,
+          "w1": 0.0
+        }
+      },
+      "微课": {
+        "engage": {
+          "ks": 0.2027,
+          "p": 0.0,
+          "psi": 0.6049,
+          "w1": 0.3705
+        },
+        "persist": {
+          "ks": 0.2317,
+          "p": 0.0,
+          "psi": 2.2868,
+          "w1": 0.3433
+        },
+        "complete": {
+          "ks": 0.1734,
+          "p": 0.0,
+          "psi": 0.8243,
+          "w1": 0.2891
+        },
+        "interact": {
+          "ks": 0.3471,
+          "p": 0.0,
+          "psi": 0.5532,
+          "w1": 0.4981
+        },
+        "context": {
+          "ks": 0.4323,
+          "p": 0.0,
+          "psi": 0.4767,
+          "w1": 0.6613
+        }
+      },
+      "短视频": {
+        "engage": {
+          "ks": 0.1829,
+          "p": 0.0,
+          "psi": 0.5196,
+          "w1": 0.3269
+        },
+        "persist": {
+          "ks": 0.3861,
+          "p": 0.0,
+          "psi": 3.8646,
+          "w1": 0.4758
+        },
+        "complete": {
+          "ks": 0.2296,
+          "p": 0.0,
+          "psi": 2.5573,
+          "w1": 0.5582
+        },
+        "interact": {
+          "ks": 0.6168,
+          "p": 0.0,
+          "psi": 11.1863,
+          "w1": 0.7628
+        },
+        "context": {
+          "ks": 0.3864,
+          "p": 0.0,
+          "psi": 0.3097,
+          "w1": 0.5347
+        }
+      },
+      "课堂对照": {
+        "engage": {
+          "ks": 0.3027,
+          "p": 0.0,
+          "psi": 8.2613,
+          "w1": 0.3417
+        },
+        "persist": {
+          "ks": 0.2974,
+          "p": 0.0,
+          "psi": 7.2025,
+          "w1": 0.3668
+        },
+        "complete": {
+          "ks": 0.4979,
+          "p": 0.0,
+          "psi": 8.7531,
+          "w1": 0.4074
+        },
+        "interact": {
+          "ks": 0.4396,
+          "p": 0.0,
+          "psi": 2.4284,
+          "w1": 0.4973
+        },
+        "context": {
+          "ks": 0.4279,
+          "p": 0.0,
+          "psi": 2.6114,
+          "w1": 0.7751
+        }
+      }
+    },
+    "mean_psi": {
+      "MOOC": 0.0,
+      "微课": 0.9492,
+      "短视频": 3.6875,
+      "课堂对照": 5.8513
+    },
+    "mean_w1": {
+      "MOOC": 0.0,
+      "微课": 0.4325,
+      "短视频": 0.5317,
+      "课堂对照": 0.4777
+    },
+    "note": "以 MOOC 为基准分布。PSI<0.10 相近、0.10—0.25 中等、>0.25 显著；形态间差异极大时 PSI 会远超经验阈值，故同时报告有界的 Wasserstein 距离(W1，以标准差为单位)与 KS 统计量，三者共同刻画域偏移。"
+  },
+  "transfer": {
+    "pairs": [
+      {
+        "train": "MOOC",
+        "test": "微课",
+        "transfer_auc": 0.5635,
+        "indomain_auc": 0.5369,
+        "delta": 0.0266,
+        "retain": 1.0496
+      },
+      {
+        "train": "MOOC",
+        "test": "短视频",
+        "transfer_auc": 0.5646,
+        "indomain_auc": 0.6123,
+        "delta": -0.0476,
+        "retain": 0.9222
+      },
+      {
+        "train": "微课",
+        "test": "MOOC",
+        "transfer_auc": 0.8815,
+        "indomain_auc": 0.9408,
+        "delta": -0.0593,
+        "retain": 0.937
+      },
+      {
+        "train": "微课",
+        "test": "短视频",
+        "transfer_auc": 0.4852,
+        "indomain_auc": 0.6123,
+        "delta": -0.1271,
+        "retain": 0.7924
+      },
+      {
+        "train": "短视频",
+        "test": "MOOC",
+        "transfer_auc": 0.8908,
+        "indomain_auc": 0.9408,
+        "delta": -0.05,
+        "retain": 0.9468
+      },
+      {
+        "train": "短视频",
+        "test": "微课",
+        "transfer_auc": 0.5565,
+        "indomain_auc": 0.5369,
+        "delta": 0.0197,
+        "retain": 1.0366
+      }
+    ],
+    "classroom_indomain_auc": 0.7422,
+    "mean_transfer_auc": 0.657,
+    "mean_indomain_auc": 0.6967,
+    "note": "标签为同构代理而非同一构念，迁移 AUC 反映行为—成效关联结构的可迁移程度，不代表可直接部署的跨域预测性能。课堂对照为零在线端点，不进入迁移矩阵。"
+  },
+  "form_effect": {
+    "global_auc": 0.8078,
+    "with_form_auc": 0.9076,
+    "auc_gain": 0.0998,
+    "lr_stat": 1772.7,
+    "lr_df": 2,
+    "lr_p": 0.0,
+    "form_dummy_coef": {
+      "微课": 4.6328,
+      "短视频": 0.3587
+    },
+    "separated": [
+      {
+        "form": "MOOC",
+        "indomain_auc": 0.9408
+      },
+      {
+        "form": "微课",
+        "indomain_auc": 0.5369
+      },
+      {
+        "form": "短视频",
+        "indomain_auc": 0.6123
+      }
+    ],
+    "separated_mean_auc": 0.6967,
+    "note": "似然比检验显著说明'形态'本身携带解释力，必须分形态建模或显式引入形态项，不能把三类数据简单拼接后训练单一模型。"
+  },
+  "platform_effect": {
+    "mixed_auc": 0.9408,
+    "within_platform_auc": 0.958,
+    "inflation": -0.0172,
+    "per_platform": [
+      {
+        "platform": "Open University (OU VLE)",
+        "n": 2000,
+        "label_rate": 0.4615,
+        "auc": 0.9138
+      },
+      {
+        "platform": "edX (HarvardX/MITx)",
+        "n": 2000,
+        "label_rate": 0.025,
+        "auc": 0.986
+      },
+      {
+        "platform": "学堂在线 XuetangX",
+        "n": 2000,
+        "label_rate": 0.082,
+        "auc": 0.9743
+      }
+    ],
+    "note": "三平台成效基准率差异极大（edX 2.9% / OU 47.7% / 学堂在线 9.0%），且行为—结果的关联结构各不相同。若混合 AUC 高于平台内加权 AUC，说明模型主要学到了'平台指纹'；若低于平台内，说明混合抹平了各平台的异质关系。两种情形都指向同一结论：应当按平台分层建模，而不是把多平台记录简单拼接。此外 edX/OULAD/学堂在线均为课程级聚合、无事件时间戳，AUC 只表示关联强度，不等于可部署的早期预警性能。"
+  },
+  "evaluate": {
+    "units": [
+      "MOOC·Open University",
+      "MOOC·edX",
+      "MOOC·学堂在线 XuetangX",
+      "微课",
+      "短视频",
+      "课堂对照"
+    ],
+    "criteria": [
+      "高成效代理率",
+      "行为一致性",
+      "数据完整度",
+      "持续参与水平",
+      "行为—成效关联强度"
+    ],
+    "ahp": {
+      "weights": [
+        0.403,
+        0.2444,
+        0.1367,
+        0.1367,
+        0.0791
+      ],
+      "lambda_max": 5.0331,
+      "ci": 0.00828,
+      "cr": 0.00739
+    },
+    "entropy": [
+      0.212,
+      0.3422,
+      0.1345,
+      0.1485,
+      0.1628
+    ],
+    "combined": [
+      0.3075,
+      0.2933,
+      0.1356,
+      0.1426,
+      0.121
+    ],
+    "rank": [
+      {
+        "rank": 1,
+        "unit": "MOOC·Open University",
+        "closeness": 0.6977
+      },
+      {
+        "rank": 2,
+        "unit": "微课",
+        "closeness": 0.4829
+      },
+      {
+        "rank": 3,
+        "unit": "MOOC·学堂在线 XuetangX",
+        "closeness": 0.4769
+      },
+      {
+        "rank": 4,
+        "unit": "课堂对照",
+        "closeness": 0.4221
+      },
+      {
+        "rank": 5,
+        "unit": "MOOC·edX",
+        "closeness": 0.3514
+      },
+      {
+        "rank": 6,
+        "unit": "短视频",
+        "closeness": 0.2727
+      }
+    ],
+    "raw": [
+      [
+        0.4615,
+        -0.4957,
+        0.8559,
+        1.2286,
+        0.9138
+      ],
+      [
+        0.025,
+        -0.731,
+        0.8062,
+        0.108,
+        0.986
+      ],
+      [
+        0.082,
+        -0.4233,
+        0.545,
+        -0.1197,
+        0.9743
+      ],
+      [
+        0.852,
+        -1.0007,
+        0.65,
+        0.5931,
+        0.5369
+      ],
+      [
+        0.1967,
+        -1.0003,
+        0.85,
+        0.8091,
+        0.6123
+      ],
+      [
+        0.4885,
+        -1.0005,
+        1.0,
+        0.7145,
+        0.7533
+      ]
+    ],
+    "matrix": [
+      [
+        0.525,
+        0.837,
+        0.665,
+        0.95,
+        0.805
+      ],
+      [
+        0.05,
+        0.47,
+        0.567,
+        0.202,
+        0.95
+      ],
+      [
+        0.112,
+        0.95,
+        0.05,
+        0.05,
+        0.927
+      ],
+      [
+        0.95,
+        0.05,
+        0.258,
+        0.526,
+        0.05
+      ],
+      [
+        0.237,
+        0.051,
+        0.653,
+        0.67,
+        0.201
+      ],
+      [
+        0.554,
+        0.05,
+        0.95,
+        0.607,
+        0.484
+      ]
+    ],
+    "note": "评价单元为'形态×平台'的 6 个群体。因五维共享指标在形态内已标准化、群体均值恒为 0，评价改用高成效代理率、行为一致性、数据完整度、持续参与水平与行为—成效关联强度五个群体级绩效量；各形态标签语义不同，评价结果只作相对运营诊断，不作跨形态绝对优劣结论。"
+  },
+  "decide": {
+    "budget_ratio": 0.45,
+    "budget": 199184.0,
+    "total_cost_all": 442631.0,
+    "segments": [
+      {
+        "segment": "MOOC-C2",
+        "form": "MOOC",
+        "n": 1640,
+        "rate": 0.564,
+        "el": 16.77,
+        "cost": 11.232
+      },
+      {
+        "segment": "MOOC-C4",
+        "form": "MOOC",
+        "n": 1599,
+        "rate": 0.0982,
+        "el": 7.959,
+        "cost": 16.822
+      },
+      {
+        "segment": "MOOC-C5",
+        "form": "MOOC",
+        "n": 643,
+        "rate": 0.0,
+        "el": 3.0,
+        "cost": 18.0
+      },
+      {
+        "segment": "MOOC-C3",
+        "form": "MOOC",
+        "n": 669,
+        "rate": 0.0075,
+        "el": 3.415,
+        "cost": 17.91
+      },
+      {
+        "segment": "MOOC-C6",
+        "form": "MOOC",
+        "n": 154,
+        "rate": 0.2468,
+        "el": 13.409,
+        "cost": 15.039
+      },
+      {
+        "segment": "MOOC-C1",
+        "form": "MOOC",
+        "n": 1295,
+        "rate": 0.0093,
+        "el": 3.514,
+        "cost": 17.889
+      },
+      {
+        "segment": "微课-C1",
+        "form": "微课",
+        "n": 412,
+        "rate": 0.8714,
+        "el": 9.277,
+        "cost": 7.544
+      },
+      {
+        "segment": "微课-C2",
+        "form": "微课",
+        "n": 311,
+        "rate": 0.8264,
+        "el": 11.035,
+        "cost": 8.084
+      },
+      {
+        "segment": "短视频-C1",
+        "form": "短视频",
+        "n": 391,
+        "rate": 0.289,
+        "el": 14.507,
+        "cost": 14.532
+      },
+      {
+        "segment": "短视频-C3",
+        "form": "短视频",
+        "n": 521,
+        "rate": 0.1593,
+        "el": 10.5,
+        "cost": 16.088
+      },
+      {
+        "segment": "短视频-C2",
+        "form": "短视频",
+        "n": 482,
+        "rate": 0.1598,
+        "el": 10.517,
+        "cost": 16.083
+      },
+      {
+        "segment": "短视频-C4",
+        "form": "短视频",
+        "n": 75,
+        "rate": 0.2133,
+        "el": 12.398,
+        "cost": 15.44
+      }
+    ],
+    "options": [
+      {
+        "segment": "MOOC-C2",
+        "form": "MOOC",
+        "level": "基础包",
+        "cost_per": 11.23,
+        "uplift": 16.77,
+        "n": 1640,
+        "total_cost": 18420.48,
+        "gain": 275.03,
+        "chosen": 0
+      },
+      {
+        "segment": "MOOC-C2",
+        "form": "MOOC",
+        "level": "强化包",
+        "cost_per": 29.2,
+        "uplift": 35.22,
+        "n": 1640,
+        "total_cost": 47893.25,
+        "gain": 577.56,
+        "chosen": 1
+      },
+      {
+        "segment": "MOOC-C4",
+        "form": "MOOC",
+        "level": "基础包",
+        "cost_per": 16.82,
+        "uplift": 7.96,
+        "n": 1599,
+        "total_cost": 26898.38,
+        "gain": 127.26,
+        "chosen": 0
+      },
+      {
+        "segment": "MOOC-C4",
+        "form": "MOOC",
+        "level": "强化包",
+        "cost_per": 43.74,
+        "uplift": 16.71,
+        "n": 1599,
+        "total_cost": 69935.78,
+        "gain": 267.26,
+        "chosen": 1
+      },
+      {
+        "segment": "MOOC-C5",
+        "form": "MOOC",
+        "level": "基础包",
+        "cost_per": 18.0,
+        "uplift": 3.0,
+        "n": 643,
+        "total_cost": 11574.0,
+        "gain": 19.29,
+        "chosen": 0
+      },
+      {
+        "segment": "MOOC-C5",
+        "form": "MOOC",
+        "level": "强化包",
+        "cost_per": 46.8,
+        "uplift": 6.3,
+        "n": 643,
+        "total_cost": 30092.4,
+        "gain": 40.51,
+        "chosen": 0
+      },
+      {
+        "segment": "MOOC-C3",
+        "form": "MOOC",
+        "level": "基础包",
+        "cost_per": 17.91,
+        "uplift": 3.42,
+        "n": 669,
+        "total_cost": 11981.79,
+        "gain": 22.85,
+        "chosen": 0
+      },
+      {
+        "segment": "MOOC-C3",
+        "form": "MOOC",
+        "level": "强化包",
+        "cost_per": 46.57,
+        "uplift": 7.17,
+        "n": 669,
+        "total_cost": 31152.65,
+        "gain": 47.98,
+        "chosen": 0
+      },
+      {
+        "segment": "MOOC-C6",
+        "form": "MOOC",
+        "level": "基础包",
+        "cost_per": 15.04,
+        "uplift": 13.41,
+        "n": 154,
+        "total_cost": 2316.01,
+        "gain": 20.65,
+        "chosen": 0
+      },
+      {
+        "segment": "MOOC-C6",
+        "form": "MOOC",
+        "level": "强化包",
+        "cost_per": 39.1,
+        "uplift": 28.16,
+        "n": 154,
+        "total_cost": 6021.62,
+        "gain": 43.36,
+        "chosen": 1
+      },
+      {
+        "segment": "MOOC-C1",
+        "form": "MOOC",
+        "level": "基础包",
+        "cost_per": 17.89,
+        "uplift": 3.51,
+        "n": 1295,
+        "total_cost": 23166.25,
+        "gain": 45.51,
+        "chosen": 0
+      },
+      {
+        "segment": "MOOC-C1",
+        "form": "MOOC",
+        "level": "强化包",
+        "cost_per": 46.51,
+        "uplift": 7.38,
+        "n": 1295,
+        "total_cost": 60232.26,
+        "gain": 95.56,
+        "chosen": 0
+      },
+      {
+        "segment": "微课-C1",
+        "form": "微课",
+        "level": "基础包",
+        "cost_per": 7.54,
+        "uplift": 9.28,
+        "n": 412,
+        "total_cost": 3108.13,
+        "gain": 38.22,
+        "chosen": 0
+      },
+      {
+        "segment": "微课-C1",
+        "form": "微课",
+        "level": "强化包",
+        "cost_per": 19.61,
+        "uplift": 19.48,
+        "n": 412,
+        "total_cost": 8081.13,
+        "gain": 80.26,
+        "chosen": 1
+      },
+      {
+        "segment": "微课-C2",
+        "form": "微课",
+        "level": "基础包",
+        "cost_per": 8.08,
+        "uplift": 11.04,
+        "n": 311,
+        "total_cost": 2514.12,
+        "gain": 34.32,
+        "chosen": 0
+      },
+      {
+        "segment": "微课-C2",
+        "form": "微课",
+        "level": "强化包",
+        "cost_per": 21.02,
+        "uplift": 23.17,
+        "n": 311,
+        "total_cost": 6536.72,
+        "gain": 72.07,
+        "chosen": 1
+      },
+      {
+        "segment": "短视频-C1",
+        "form": "短视频",
+        "level": "基础包",
+        "cost_per": 14.53,
+        "uplift": 14.51,
+        "n": 391,
+        "total_cost": 5682.01,
+        "gain": 56.72,
+        "chosen": 0
+      },
+      {
+        "segment": "短视频-C1",
+        "form": "短视频",
+        "level": "强化包",
+        "cost_per": 37.78,
+        "uplift": 30.46,
+        "n": 391,
+        "total_cost": 14773.23,
+        "gain": 119.12,
+        "chosen": 1
+      },
+      {
+        "segment": "短视频-C3",
+        "form": "短视频",
+        "level": "基础包",
+        "cost_per": 16.09,
+        "uplift": 10.5,
+        "n": 521,
+        "total_cost": 8381.85,
+        "gain": 54.7,
+        "chosen": 0
+      },
+      {
+        "segment": "短视频-C3",
+        "form": "短视频",
+        "level": "强化包",
+        "cost_per": 41.83,
+        "uplift": 22.05,
+        "n": 521,
+        "total_cost": 21792.8,
+        "gain": 114.88,
+        "chosen": 1
+      },
+      {
+        "segment": "短视频-C2",
+        "form": "短视频",
+        "level": "基础包",
+        "cost_per": 16.08,
+        "uplift": 10.52,
+        "n": 482,
+        "total_cost": 7752.01,
+        "gain": 50.69,
+        "chosen": 0
+      },
+      {
+        "segment": "短视频-C2",
+        "form": "短视频",
+        "level": "强化包",
+        "cost_per": 41.82,
+        "uplift": 22.09,
+        "n": 482,
+        "total_cost": 20155.22,
+        "gain": 106.45,
+        "chosen": 1
+      },
+      {
+        "segment": "短视频-C4",
+        "form": "短视频",
+        "level": "基础包",
+        "cost_per": 15.44,
+        "uplift": 12.4,
+        "n": 75,
+        "total_cost": 1158.0,
+        "gain": 9.3,
+        "chosen": 0
+      },
+      {
+        "segment": "短视频-C4",
+        "form": "短视频",
+        "level": "强化包",
+        "cost_per": 40.14,
+        "uplift": 26.04,
+        "n": 75,
+        "total_cost": 3010.8,
+        "gain": 19.53,
+        "chosen": 1
+      }
+    ],
+    "chosen": [
+      {
+        "segment": "MOOC-C2",
+        "level": "强化包",
+        "cost_per": 29.2,
+        "n": 1640,
+        "total_cost": 47893.25,
+        "uplift": 35.22,
+        "gain": 577.56
+      },
+      {
+        "segment": "MOOC-C4",
+        "level": "强化包",
+        "cost_per": 43.74,
+        "n": 1599,
+        "total_cost": 69935.78,
+        "uplift": 16.71,
+        "gain": 267.26
+      },
+      {
+        "segment": "MOOC-C6",
+        "level": "强化包",
+        "cost_per": 39.1,
+        "n": 154,
+        "total_cost": 6021.62,
+        "uplift": 28.16,
+        "gain": 43.36
+      },
+      {
+        "segment": "微课-C1",
+        "level": "强化包",
+        "cost_per": 19.61,
+        "n": 412,
+        "total_cost": 8081.13,
+        "uplift": 19.48,
+        "gain": 80.26
+      },
+      {
+        "segment": "微课-C2",
+        "level": "强化包",
+        "cost_per": 21.02,
+        "n": 311,
+        "total_cost": 6536.72,
+        "uplift": 23.17,
+        "gain": 72.07
+      },
+      {
+        "segment": "短视频-C1",
+        "level": "强化包",
+        "cost_per": 37.78,
+        "n": 391,
+        "total_cost": 14773.23,
+        "uplift": 30.46,
+        "gain": 119.12
+      },
+      {
+        "segment": "短视频-C3",
+        "level": "强化包",
+        "cost_per": 41.83,
+        "n": 521,
+        "total_cost": 21792.8,
+        "uplift": 22.05,
+        "gain": 114.88
+      },
+      {
+        "segment": "短视频-C2",
+        "level": "强化包",
+        "cost_per": 41.82,
+        "n": 482,
+        "total_cost": 20155.22,
+        "uplift": 22.09,
+        "gain": 106.45
+      },
+      {
+        "segment": "短视频-C4",
+        "level": "强化包",
+        "cost_per": 40.14,
+        "n": 75,
+        "total_cost": 3010.8,
+        "uplift": 26.04,
+        "gain": 19.53
+      }
+    ],
+    "opt_gain": 1400.5,
+    "opt_cost": 198201.0,
+    "heur_gain": 502.0,
+    "heur_picked": [
+      {
+        "segment": "MOOC-C5",
+        "level": "强化包",
+        "gain": 40.5
+      },
+      {
+        "segment": "MOOC-C3",
+        "level": "强化包",
+        "gain": 48.0
+      },
+      {
+        "segment": "MOOC-C1",
+        "level": "强化包",
+        "gain": 95.6
+      },
+      {
+        "segment": "MOOC-C4",
+        "level": "强化包",
+        "gain": 267.3
+      },
+      {
+        "segment": "短视频-C2",
+        "level": "基础包",
+        "gain": 50.7
+      }
+    ],
+    "uniform_gain": 754.5,
+    "status": "optimal",
+    "online_n": 8192,
+    "excluded": {
+      "form": "课堂对照",
+      "n": 1044,
+      "reason": "零在线参照端点，无可投放的线上干预手段，不进入预算分配"
+    },
+    "note": "决策变量 x_{j}∈{0,1} 表示是否对第 j 个（形态×画像, 强度）组合投放干预；约束为预算上限与同一细分单元至多选择一种强度；提升幅度由倒 U 型干预弹性给出，避免人为设定使优化必然获胜。决策总体仅含 MOOC / 微课 / 短视频三类在线形态，传统课堂对照不参与干预。"
+  },
+  "robustness": {
+    "bootstrap_ci": {
+      "MOOC": {
+        "mean": 0.9404,
+        "lo": 0.9353,
+        "hi": 0.9445,
+        "n": 120
+      },
+      "微课": {
+        "mean": 0.5322,
+        "lo": 0.4443,
+        "hi": 0.5921,
+        "n": 120
+      },
+      "短视频": {
+        "mean": 0.612,
+        "lo": 0.5811,
+        "hi": 0.6387,
+        "n": 120
+      }
+    },
+    "micro_alt_label_auc": 0.6679,
+    "micro_primary_auc": 0.5369,
+    "edu_filter_note": "窄口径（严格教育类 root_id=14）与宽口径（教育+科学+读书+历史）均由 prepare_shortvideo() 实跑生成；报告主结论采用宽口径以保证样本量，窄口径结果见 narrow_vs_broad。",
+    "narrow_vs_broad": {
+      "narrow_rows": 404,
+      "narrow_positive_rate": 0.0545,
+      "narrow_auc": 0.6058,
+      "narrow_w1": 0.5379,
+      "broad_rows": 1469,
+      "broad_auc": 0.6123,
+      "broad_w1": 0.5317,
+      "same_direction": true
+    }
+  },
+  "headline": {
+    "n_total": 9236,
+    "forms": {
+      "MOOC": 6000,
+      "微课": 723,
+      "短视频": 1469,
+      "课堂对照": 1044
+    },
+    "shift_mean_psi": {
+      "MOOC": 0.0,
+      "微课": 0.9492,
+      "短视频": 3.6875,
+      "课堂对照": 5.8513
+    },
+    "shift_mean_w1": {
+      "MOOC": 0.0,
+      "微课": 0.4325,
+      "短视频": 0.5317,
+      "课堂对照": 0.4777
+    },
+    "transfer_mean": 0.657,
+    "indomain_mean": 0.6967,
+    "form_effect_gain": 0.0998,
+    "form_effect_p": 0.0,
+    "platform_mixed_auc": 0.9408,
+    "platform_within_auc": 0.958,
+    "platform_inflation": -0.0172,
+    "ahp_cr": 0.00739,
+    "topsis_top": "MOOC·Open University",
+    "opt_gain": 1400.5,
+    "heur_gain": 502.0,
+    "uniform_gain": 754.5
+  }
+}

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>四维学习者画像 · 地区 / 专业背景 / 学习习惯 / 兴趣爱好</title>
+<style>
+:root{
+  --navy:#1F3864; --blue:#2E75B6; --cyan:#2A9D8F; --orange:#D97706; --red:#C0392B;
+  --ink:#1B2733; --muted:#64748B; --line:#E2E8F0; --bg:#F4F7FB; --card:#FFFFFF; --soft:#EEF3F9;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;font-size:14px;line-height:1.6}
+code{background:var(--soft);color:var(--navy);padding:1px 5px;border-radius:4px;font-size:12px}
+a{color:var(--blue);text-decoration:none}
+header.hero{background:linear-gradient(120deg,#16294B 0%,#1F3864 52%,#2E75B6 100%);color:#fff;padding:24px 5vw 0;position:relative;overflow:hidden}
+header.hero:after{content:"";position:absolute;right:-60px;top:-90px;width:340px;height:340px;border:1px solid rgba(255,255,255,.12);border-radius:50%;box-shadow:0 0 0 55px rgba(255,255,255,.035),0 0 0 120px rgba(255,255,255,.025)}
+.hero-inner{max-width:1400px;margin:0 auto;position:relative;z-index:2}
+.hero h1{margin:0;font-size:23px;letter-spacing:.5px}
+.hero .sub{opacity:.86;font-size:12.5px;margin:5px 0 0}
+.tabs{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.tab{cursor:pointer;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#EAF2FB;border-radius:9px 9px 0 0;padding:9px 22px;font-size:13px;font-weight:600;transition:.15s;border-bottom:none}
+.tab:hover{background:rgba(255,255,255,.16)}
+.tab.active{background:var(--card);color:var(--navy);border-color:var(--line)}
+.back{font-size:12px;color:#fff;opacity:.85;float:right}
+.back:hover{opacity:1;text-decoration:underline}
+.wrap{max-width:1400px;margin:0 auto;padding:18px 5vw 70px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 16px;box-shadow:0 2px 9px rgba(31,56,100,.05)}
+.kpi b{display:block;font-size:22px;color:var(--navy);line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi span{font-size:11.5px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(31,56,100,.05);padding:18px 20px;margin-bottom:16px}
+.card h2{margin:0 0 3px;font-size:16px;color:var(--navy);display:flex;align-items:center;gap:9px}
+.card h2 .no{width:25px;height:25px;border-radius:7px;background:var(--soft);color:var(--navy);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.card .desc{color:var(--muted);font-size:12px;margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:1000px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+h3{font-size:13px;margin:4px 0 8px;color:var(--navy)}
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:none;background:#fff;color:var(--muted);padding:5px 12px;font-size:11.5px;cursor:pointer;font-family:inherit}
+.seg button.on{background:var(--navy);color:#fff}
+.note{background:var(--soft);border-left:3px solid var(--blue);padding:9px 13px;font-size:11.5px;color:#3E5670;border-radius:0 7px 7px 0;margin:10px 0}
+.note.warn{background:#FFF8EC;border-left-color:var(--orange);color:#7A4E12}
+.sig{display:inline-block;font-size:10.5px;padding:1px 8px;border-radius:12px;font-weight:700;margin-left:6px}
+.sig.y{background:#E6F4EF;color:#1E7A63;border:1px solid #BFE3D7}
+.chart{width:100%;overflow:auto}
+.chart svg{display:block;max-width:100%;height:auto}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{background:var(--soft);color:var(--navy);font-weight:700;cursor:pointer;user-select:none}
+thead th:hover{background:#DFEAF6}
+tbody tr:hover{background:#F8FBFE}
+.tblwrap{overflow-x:auto}
+.barcell{position:relative;min-width:120px}
+.barcell i{position:absolute;left:0;top:50%;transform:translateY(-50%);height:16px;border-radius:3px;opacity:.16;z-index:0}
+.barcell span{position:relative;z-index:1}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:20px;border-top:1px solid var(--line);background:#fff}
+#tip{position:fixed;pointer-events:none;background:rgba(16,32,56,.94);color:#fff;font-size:11px;line-height:1.6;padding:7px 10px;border-radius:7px;z-index:99;display:none;box-shadow:0 6px 18px rgba(0,0,0,.2);white-space:nowrap}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <a class="back" href="persona_dashboard.html">← 形态画像看板</a>
+    <h1>四维学习者画像分析</h1>
+    <p class="sub">地区 · 专业背景 · 学习习惯 · 兴趣爱好 —— 从显性/隐性行为刻画群体，回答“不识其人，即知其理”</p>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+<div class="wrap">
+  <div class="kpis" id="kpis"></div>
+  <section class="card">
+    <h2><span class="no">1</span><span id="chartTitle">分组对照</span></h2>
+    <p class="desc" id="chartDesc"></p>
+    <div class="ctrl">
+      <span>指标</span>
+      <div class="seg" id="metricSeg"></div>
+      <span id="sortHint" style="margin-left:auto">点击表头可排序 · 悬停条形查看明细</span>
+    </div>
+    <div class="grid2">
+      <div><div class="chart" id="chart"></div></div>
+      <div><div id="statBox"></div><div class="tblwrap" style="margin-top:10px"><table id="tbl"></table></div></div>
+    </div>
+  </section>
+  <div id="extra"></div>
+  <div class="note warn" id="ethics"></div>
+</div>
+<div id="tip"></div>
+<footer>全部数字来自真实公开数据（OULAD 英国 / 清华 FIB WWW2025 短视频·中国 / 阿里云天池微课·中国）· 由 profile_modeling.py 实算 · 群体关联非因果，不用于个体评价</footer>
+
+<script id="profile" type="application/json">{"meta": {"title": "六维学习者画像建模结果", "data": "OULAD 真实主表（20,105 条，英国）+ 清华 FIB 短视频 sampled（794,053 事件 / 6,654 用户，中国）+ 阿里云天池脱敏微课样本（5,000 事件 / 715 学习者，中国）", "n_main": 20105, "no_simulation": true, "dimensions": ["地区差异(英国)", "专业背景", "学习习惯", "兴趣爱好", "短视频人口与行为(国内)", "天池倍速与终端标签(国内)"], "region_sources": [{"source": "OULAD", "region": "英国 13 大区（locale）", "n": 20105, "domestic": false}, {"source": "清华 FIB 短视频", "region": "中国 365 城市 + 一线~五线等级", "n": 6654, "domestic": true}, {"source": "天池微课", "region": "中国（平台脱敏，无城市字段）", "n": 715, "domestic": true}], "ethics": ["地域有国内与英国两类：OULAD 为英国 13 大区（locale，非国籍）；短视频为中国 365 城市与城市等级，天池为国内脱敏微课。二者分层呈现，不合并、不互推。", "专业背景以学历与课程模块代理，数据无专业自陈字段。", "兴趣由内容观看占比推断，属行为偏好代理，非心理测量。", "观看完成度为 watch_time/duration 截断 1 的代理，非真实完课率。", "倍速、设备、网络、预习均为观察性标签，关联非因果，不用于个体评价或惩戒。"]}, "region": {"rows": [{"group": "爱尔兰", "n": 789, "share": 0.0392, "pass_rate": 0.5805, "visits": 516.63, "active_days": 23.41, "study_hours": 0.861}, {"group": "南部", "n": 1883, "share": 0.0937, "pass_rate": 0.5374, "visits": 498.61, "active_days": 22.94, "study_hours": 0.831}, {"group": "东南", "n": 1328, "share": 0.0661, "pass_rate": 0.5294, "visits": 457.62, "active_days": 21.96, "study_hours": 0.763}, {"group": "北部", "n": 1102, "share": 0.0548, "pass_rate": 0.5218, "visits": 573.03, "active_days": 25.42, "study_hours": 0.955}, {"group": "苏格兰", "n": 2285, "share": 0.1137, "pass_rate": 0.5195, "visits": 554.96, "active_days": 24.38, "study_hours": 0.925}, {"group": "东盎格利亚", "n": 2034, "share": 0.1012, "pass_rate": 0.5118, "visits": 444.41, "active_days": 21.37, "study_hours": 0.741}, {"group": "西南", "n": 1477, "share": 0.0735, "pass_rate": 0.5098, "visits": 463.37, "active_days": 22.08, "study_hours": 0.773}, {"group": "东米德兰兹", "n": 1454, "share": 0.0723, "pass_rate": 0.4842, "visits": 446.86, "active_days": 20.74, "study_hours": 0.745}, {"group": "约克郡", "n": 1211, "share": 0.0602, "pass_rate": 0.4748, "visits": 429.77, "active_days": 20.74, "study_hours": 0.717}, {"group": "威尔士", "n": 1329, "share": 0.0661, "pass_rate": 0.462, "visits": 451.81, "active_days": 20.64, "study_hours": 0.753}, {"group": "西米德兰兹", "n": 1564, "share": 0.0778, "pass_rate": 0.4527, "visits": 429.84, "active_days": 20.63, "study_hours": 0.717}, {"group": "伦敦", "n": 1883, "share": 0.0937, "pass_rate": 0.4493, "visits": 449.06, "active_days": 20.3, "study_hours": 0.749}, {"group": "西北", "n": 1766, "share": 0.0878, "pass_rate": 0.4281, "visits": 444.76, "active_days": 20.75, "study_hours": 0.741}], "chi2": {"chi2": 122.085, "p": "<1e-6", "dof": 12, "cramers_v": 0.0779, "n": 20105, "significant": true}, "kw_visits": {"H": 205.71, "p": "<1e-6", "groups": 13, "significant": true}, "kw_hours": {"H": 205.969, "p": "<1e-6", "groups": 13, "significant": true}, "note": "地区为英国开放大学学习者地域分类（locale），非国籍；差异为观察性关联，不作因果解释。"}, "background": {"education": [{"group": "无正式学历", "n": 198, "share": 0.0098, "pass_rate": 0.2778, "visits": 295.09, "active_days": 13.88, "study_hours": 0.492}, {"group": "低于A-Level", "n": 8048, "share": 0.4003, "pass_rate": 0.4122, "visits": 431.93, "active_days": 19.96, "study_hours": 0.72}, {"group": "A-Level或同等", "n": 8703, "share": 0.4329, "pass_rate": 0.5421, "visits": 472.61, "active_days": 22.39, "study_hours": 0.788}, {"group": "高等教育学历", "n": 2975, "share": 0.148, "pass_rate": 0.5795, "visits": 590.49, "active_days": 25.99, "study_hours": 0.984}, {"group": "研究生学历", "n": 181, "share": 0.009, "pass_rate": 0.6519, "visits": 616.73, "active_days": 27.25, "study_hours": 1.028}], "discipline": [{"group": "AAA", "n": 748, "share": 0.0372, "pass_rate": 0.7099, "visits": 661.63, "active_days": 31.09, "study_hours": 1.103}, {"group": "GGG", "n": 1701, "share": 0.0846, "pass_rate": 0.6091, "visits": 115.49, "active_days": 9.98, "study_hours": 0.193}, {"group": "EEE", "n": 2240, "share": 0.1114, "pass_rate": 0.5772, "visits": 596.66, "active_days": 27.03, "study_hours": 0.995}, {"group": "BBB", "n": 4529, "share": 0.2253, "pass_rate": 0.4911, "visits": 243.1, "active_days": 14.7, "study_hours": 0.405}, {"group": "FFF", "n": 4648, "share": 0.2312, "pass_rate": 0.4759, "visits": 848.02, "active_days": 28.65, "study_hours": 1.414}, {"group": "DDD", "n": 3741, "share": 0.1861, "pass_rate": 0.4333, "visits": 345.86, "active_days": 23.91, "study_hours": 0.577}, {"group": "CCC", "n": 2498, "share": 0.1242, "pass_rate": 0.4063, "visits": 461.05, "active_days": 20.22, "study_hours": 0.769}], "course_num": [{"group": "1 门", "n": 17195, "share": 0.8553, "pass_rate": 0.5085, "visits": 477.11, "active_days": 21.94}, {"group": "2 门", "n": 2814, "share": 0.14, "pass_rate": 0.4165, "visits": 452.55, "active_days": 21.88}, {"group": "≥3 门", "n": 96, "share": 0.0048, "pass_rate": 0.1771, "visits": 401.78, "active_days": 17.81}], "chi2_edu": {"chi2": 438.371, "p": "<1e-6", "dof": 4, "cramers_v": 0.1477, "n": 20105, "significant": true}, "chi2_disc": {"chi2": 429.832, "p": "<1e-6", "dof": 6, "cramers_v": 0.1462, "n": 20105, "significant": true}, "kw_edu_visits": {"H": 359.957, "p": "<1e-6", "groups": 5, "significant": true}, "note": "数据集无'专业'自陈字段，以入学学历与所选课程模块（学科方向）作为专业背景代理；课程模块为 OULAD 编码（AAA–GGG），原数据不提供学科中文名，故保留代码。"}, "habit": {"types": [{"group": "规律深耕型", "n": 7271, "share": 0.3617, "pass_rate": 0.7571, "lag": 1.05, "active_days": 41.25, "session_min": 2.34, "video_rate": 0.322}, {"group": "稳定参与型", "n": 1415, "share": 0.0704, "pass_rate": 0.6375, "lag": 1.31, "active_days": 32.43, "session_min": 1.26, "video_rate": 0.123}, {"group": "晚到追赶型", "n": 320, "share": 0.0159, "pass_rate": 0.675, "lag": 11.38, "active_days": 28.56, "session_min": 2.06, "video_rate": 0.249}, {"group": "碎片专注型", "n": 3853, "share": 0.1916, "pass_rate": 0.3966, "lag": 4.96, "active_days": 11.84, "session_min": 2.37, "video_rate": 0.215}, {"group": "浅触即离型", "n": 7246, "share": 0.3604, "pass_rate": 0.2458, "lag": 34.61, "active_days": 5.5, "session_min": 0.63, "video_rate": 0.048}], "chi2": {"chi2": 4104.439, "p": "<1e-6", "dof": 4, "cramers_v": 0.4518, "n": 20105, "significant": true}, "kw_lag": {"H": 7498.003, "p": "<1e-6", "groups": 5, "significant": true}, "time_of_day": {"rows": [{"group": "晚间 (18-21)", "users": 2171, "share": 0.3263}, {"group": "下午 (12-17)", "users": 2145, "share": 0.3224}, {"group": "上午 (6-11)", "users": 1460, "share": 0.2194}, {"group": "深夜 (22-23)", "users": 629, "share": 0.0945}, {"group": "凌晨 (0-5)", "users": 249, "share": 0.0374}], "user_pref": [{"group": "晚间 (18-21)", "share": 0.3263}, {"group": "下午 (12-17)", "share": 0.3224}, {"group": "上午 (6-11)", "share": 0.2194}, {"group": "深夜 (22-23)", "share": 0.0945}, {"group": "凌晨 (0-5)", "share": 0.0374}], "n_users": 6654, "note": "时段为用户主观看时段（短视频 p_hour，0–23 聚合）；OULAD 仅日粒度，二者分层呈现不合并。"}, "note": "学习习惯分型由启动滞后、活跃密度、单次时长、资源覆盖四阈值规则生成，可解释、独立于成效；阈值来自真实分布分位，非仿真。"}, "interest": {"cat_watch": [{"cat": "影视和短剧", "watch_share": 0.5005, "events": 279297, "like_rate": 0.022, "comment_rate": 0.0012}, {"cat": "搞笑", "watch_share": 0.0825, "events": 62859, "like_rate": 0.0224, "comment_rate": 0.0019}, {"cat": "美食", "watch_share": 0.046, "events": 48745, "like_rate": 0.014, "comment_rate": 0.0009}, {"cat": "游戏", "watch_share": 0.0371, "events": 32257, "like_rate": 0.0258, "comment_rate": 0.0068}, {"cat": "生活", "watch_share": 0.0366, "events": 36982, "like_rate": 0.0168, "comment_rate": 0.0032}, {"cat": "二次元", "watch_share": 0.0288, "events": 22448, "like_rate": 0.0434, "comment_rate": 0.0076}, {"cat": "明星娱乐", "watch_share": 0.0272, "events": 24173, "like_rate": 0.0321, "comment_rate": 0.0033}, {"cat": "亲子", "watch_share": 0.023, "events": 27231, "like_rate": 0.0155, "comment_rate": 0.0006}, {"cat": "运动", "watch_share": 0.0202, "events": 25917, "like_rate": 0.0208, "comment_rate": 0.0009}, {"cat": "才艺", "watch_share": 0.0197, "events": 22696, "like_rate": 0.0177, "comment_rate": 0.0019}, {"cat": "音乐", "watch_share": 0.0189, "events": 21510, "like_rate": 0.033, "comment_rate": 0.0027}, {"cat": "资讯", "watch_share": 0.0184, "events": 21575, "like_rate": 0.0132, "comment_rate": 0.0032}], "interest_types": [{"group": "知识求知型", "n": 446, "share": 0.067, "know_share": 0.4542, "ent_share": 0.0771, "diversity": 0.634}, {"group": "均衡杂食型", "n": 4212, "share": 0.633, "know_share": 0.0279, "ent_share": 0.4171, "diversity": 0.634}, {"group": "娱乐休闲型", "n": 1996, "share": 0.3, "know_share": 0.0058, "ent_share": 0.9343, "diversity": 0.365}], "edu_subgroup": {"education": {"like_rate": 0.0223, "comment_rate": 0.0003}, "all": {"like_rate": 0.0203, "comment_rate": 0.003}, "note": "互动强度按类目观看事件计（类目汇总），教育类 vs 全平台。"}, "n_users": 6654, "n_categories": 37, "diversity_mean": 0.553, "note": "兴趣由内容观看占比推断，属行为偏好代理而非心理测量；短视频内容偏好不等同学科兴趣，仅作人群描述与方法示范，不用于个体评价。"}, "sv_profile": {"city_level": [{"group": "一线城市", "n": 295, "share": 0.0443, "finish_ratio": 0.459, "full_watch_rate": 0.301, "interact_rate": 0.582, "avg_watch_sec": 47.8, "events": 31371}, {"group": "新一线城市", "n": 733, "share": 0.1102, "finish_ratio": 0.45, "full_watch_rate": 0.298, "interact_rate": 0.588, "avg_watch_sec": 45.8, "events": 79804}, {"group": "二线城市", "n": 994, "share": 0.1494, "finish_ratio": 0.485, "full_watch_rate": 0.324, "interact_rate": 0.634, "avg_watch_sec": 48.1, "events": 122023}, {"group": "三线城市", "n": 1548, "share": 0.2326, "finish_ratio": 0.48, "full_watch_rate": 0.318, "interact_rate": 0.634, "avg_watch_sec": 49.3, "events": 185246}, {"group": "四线城市", "n": 1588, "share": 0.2387, "finish_ratio": 0.474, "full_watch_rate": 0.313, "interact_rate": 0.635, "avg_watch_sec": 48.4, "events": 191926}, {"group": "五线城市", "n": 1490, "share": 0.2239, "finish_ratio": 0.46, "full_watch_rate": 0.303, "interact_rate": 0.621, "avg_watch_sec": 49.0, "events": 183163}], "gender": [{"group": "男", "n": 4217, "share": 0.6338, "finish_ratio": 0.469, "full_watch_rate": 0.31, "interact_rate": 0.628, "avg_watch_sec": 49.1, "events": 497010}, {"group": "女", "n": 2437, "share": 0.3662, "finish_ratio": 0.474, "full_watch_rate": 0.314, "interact_rate": 0.617, "avg_watch_sec": 47.0, "events": 297043}], "age_band": [{"group": "20–24岁", "n": 740, "share": 0.1112, "finish_ratio": 0.431, "full_watch_rate": 0.26, "interact_rate": 0.591, "avg_watch_sec": 38.1, "events": 123867}, {"group": "25–34岁", "n": 1209, "share": 0.1817, "finish_ratio": 0.457, "full_watch_rate": 0.291, "interact_rate": 0.615, "avg_watch_sec": 40.8, "events": 161676}, {"group": "35–44岁", "n": 1292, "share": 0.1942, "finish_ratio": 0.458, "full_watch_rate": 0.296, "interact_rate": 0.616, "avg_watch_sec": 43.6, "events": 156946}, {"group": "45–54岁", "n": 892, "share": 0.1341, "finish_ratio": 0.48, "full_watch_rate": 0.332, "interact_rate": 0.631, "avg_watch_sec": 51.6, "events": 103295}, {"group": "55–64岁", "n": 1047, "share": 0.1573, "finish_ratio": 0.481, "full_watch_rate": 0.328, "interact_rate": 0.632, "avg_watch_sec": 55.7, "events": 105327}, {"group": "65岁以上", "n": 1474, "share": 0.2215, "finish_ratio": 0.5, "full_watch_rate": 0.343, "interact_rate": 0.646, "avg_watch_sec": 56.6, "events": 142942}], "main_seg": [{"group": "凌晨 (0-5)", "n": 249, "share": 0.0374, "finish_ratio": 0.484, "full_watch_rate": 0.33, "interact_rate": 0.61, "avg_watch_sec": 53.6, "events": 20832}, {"group": "上午 (6-11)", "n": 1460, "share": 0.2194, "finish_ratio": 0.468, "full_watch_rate": 0.312, "interact_rate": 0.62, "avg_watch_sec": 47.8, "events": 167892}, {"group": "下午 (12-17)", "n": 2145, "share": 0.3224, "finish_ratio": 0.462, "full_watch_rate": 0.304, "interact_rate": 0.614, "avg_watch_sec": 47.2, "events": 283771}, {"group": "晚间 (18-21)", "n": 2171, "share": 0.3263, "finish_ratio": 0.478, "full_watch_rate": 0.314, "interact_rate": 0.638, "avg_watch_sec": 49.0, "events": 256223}, {"group": "深夜 (22-23)", "n": 629, "share": 0.0945, "finish_ratio": 0.475, "full_watch_rate": 0.318, "interact_rate": 0.623, "avg_watch_sec": 49.4, "events": 65335}], "community": [{"group": "乡村", "n": 2228, "share": 0.3348, "finish_ratio": 0.474, "full_watch_rate": 0.311, "interact_rate": 0.633, "avg_watch_sec": 50.8, "events": 292848}, {"group": "城区", "n": 1324, "share": 0.199, "finish_ratio": 0.446, "full_watch_rate": 0.286, "interact_rate": 0.589, "avg_watch_sec": 43.6, "events": 155864}, {"group": "镇区", "n": 686, "share": 0.1031, "finish_ratio": 0.459, "full_watch_rate": 0.309, "interact_rate": 0.61, "avg_watch_sec": 46.5, "events": 88367}], "kw_city": {"H": 14.641, "p": 0.012, "groups": 6, "significant": true}, "kw_gender": {"H": 0.508, "p": 0.476, "groups": 2, "significant": false}, "kw_age": {"H": 48.324, "p": "<1e-6", "groups": 6, "significant": true}, "kw_seg": {"H": 7.037, "p": 0.134, "groups": 5, "significant": false}, "n_users": 6654, "n_cities": 365, "city_top": [{"group": "北京", "n": 99}, {"group": "石家庄", "n": 97}, {"group": "邯郸", "n": 86}, {"group": "临沂", "n": 83}, {"group": "保定", "n": 78}, {"group": "济宁", "n": 76}, {"group": "沧州", "n": 76}, {"group": "哈尔滨", "n": 75}, {"group": "天津", "n": 74}, {"group": "徐州", "n": 72}], "finish_range": 0.035, "note": "城市等级/城市/社区类型来自短视频数据 fre_city_level/fre_city/fre_community_type，为中国国内地域（非英国 OULAD）；性别年龄为用户自陈属性。观看完成度为 watch_time/duration 截断 1 的代理，非真实完课；全部为观察性关联。"}, "tianchi": {"playback_speed": [{"group": "0.75×", "n": 396, "share": 0.1515, "progress_delta": 15.66, "interaction_cnt": 8.34, "score_ratio": null, "satisfaction": null}, {"group": "1×", "n": 1099, "share": 0.4204, "progress_delta": 16.27, "interaction_cnt": 8.27, "score_ratio": null, "satisfaction": null}, {"group": "1.25×", "n": 346, "share": 0.1324, "progress_delta": 16.2, "interaction_cnt": 8.5, "score_ratio": null, "satisfaction": null}, {"group": "1.5×", "n": 384, "share": 0.1469, "progress_delta": 16.32, "interaction_cnt": 8.62, "score_ratio": null, "satisfaction": null}, {"group": "1.75×", "n": 389, "share": 0.1488, "progress_delta": 16.6, "interaction_cnt": 8.85, "score_ratio": null, "satisfaction": null}], "device": [{"group": "Mobile", "n": 2135, "share": 0.427, "progress_delta": 9.48, "interaction_cnt": 11.45, "score_ratio": 0.721, "satisfaction": 3.92}, {"group": "Tablet", "n": 1702, "share": 0.3404, "progress_delta": 9.39, "interaction_cnt": 11.79, "score_ratio": 0.727, "satisfaction": 3.92}, {"group": "PC", "n": 1163, "share": 0.2326, "progress_delta": 9.63, "interaction_cnt": 11.61, "score_ratio": 0.715, "satisfaction": 3.89}], "client_os": [{"group": "Android", "n": 1932, "share": 0.3864, "progress_delta": 9.59, "interaction_cnt": 11.74, "score_ratio": 0.727, "satisfaction": 3.78}, {"group": "iOS", "n": 1059, "share": 0.2118, "progress_delta": 9.14, "interaction_cnt": 11.35, "score_ratio": 0.717, "satisfaction": 4.0}, {"group": "iPadOS", "n": 846, "share": 0.1692, "progress_delta": 9.47, "interaction_cnt": 11.58, "score_ratio": 0.725, "satisfaction": 4.08}, {"group": "Windows 11", "n": 428, "share": 0.0856, "progress_delta": 9.48, "interaction_cnt": 11.27, "score_ratio": 0.715, "satisfaction": 3.76}, {"group": "macOS", "n": 373, "share": 0.0746, "progress_delta": 9.75, "interaction_cnt": 11.79, "score_ratio": 0.705, "satisfaction": 4.44}, {"group": "Windows 10", "n": 362, "share": 0.0724, "progress_delta": 9.69, "interaction_cnt": 11.83, "score_ratio": 0.727, "satisfaction": 3.74}], "network": [{"group": "WiFi", "n": 2990, "share": 0.598, "progress_delta": 9.39, "interaction_cnt": 11.61, "score_ratio": 0.723, "satisfaction": 3.87}, {"group": "4G", "n": 713, "share": 0.1426, "progress_delta": 9.8, "interaction_cnt": 11.19, "score_ratio": 0.72, "satisfaction": 3.83}, {"group": "5G", "n": 708, "share": 0.1416, "progress_delta": 9.32, "interaction_cnt": 11.73, "score_ratio": 0.721, "satisfaction": 3.95}, {"group": "有线", "n": 589, "share": 0.1178, "progress_delta": 9.77, "interaction_cnt": 11.9, "score_ratio": 0.719, "satisfaction": 4.18}], "preview": [{"group": "课前预习", "n": 472, "share": 0.1806, "progress_delta": 16.84, "interaction_cnt": 8.54, "score_ratio": null, "satisfaction": null}, {"group": "常规回看", "n": 2142, "share": 0.8194, "progress_delta": 16.09, "interaction_cnt": 8.43, "score_ratio": null, "satisfaction": null}], "assessment": [{"group": "无标签", "n": 4299, "share": 0.8598, "progress_delta": 10.83, "interaction_cnt": 10.0, "score_ratio": 0.765, "satisfaction": 3.91}, {"group": "及格边缘", "n": 402, "share": 0.0804, "progress_delta": 1.73, "interaction_cnt": 21.44, "score_ratio": 0.639, "satisfaction": null}, {"group": "待关注", "n": 162, "share": 0.0324, "progress_delta": 1.79, "interaction_cnt": 21.26, "score_ratio": 0.468, "satisfaction": null}, {"group": "学优表现", "n": 137, "share": 0.0274, "progress_delta": 1.67, "interaction_cnt": 21.55, "score_ratio": 0.958, "satisfaction": null}], "kw_speed_progress": {"H": 1.823, "p": 0.768, "groups": 5, "significant": false}, "mw_preview_progress": {"U": 521168.0, "p": 0.291, "n_preview": 472, "n_other": 2142, "significant": false}, "n_events": 5000, "n_learners": 715, "n_preview": 472, "n_video_events": 2614, "note": "倍速/设备/操作系统/网络/预习标签来自天池脱敏微课样本（国内），全部真实。原始数据将非视频事件的倍速统一记为 1.0× 且其进度增益≈0，会造成虚假差异；故倍速与预习对照严格限定在 video_play 事件（2,614 条）内，避免该结构性伪影。设备/OS/网络为全事件分布；progress_delta=观看后进度−观看前进度；预习=remark 含‘课前预习’。均为观察性关联，非因果。"}}</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById('profile').textContent);
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fx=(v,n=2)=>(v===null||v===undefined||isNaN(Number(v)))?'—':Number(v).toFixed(n);
+const pct=(v,n=1)=>(v===null||v===undefined)?'—':(v*100).toFixed(n)+'%';
+const pv=v=>(v===null||v===undefined)?'—':(typeof v==='string'?v:(Number(v)<0.001?'<0.001':'='+Number(v).toFixed(3)));
+const NS='http://www.w3.org/2000/svg';
+const svg=(w,h,inner)=>`<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="${NS}" font-family="Microsoft YaHei,PingFang SC,sans-serif">${inner}</svg>`;
+const tx=(x,y,s,z=10,c='#64748B',a='start',w='normal')=>`<text x="${x}" y="${y}" font-size="${z}" fill="${c}" text-anchor="${a}" font-weight="${w}">${esc(s)}</text>`;
+const rc=(x,y,w,h,f,r=4,extra='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${f}" ${extra}/>`;
+const TIP=$('tip');
+function tipOn(e,html){TIP.innerHTML=html;TIP.style.display='block';tipMove(e);}
+function tipMove(e){let x=e.clientX+14,y=e.clientY+14;if(x+250>innerWidth)x=e.clientX-260;if(y+130>innerHeight)y=e.clientY-140;TIP.style.left=x+'px';TIP.style.top=y+'px';}
+function tipOff(){TIP.style.display='none';}
+
+const PALETTE=['#2E75B6','#2A9D8F','#D97706','#7B4FA8','#C0392B','#5B8C5A','#B7791F','#2E75B6','#1F5A94','#9A5B0B','#4A7C7E','#6C7A89','#8E6E53'];
+const DIMS=[
+  {id:'region', name:'地区差异', sub:'英国开放大学 13 类地域 · locale',
+   kpis:[['地区类别',d=>d.rows.length,'类'],['样本量',d=>d.rows.reduce((a,r)=>a+r.n,0).toLocaleString(),'条'],['通过率极差',d=>{const v=d.rows.map(r=>r.pass_rate);return pct(Math.max(...v)-Math.min(...v))},''],['Cramér’s V',d=>fx(d.chi2.cramers_v,3),'关联强度']],
+   chartTitle:'13 类地区的参与与成效对照', chartDesc:'按所选指标排序；条形长度=指标值，颜色区分高低。卡方检验显著但关联强度弱，说明地区携带信息但解释力有限。',
+   metrics:[['pass_rate','真实通过率'],['visits','访问次数'],['active_days','活跃天数'],['n','样本数']],
+   rows:d=>d.rows, label:r=>r.group,
+   stat:d=>`<div class="note"><b>差异检验</b>　卡方 χ²=${d.chi2.chi2}，df=${d.chi2.dof}，p${pv(d.chi2.p)} <span class="sig y">显著</span>；Cramér’s V=${d.chi2.cramers_v}（弱关联）。<br>地区间访问次数 Kruskal–Wallis H=${d.kw_visits.H}，p${pv(d.kw_visits.p)}。</div>`,
+   cols:[['group','地区'],['n','样本数'],['share','占比'],['pass_rate','通过率'],['visits','访问次数'],['active_days','活跃天数']],
+   fmt:(r,k)=>k==='n'?r.n.toLocaleString():(k==='share'||k==='pass_rate')?pct(r[k]):fx(r[k],k==='visits'?0:1),
+   extra:d=>''},
+  {id:'background', name:'专业背景', sub:'学历 + 课程模块 + 选课门数（代理口径）',
+   kpis:[['学历层次',d=>d.education.length,'类'],['学科模块',d=>d.discipline.length,'个'],['通过率跨度',d=>pct(d.education[d.education.length-1].pass_rate-d.education[0].pass_rate),'学历'],['最高通过率',d=>pct(Math.max(...d.education.map(r=>r.pass_rate))),'研究生']],
+   chartTitle:'学历层次与课程模块的成效梯度', chartDesc:'可切换“学历 / 课程模块 / 选课门数”。数据集无专业自陈字段，三者均为专业背景代理。',
+   metrics:[['pass_rate','真实通过率'],['visits','访问次数'],['n','样本数']],
+   rows:d=>d.education, label:r=>r.group,
+   stat:d=>`<div class="note"><b>差异检验</b>　学历×结果 χ²=${d.chi2_edu.chi2}（p${pv(d.chi2_edu.p)}，Cramér’s V=${d.chi2_edu.cramers_v}）；课程模块×结果 χ²=${d.chi2_disc.chi2}（p${pv(d.chi2_disc.p)}）。</div>`,
+   cols:[['group','分组'],['n','样本数'],['share','占比'],['pass_rate','通过率'],['visits','访问次数']],
+   fmt:(r,k)=>k==='n'?r.n.toLocaleString():(k==='share'||k==='pass_rate')?pct(r[k]):fx(r[k],0),
+   extra:d=>`<section class="card"><h2><span class="no">2</span>课程模块（学科方向）与选课门数</h2>
+     <p class="desc">课程模块为 OULAD 编码，原数据不提供学科中文名；选课门数为同一学习者注册的不同课程数（真实派生）。</p>
+     <div class="grid2"><div><h3>课程模块 × 通过率</h3><div class="chart" id="bgDisc"></div></div>
+     <div><h3>选课门数 × 通过率</h3><div class="chart" id="bgCnum"></div></div></div></section>`,
+   after:d=>{drawBars('bgDisc',d.discipline,'pass_rate',r=>r.group,v=>pct(v));drawBars('bgCnum',d.course_num,'pass_rate',r=>r.group,v=>pct(v));}},
+  {id:'habit', name:'学习习惯', sub:'行为节律分型（OULAD）+ 观看时段偏好（短视频）',
+   kpis:[['习惯分型',d=>d.types.length,'类'],['深耕型占比',d=>pct(d.types[0].share),''],['分型通过率差',d=>pct(d.types[0].pass_rate-d.types[d.types.length-1].pass_rate),''],['时段峰值',d=>{const p=d.time_of_day.user_pref;return p&&p.length?p[0].group:'—'},'']],
+   chartTitle:'五类学习习惯分型的规模与成效', chartDesc:'由启动滞后、活跃密度、单次时长、资源覆盖四阈值规则生成，可解释、独立于成效画像。可切换指标。',
+   metrics:[['pass_rate','真实通过率'],['share','人群占比'],['active_days','活跃天数'],['lag','启动滞后(天)'],['session_min','单次时长(分)']],
+   rows:d=>d.types, label:r=>r.group,
+   stat:d=>`<div class="note"><b>差异检验</b>　习惯分型×结果 χ²=${d.chi2.chi2}（p${pv(d.chi2.p)}）<span class="sig y">强关联</span>；启动滞后 Kruskal–Wallis H=${d.kw_lag.H}（p${pv(d.kw_lag.p)}）。四类维度中习惯信号最强。</div>`,
+   cols:[['group','习惯类型'],['n','人数'],['share','占比'],['pass_rate','通过率'],['lag','启动滞后'],['active_days','活跃天数'],['session_min','单次时长']],
+   fmt:(r,k)=>k==='n'?r.n.toLocaleString():(['share','pass_rate'].includes(k))?pct(r[k]):fx(r[k],k==='session_min'?2:1),
+   extra:d=>`<section class="card"><h2><span class="no">2</span>观看时段偏好 · 登录时间行为</h2>
+     <p class="desc">短视频小时级 p_hour（6,654 用户）显示观看高峰；OULAD 仅日粒度，二者分层呈现、不直接合并。</p>
+     <div class="grid2"><div><h3>用户主时段占比</h3><div class="chart" id="hbPref"></div></div>
+     <div><h3>各时段事件占比与完播代理</h3><div class="chart" id="hbTod"></div></div></div></section>`,
+   after:d=>{const t=d.time_of_day;if(t.user_pref){drawBars('hbPref',t.user_pref,'share',r=>r.group,v=>pct(v));}if(t.rows){drawBars('hbTod',t.rows,'share',r=>r.group,v=>pct(v));}}},
+  {id:'interest', name:'兴趣爱好', sub:'短视频内容类目偏好（行为代理，非心理测量）',
+   kpis:[['短视频用户',d=>d.n_users.toLocaleString(),'人'],['一级类目',d=>d.n_categories,'类'],['知识求知型',d=>{const r=d.interest_types.find(x=>x.group==='知识求知型');return r?pct(r.share):'—'},''],['多样性均值',d=>fx(d.diversity_mean,3),'归一化熵']],
+   chartTitle:'内容类目观看时长占比', chartDesc:'按观看时长聚合的 Top 类目；切换到“兴趣画像”看用户分群。“兴趣”由观看占比推断，仅作人群描述。',
+   metrics:[['watch_share','观看时长占比'],['events','交互事件数']],
+   rows:d=>d.cat_watch, label:r=>r.cat,
+   stat:d=>`<div class="note"><b>兴趣画像</b>　知识求知型 ${pct((d.interest_types.find(x=>x.group==='知识求知型')||{}).share)}、均衡杂食型 ${pct((d.interest_types.find(x=>x.group==='均衡杂食型')||{}).share)}、娱乐休闲型 ${pct((d.interest_types.find(x=>x.group==='娱乐休闲型')||{}).share)}。教育类子群平均观看 ${d.edu_subgroup.education.avg_watch_sec}s，低于全平台 ${d.edu_subgroup.all.avg_watch_sec}s。</div>`,
+   cols:[['cat','内容类目'],['watch_share','观看占比'],['events','事件数']],
+   fmt:(r,k)=>k==='events'?r.events.toLocaleString():pct(r[k]),
+   extra:d=>`<section class="card"><h2><span class="no">2</span>用户兴趣画像 · 知识 vs 娱乐</h2>
+     <p class="desc">按知识类（教育/科学/读书/历史/财经/法律/数码）与娱乐类（影视/搞笑/游戏/音乐/明星/二次元）观看占比划分。</p>
+     <div class="grid2"><div><h3>三类兴趣画像占比</h3><div class="chart" id="itShare"></div></div>
+     <div><h3>知识类 / 娱乐类偏好强度</h3><div class="chart" id="itPref"></div></div></div></section>`,
+   after:d=>{drawBars('itShare',d.interest_types,'share',r=>r.group,v=>pct(v));
+     // 双系列偏好条形
+     const it=d.interest_types; const w=430,rowH=44,L=78,R=20,T=22,plot=w-L-R;
+     let s=tx(L,T-8,'知识类',10,'#2A9D8F','start')+tx(w-R,T-8,'娱乐类',10,'#C0392B','end');
+     it.forEach((r,i)=>{const y=T+i*rowH,mid=L+plot/2,half=plot/2;
+       const kv=r.know_share,ev=r.ent_share,mx=Math.max(kv,ev,0.5);
+       s+=rc(mid-kv/mx*half,y+6,kv/mx*half,11,'#2A9D8F',3,'opacity=".85"');
+       s+=rc(mid,y+22,ev/mx*half,11,'#C0392B',3,'opacity=".85"');
+       s+=tx(8,y+14,r.group,10.5,'#334155','start');
+       s+=tx(mid-kv/mx*half-4,y+15,pct(kv,0),9,'#2A9D8F','end');
+       s+=tx(mid+ev/mx*half+4,y+31,pct(ev,0),9,'#C0392B','start');
+     });
+     $('itPref').innerHTML=svg(w,it.length*rowH+T+6,s);}},
+  {id:'sv_profile', name:'短视频用户属性', sub:'城市等级 / 性别 / 年龄 / 时段 / 城乡（中国国内数据）',
+   kpis:[['国内用户',d=>d.n_users.toLocaleString(),'人'],['覆盖城市',d=>d.n_cities,'座'],['城市等级',d=>d.city_level.length,'档'],['晚间+下午占比',d=>{const g=d.main_seg.filter(r=>/晚间|下午/.test(r.group));return pct(g.reduce((a,r)=>a+r.share,0))},'']],
+   chartTitle:'城市等级 × 观看完成度与互动（国内）', chartDesc:'中国 6 档城市等级用户的观看完成度与互动率；可切换性别/年龄/时段/城乡。完成度为观看时长/视频时长代理，非真实完课。',
+   metrics:[['finish_ratio','观看完成度'],['interact_rate','互动率'],['full_watch_rate','完整观看率'],['share','人群占比'],['avg_watch_sec','平均观看秒']],
+   rows:d=>d.city_level, label:r=>r.group,
+   stat:d=>`<div class="note"><b>差异检验</b>　城市等级×完成度 Kruskal–Wallis H=${d.kw_city.H}，p${pv(d.kw_city.p)} ${d.kw_city.significant?'<span class="sig y">显著</span>':'<span class="sig n">不显著</span>'}；性别 p${pv(d.kw_gender.p)}、年龄 p${pv(d.kw_age.p)}、时段 p${pv(d.kw_seg.p)}。<br>完成度随年龄递增（20–24岁 43.1% → 65岁以上 50.0%）；城市等级差异统计显著但实际极差仅 ${pct(d.finish_range)}，效应弱。</div>`,
+   cols:[['group','分组'],['n','人数'],['share','占比'],['finish_ratio','完成度'],['full_watch_rate','完整观看'],['interact_rate','互动率'],['avg_watch_sec','观看秒']],
+   fmt:(r,k)=>k==='n'?r.n.toLocaleString():(['share','finish_ratio','full_watch_rate','interact_rate'].includes(k))?pct(r[k]):fx(r[k],1),
+   extra:d=>`<section class="card"><h2><span class="no">2</span>性别 · 年龄 · 观看时段 · 城乡 · 热门城市</h2>
+     <p class="desc">短视频人口属性均为真实用户自陈/平台字段。观看时段 p_hour 小时级，晚间(18–21) 与下午(12–17) 合计约 65%。</p>
+     <div class="grid2"><div><h3>性别 × 完成度/互动</h3><div class="chart" id="spGender"></div></div>
+     <div><h3>年龄段 × 完成度</h3><div class="chart" id="spAge"></div></div>
+     <div><h3>观看时段 × 占比</h3><div class="chart" id="spSeg"></div></div>
+     <div><h3>城乡类型 × 完成度</h3><div class="chart" id="spComm"></div></div></div>
+     <p class="desc" style="margin-top:10px">热门城市（用户数）：${d.city_top.slice(0,6).map(c=>esc(c.group)+' '+c.n.toLocaleString()).join(' · ')}</p></section>`,
+   after:d=>{drawBars('spGender',d.gender,'finish_ratio',r=>r.group,v=>pct(v));
+     drawBars('spAge',d.age_band,'finish_ratio',r=>r.group,v=>pct(v));
+     drawBars('spSeg',d.main_seg,'share',r=>r.group,v=>pct(v));
+     drawBars('spComm',d.community,'finish_ratio',r=>r.group,v=>pct(v));}},
+  {id:'tianchi', name:'天池倍速标签', sub:'倍速 / 设备 / OS / 网络 / 预习（国内脱敏微课）',
+   kpis:[['事件数',d=>d.n_events.toLocaleString(),'条'],['学习者',d=>d.n_learners.toLocaleString(),'人'],['视频事件',d=>d.n_video_events.toLocaleString(),'条'],['预习事件',d=>d.n_preview.toLocaleString(),'条']],
+   chartTitle:'倍速 × 观看进度增益（仅视频事件）', chartDesc:'原始数据将非视频事件倍速统一记为 1.0× 且进度增益≈0，会造成虚假差异；此处严格限定在 video_play 事件内，避免结构性伪影。',
+   metrics:[['progress_delta','进度增益(点)'],['interaction_cnt','交互次数'],['share','事件占比'],['n','事件数']],
+   rows:d=>d.playback_speed, label:r=>r.group,
+   stat:d=>`<div class="note"><b>口径修正与检验</b>　倍速×进度增益 Kruskal–Wallis H=${d.kw_speed_progress.H}，p${pv(d.kw_speed_progress.p)} <span class="sig n">不显著</span>——各倍速进度增益接近（${d.playback_speed.map(r=>r.progress_delta).join(' / ')} 百分点），不存在“倍速越高学得越多”。<br>课前预习 vs 常规回看进度增益 16.84 vs 16.09（Mann–Whitney p${pv(d.mw_preview_progress.p)}），同为视频事件内对照，差异不显著。</div>`,
+   cols:[['group','分组'],['n','事件数'],['share','占比'],['progress_delta','进度增益'],['interaction_cnt','交互次数'],['satisfaction','满意度']],
+   fmt:(r,k)=>k==='n'?r.n.toLocaleString():(k==='share')?pct(r[k]):fx(r[k],k==='progress_delta'?2:1),
+   extra:d=>`<section class="card"><h2><span class="no">2</span>预习 · 设备 · 操作系统 · 网络 · 测评标签</h2>
+     <p class="desc">预习=remark 含“课前预习”（严格在视频事件内对照）；设备/OS/网络为全事件分布；测评标签为天池源字段。</p>
+     <div class="grid2"><div><h3>预习 × 进度增益</h3><div class="chart" id="tcPrev"></div></div>
+     <div><h3>设备 × 交互次数</h3><div class="chart" id="tcDev"></div></div>
+     <div><h3>网络类型 × 占比</h3><div class="chart" id="tcNet"></div></div>
+     <div><h3>操作系统 × 占比</h3><div class="chart" id="tcOS"></div></div></div></section>`,
+   after:d=>{drawBars('tcPrev',d.preview,'progress_delta',r=>r.group,v=>fx(v,1));
+     drawBars('tcDev',d.device,'interaction_cnt',r=>r.group,v=>fx(v,1));
+     drawBars('tcNet',d.network,'share',r=>r.group,v=>pct(v));
+     drawBars('tcOS',d.client_os,'share',r=>r.group,v=>pct(v));}}
+];
+
+function drawBars(el,rows,key,labelFn,fmtFn){
+  const box=$(el); if(!box||!rows||!rows.length)return;
+  const w=430,rowH=29,L=104,R=52,T=8,plot=w-L-R;
+  const arr=rows.map(r=>({r,v:key==='n'?r.n:(Number(r[key])||0)})).sort((a,b)=>a.v-b.v);
+  const mx=Math.max(...arr.map(a=>a.v),1e-9);
+  let s='';
+  arr.forEach((a,i)=>{const y=T+i*rowH,len=Math.max(2,a.v/mx*plot);
+    s+=rc(L,y+2,len,18,PALETTE[i%PALETTE.length],3,'opacity=".82"');
+    s+=tx(L-6,y+15,labelFn(a.r),10,'#334155','end');
+    s+=tx(L+len+5,y+15,fmtFn(a.v),9.5,'#1F3864','start','bold');
+  });
+  box.innerHTML=svg(w,arr.length*rowH+T+4,s);
+}
+
+let CUR='region', METRIC={}, SORT={};
+function kpiHtml(dim){return dim.kpis.map(([name,fn,unit])=>`<div class="kpi"><b>${fn(D[dim.id])}</b><span>${name}${unit?' · '+unit:''}</span></div>`).join('');}
+function render(id){
+  CUR=id; const dim=DIMS.find(d=>d.id===id), d=D[dim.id];
+  [...$('tabs').children].forEach(b=>b.classList.toggle('active',b.dataset.id===id));
+  $('kpis').innerHTML=kpiHtml(dim);
+  $('chartTitle').textContent=dim.chartTitle; $('chartDesc').textContent=dim.chartDesc;
+  $('metricSeg').innerHTML=dim.metrics.map(([k,n])=>`<button data-k="${k}" class="${(METRIC[id]||dim.metrics[0][0])===k?'on':''}">${n}</button>`).join('');
+  [...$('metricSeg').children].forEach(b=>b.onclick=()=>{METRIC[id]=b.dataset.k;render(id);});
+  $('extra').innerHTML=dim.extra(d)||'';
+  $('statBox').innerHTML=dim.stat(d);
+  $('ethics').innerHTML='<b>口径与伦理边界</b>　'+(D.meta.ethics||[]).map(e=>esc(e)).join('　');
+  SORT[id]=SORT[id]||{k:null,dir:-1};
+  drawMain(dim,d);
+  if(dim.after)dim.after(d);
+}
+function drawMain(dim,d){
+  const key=METRIC[CUR]||dim.metrics[0][0];
+  let rows=dim.rows(d).slice();
+  const sk=SORT[CUR];
+  if(sk.k)rows.sort((a,b)=>{const va=Number(a[sk.k])||0,vb=Number(b[sk.k])||0;return (va-vb)*sk.dir;});
+  drawBars('chart',rows,key,dim.label,v=>key==='n'||key==='events'?Number(v).toLocaleString():(key==='pass_rate'||key==='share'||key==='watch_share')?pct(v):fx(v,1));
+  // 表格
+  const cols=dim.cols;
+  let h='<thead><tr>'+cols.map(([k,n])=>`<th data-k="${k}">${n}${sk.k===k?(sk.dir<0?' ↓':' ↑'):''}</th>`).join('')+'</tr></thead><tbody>';
+  rows.forEach(r=>{h+='<tr>'+cols.map(([k])=>`<td>${(k==='group'||k==='cat')?esc(r[k]):dim.fmt(r,k)}</td>`).join('')+'</tr>';});
+  h+='</tbody>'; $('tbl').innerHTML=h;
+  [...$('tbl').querySelectorAll('th')].forEach(th=>th.onclick=()=>{const k=th.dataset.k;SORT[CUR]={k,dir:(sk.k===k?-sk.dir:-1)};drawMain(dim,d);});
+}
+
+$('tabs').innerHTML=DIMS.map(d=>`<div class="tab" data-id="${d.id}">${d.name}</div>`).join('');
+[...$('tabs').children].forEach(b=>b.onclick=()=>render(b.dataset.id));
+render('region');
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+{"ts": "2026-11-19T23:34:55", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-19T23:34:55", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-19T23:34:55", "msg": "[up 1/2] 数据层+特征层"}
+{"ts": "2026-11-19T23:34:55", "msg": "  [UCI Student Performance] 已加载 student-mat.csv  n=395"}
+{"ts": "2026-11-19T23:34:55", "msg": "  [UCI Student Performance] 已加载 student-por.csv  n=649"}
+{"ts": "2026-11-19T23:34:58", "msg": "  [清华短视频] 已加载 interaction_sampled.csv  用户 n=6654, 行为记录 794053 条"}
+{"ts": "2026-11-19T23:34:59", "msg": "  [天池慕课] 已加载 user_learning_behavior.xls  学习者 n=715, 行为事件 4985 条"}
+{"ts": "2026-11-19T23:35:00", "msg": "  [HarvardX/MITx] 用户量 50000 超上限，随机抽样 50000 人"}
+{"ts": "2026-11-19T23:35:00", "msg": "  [HarvardX/MITx] 已加载 hmx_cleaned.csv  用户 n=50000"}
+{"ts": "2026-11-19T23:35:01", "msg": "  [EduData/ASSISTments] 已加载 skill_builder_data_corrected.csv  学生 n=4217, 答题记录 401756 条"}
+{"ts": "2026-11-19T23:35:01", "msg": "  适配器 load_oulad 加载失败: Usecols do not match columns, columns expected but not found: ['site_id']"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\classroom.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\early_warning.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\micro.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\mooc.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\multimodal_all.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\real_learners.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\shortvideo.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\shortvideo_cat_watch.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\shortvideo_narrow.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  已加载真实汇总表 shortvideo_profile.csv  shape=(6654, 21)"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\tianchi_profile.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\weekly_activity.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\字段字典.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\字段对齐表.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\数据源清单.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:01", "msg": "  跳过 d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\02_数据与数据集\\方法适配矩阵.csv（缺少 student_id 列）"}
+{"ts": "2026-11-19T23:35:02", "msg": "\n统一数据集: 69284 名学生 × 28 列, 来源分布: {'real:harvardx_mitx_person_course': 50000, 'real:thu_shortvideo': 6654, 'real:shortvideo_profile.csv': 6654, 'real:edudata_assistments_2009': 4217, 'real:uci_student_performance': 1044, 'real:tianchi_mooc_2024_2025': 715}"}
+{"ts": "2026-11-19T23:35:02", "msg": "  事件流来源 load_thu_shortvideo: 169097 条"}
+{"ts": "2026-11-19T23:35:02", "msg": "  事件流来源 load_mooc_tianchi: 4985 条"}
+{"ts": "2026-11-19T23:35:02", "msg": "  事件流适配器 load_oulad 失败: Usecols do not match columns, columns expected but not found: ['site_id']"}
+{"ts": "2026-11-19T23:35:04", "msg": "  产物: d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_unified.csv ((69284, 28)), d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_clicks.csv ((174082, 9))"}
+{"ts": "2026-11-19T23:35:04", "msg": "[up 1/2] 完成"}
+{"ts": "2026-11-19T23:35:55", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-19T23:35:55", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-19T23:35:55", "msg": "[up 1/2] 数据层+特征层"}
+{"ts": "2026-11-19T23:35:55", "msg": "  [UCI Student Performance] 已加载 student-mat.csv  n=395"}
+{"ts": "2026-11-19T23:35:55", "msg": "  [UCI Student Performance] 已加载 student-por.csv  n=649"}
+{"ts": "2026-11-19T23:35:57", "msg": "  [清华短视频] 已加载 interaction_sampled.csv  用户 n=6654, 行为记录 794053 条"}
+{"ts": "2026-11-19T23:35:58", "msg": "  [天池慕课] 已加载 user_learning_behavior.xls  学习者 n=715, 行为事件 4985 条"}
+{"ts": "2026-11-19T23:35:59", "msg": "  [HarvardX/MITx] 用户量 50000 超上限，随机抽样 50000 人"}
+{"ts": "2026-11-19T23:35:59", "msg": "  [HarvardX/MITx] 已加载 hmx_cleaned.csv  用户 n=50000"}
+{"ts": "2026-11-19T23:36:00", "msg": "  [EduData/ASSISTments] 已加载 skill_builder_data_corrected.csv  学生 n=4217, 答题记录 401756 条"}
+{"ts": "2026-11-19T23:36:00", "msg": "  适配器 load_oulad 加载失败: 'site_id'"}
+{"ts": "2026-11-19T23:36:01", "msg": "\n统一数据集: 62630 名学生 × 28 列, 来源分布: {'real:harvardx_mitx_person_course': 50000, 'real:thu_shortvideo': 6654, 'real:edudata_assistments_2009': 4217, 'real:uci_student_performance': 1044, 'real:tianchi_mooc_2024_2025': 715}"}
+{"ts": "2026-11-19T23:36:01", "msg": "  事件流来源 load_thu_shortvideo: 169097 条"}
+{"ts": "2026-11-19T23:36:01", "msg": "  事件流来源 load_mooc_tianchi: 4985 条"}
+{"ts": "2026-11-19T23:36:01", "msg": "  事件流适配器 load_oulad 失败: 'site_id'"}
+{"ts": "2026-11-19T23:36:03", "msg": "  产物: d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_unified.csv ((62630, 28)), d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_clicks.csv ((174082, 9))"}
+{"ts": "2026-11-19T23:36:03", "msg": "[up 1/2] 完成"}
+{"ts": "2026-11-19T23:36:26", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-19T23:36:26", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-19T23:36:26", "msg": "[up 1/2] 数据层+特征层"}
+{"ts": "2026-11-19T23:36:26", "msg": "  [UCI Student Performance] 已加载 student-mat.csv  n=395"}
+{"ts": "2026-11-19T23:36:26", "msg": "  [UCI Student Performance] 已加载 student-por.csv  n=649"}
+{"ts": "2026-11-19T23:36:28", "msg": "  [清华短视频] 已加载 interaction_sampled.csv  用户 n=6654, 行为记录 794053 条"}
+{"ts": "2026-11-19T23:36:29", "msg": "  [天池慕课] 已加载 user_learning_behavior.xls  学习者 n=715, 行为事件 4985 条"}
+{"ts": "2026-11-19T23:36:30", "msg": "  [HarvardX/MITx] 用户量 50000 超上限，随机抽样 50000 人"}
+{"ts": "2026-11-19T23:36:30", "msg": "  [HarvardX/MITx] 已加载 hmx_cleaned.csv  用户 n=50000"}
+{"ts": "2026-11-19T23:36:31", "msg": "  [EduData/ASSISTments] 已加载 skill_builder_data_corrected.csv  学生 n=4217, 答题记录 401756 条"}
+{"ts": "2026-11-19T23:36:31", "msg": "  适配器 load_oulad 加载失败: Could not convert 5878?100 to numeric"}
+{"ts": "2026-11-19T23:36:32", "msg": "\n统一数据集: 62630 名学生 × 28 列, 来源分布: {'real:harvardx_mitx_person_course': 50000, 'real:thu_shortvideo': 6654, 'real:edudata_assistments_2009': 4217, 'real:uci_student_performance': 1044, 'real:tianchi_mooc_2024_2025': 715}"}
+{"ts": "2026-11-19T23:36:32", "msg": "  事件流来源 load_thu_shortvideo: 169097 条"}
+{"ts": "2026-11-19T23:36:32", "msg": "  事件流来源 load_mooc_tianchi: 4985 条"}
+{"ts": "2026-11-19T23:36:32", "msg": "  事件流适配器 load_oulad 失败: Could not convert 5878?100 to numeric"}
+{"ts": "2026-11-19T23:36:34", "msg": "  产物: d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_unified.csv ((62630, 28)), d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_clicks.csv ((174082, 9))"}
+{"ts": "2026-11-19T23:36:34", "msg": "[up 1/2] 完成"}
+{"ts": "2026-11-19T23:36:55", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-19T23:36:55", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-19T23:36:55", "msg": "[up 1/2] 数据层+特征层"}
+{"ts": "2026-11-19T23:36:55", "msg": "  [UCI Student Performance] 已加载 student-mat.csv  n=395"}
+{"ts": "2026-11-19T23:36:55", "msg": "  [UCI Student Performance] 已加载 student-por.csv  n=649"}
+{"ts": "2026-11-19T23:36:57", "msg": "  [清华短视频] 已加载 interaction_sampled.csv  用户 n=6654, 行为记录 794053 条"}
+{"ts": "2026-11-19T23:36:58", "msg": "  [天池慕课] 已加载 user_learning_behavior.xls  学习者 n=715, 行为事件 4985 条"}
+{"ts": "2026-11-19T23:36:59", "msg": "  [HarvardX/MITx] 用户量 50000 超上限，随机抽样 50000 人"}
+{"ts": "2026-11-19T23:36:59", "msg": "  [HarvardX/MITx] 已加载 hmx_cleaned.csv  用户 n=50000"}
+{"ts": "2026-11-19T23:37:00", "msg": "  [EduData/ASSISTments] 已加载 skill_builder_data_corrected.csv  学生 n=4217, 答题记录 401756 条"}
+{"ts": "2026-11-19T23:37:01", "msg": "  适配器 load_oulad 加载失败: Could not convert 5878?100 to numeric"}
+{"ts": "2026-11-19T23:37:01", "msg": "\n统一数据集: 62630 名学生 × 28 列, 来源分布: {'real:harvardx_mitx_person_course': 50000, 'real:thu_shortvideo': 6654, 'real:edudata_assistments_2009': 4217, 'real:uci_student_performance': 1044, 'real:tianchi_mooc_2024_2025': 715}"}
+{"ts": "2026-11-19T23:37:01", "msg": "  事件流来源 load_thu_shortvideo: 169097 条"}
+{"ts": "2026-11-19T23:37:01", "msg": "  事件流来源 load_mooc_tianchi: 4985 条"}
+{"ts": "2026-11-19T23:37:02", "msg": "  事件流适配器 load_oulad 失败: Could not convert 5878?100 to numeric"}
+{"ts": "2026-11-19T23:37:04", "msg": "  产物: d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_unified.csv ((62630, 28)), d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_clicks.csv ((174082, 9))"}
+{"ts": "2026-11-19T23:37:04", "msg": "[up 1/2] 完成"}
+{"ts": "2026-11-19T23:38:09", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-19T23:38:09", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-19T23:38:09", "msg": "[up 1/2] 数据层+特征层"}
+{"ts": "2026-11-19T23:38:09", "msg": "  [UCI Student Performance] 已加载 student-mat.csv  n=395"}
+{"ts": "2026-11-19T23:38:09", "msg": "  [UCI Student Performance] 已加载 student-por.csv  n=649"}
+{"ts": "2026-11-19T23:38:11", "msg": "  [清华短视频] 已加载 interaction_sampled.csv  用户 n=6654, 行为记录 794053 条"}
+{"ts": "2026-11-19T23:38:12", "msg": "  [天池慕课] 已加载 user_learning_behavior.xls  学习者 n=715, 行为事件 4985 条"}
+{"ts": "2026-11-19T23:38:13", "msg": "  [HarvardX/MITx] 用户量 50000 超上限，随机抽样 50000 人"}
+{"ts": "2026-11-19T23:38:13", "msg": "  [HarvardX/MITx] 已加载 hmx_cleaned.csv  用户 n=50000"}
+{"ts": "2026-11-19T23:38:14", "msg": "  [EduData/ASSISTments] 已加载 skill_builder_data_corrected.csv  学生 n=4217, 答题记录 401756 条"}
+{"ts": "2026-11-19T23:38:16", "msg": "  [OULAD] 已加载 studentInfo/studentVle  学生 n=4014, VLE 记录 983656 条"}
+{"ts": "2026-11-19T23:38:16", "msg": "\n统一数据集: 66644 名学生 × 28 列, 来源分布: {'real:harvardx_mitx_person_course': 50000, 'real:thu_shortvideo': 6654, 'real:edudata_assistments_2009': 4217, 'real:oulad': 4014, 'real:uci_student_performance': 1044, 'real:tianchi_mooc_2024_2025': 715}"}
+{"ts": "2026-11-19T23:38:16", "msg": "  事件流来源 load_thu_shortvideo: 169097 条"}
+{"ts": "2026-11-19T23:38:16", "msg": "  事件流来源 load_mooc_tianchi: 4985 条"}
+{"ts": "2026-11-19T23:38:16", "msg": "  事件流来源 load_oulad: 112941 条"}
+{"ts": "2026-11-19T23:38:17", "msg": "  事件流超过 200000 条，随机采样至 200000 条"}
+{"ts": "2026-11-19T23:38:18", "msg": "  产物: d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_unified.csv ((66644, 28)), d:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果\\up_clicks.csv ((200000, 9))"}
+{"ts": "2026-11-19T23:38:18", "msg": "[up 1/2] 完成"}
+{"ts": "2026-11-19T23:38:44", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-19T23:38:44", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-19T23:38:44", "msg": "[up 3] 分析层（PCA + 聚类画像）"}
+{"ts": "2026-11-19T23:38:44", "msg": "  聚类特征（缺失率 ≤ 40%）: ['total_clicks', 'active_days', 'avg_session_min', 'forum_posts', 'resource_clicks', 'video_clicks', 'quiz_attempts', 'avg_quiz_score', 'help_requests', 'accuracy', 'avg_response_time', 'engagement_score', 'hint_usage', 'success_rate']"}
+{"ts": "2026-11-19T23:38:45", "msg": "  PCA 主成分命名: PC1=学习投入度(23.0%), PC2=互动活跃度(21.7%), PC3=学业表现(13.5%), PC4=学业表现(次要)(11.2%)"}
+{"ts": "2026-11-19T23:39:12", "msg": "  自动选择 K = 4（轮廓系数 0.552，肘部拐点 K=4，各 K 综合得分: {2: 0.42, 3: 0.73, 4: 1.0, 5: 0.64, 6: 0.63, 7: 0.47, 8: 0.0}）"}
+{"ts": "2026-11-19T23:39:13", "msg": "  K-Means(K=4, backend=torch)  Silhouette(基于 15000 样本) = 0.552"}
+{"ts": "2026-11-19T23:39:14", "msg": "  PCA 方差解释率: PC1=23.0%, PC2=21.7%"}
+{"ts": "2026-11-19T23:39:15", "msg": "  非线性嵌入可视化: 10000 样本"}
+{"ts": "2026-11-19T23:39:15", "msg": "  t-SNE: perplexity=30 (大数据集需 1-2 分钟)"}
+{"ts": "2026-11-19T23:40:10", "msg": "  UMAP: n_neighbors=15, min_dist=0.1 (约 10-30 秒)"}
+{"ts": "2026-11-19T23:41:02", "msg": "  画像分布: {'At-Risk / Disengaged': 53281, 'Independent Deep Learner': 11445, 'Guided Learner': 1165, 'Low-Engagement Strong-Performance Learner': 753}"}
+{"ts": "2026-11-19T23:41:04", "msg": "[up 3] 完成"}
+{"ts": "2026-11-19T23:41:19", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-19T23:41:19", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-19T23:41:19", "msg": "[up 4] 挖掘层（SNA/LSA/时序/Apriori/场景）"}
+{"ts": "2026-11-19T23:48:35", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-19T23:48:35", "msg": "  计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速"}
+{"ts": "2026-11-19T23:48:35", "msg": "[up 4] 挖掘层（SNA/LSA/时序/Apriori/场景）"}

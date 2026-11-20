@@ -1,0 +1,1149 @@
+{
+  "meta": {
+    "title": "六维学习者画像建模结果",
+    "data": "OULAD 真实主表（20,105 条，英国）+ 清华 FIB 短视频 sampled（794,053 事件 / 6,654 用户，中国）+ 阿里云天池脱敏微课样本（5,000 事件 / 715 学习者，中国）",
+    "n_main": 20105,
+    "no_simulation": true,
+    "dimensions": [
+      "地区差异(英国)",
+      "专业背景",
+      "学习习惯",
+      "兴趣爱好",
+      "短视频人口与行为(国内)",
+      "天池倍速与终端标签(国内)"
+    ],
+    "region_sources": [
+      {
+        "source": "OULAD",
+        "region": "英国 13 大区（locale）",
+        "n": 20105,
+        "domestic": false
+      },
+      {
+        "source": "清华 FIB 短视频",
+        "region": "中国 365 城市 + 一线~五线等级",
+        "n": 6654,
+        "domestic": true
+      },
+      {
+        "source": "天池微课",
+        "region": "中国（平台脱敏，无城市字段）",
+        "n": 715,
+        "domestic": true
+      }
+    ],
+    "ethics": [
+      "地域有国内与英国两类：OULAD 为英国 13 大区（locale，非国籍）；短视频为中国 365 城市与城市等级，天池为国内脱敏微课。二者分层呈现，不合并、不互推。",
+      "专业背景以学历与课程模块代理，数据无专业自陈字段。",
+      "兴趣由内容观看占比推断，属行为偏好代理，非心理测量。",
+      "观看完成度为 watch_time/duration 截断 1 的代理，非真实完课率。",
+      "倍速、设备、网络、预习均为观察性标签，关联非因果，不用于个体评价或惩戒。"
+    ]
+  },
+  "region": {
+    "rows": [
+      {
+        "group": "爱尔兰",
+        "n": 789,
+        "share": 0.0392,
+        "pass_rate": 0.5805,
+        "visits": 516.63,
+        "active_days": 23.41,
+        "study_hours": 0.861
+      },
+      {
+        "group": "南部",
+        "n": 1883,
+        "share": 0.0937,
+        "pass_rate": 0.5374,
+        "visits": 498.61,
+        "active_days": 22.94,
+        "study_hours": 0.831
+      },
+      {
+        "group": "东南",
+        "n": 1328,
+        "share": 0.0661,
+        "pass_rate": 0.5294,
+        "visits": 457.62,
+        "active_days": 21.96,
+        "study_hours": 0.763
+      },
+      {
+        "group": "北部",
+        "n": 1102,
+        "share": 0.0548,
+        "pass_rate": 0.5218,
+        "visits": 573.03,
+        "active_days": 25.42,
+        "study_hours": 0.955
+      },
+      {
+        "group": "苏格兰",
+        "n": 2285,
+        "share": 0.1137,
+        "pass_rate": 0.5195,
+        "visits": 554.96,
+        "active_days": 24.38,
+        "study_hours": 0.925
+      },
+      {
+        "group": "东盎格利亚",
+        "n": 2034,
+        "share": 0.1012,
+        "pass_rate": 0.5118,
+        "visits": 444.41,
+        "active_days": 21.37,
+        "study_hours": 0.741
+      },
+      {
+        "group": "西南",
+        "n": 1477,
+        "share": 0.0735,
+        "pass_rate": 0.5098,
+        "visits": 463.37,
+        "active_days": 22.08,
+        "study_hours": 0.773
+      },
+      {
+        "group": "东米德兰兹",
+        "n": 1454,
+        "share": 0.0723,
+        "pass_rate": 0.4842,
+        "visits": 446.86,
+        "active_days": 20.74,
+        "study_hours": 0.745
+      },
+      {
+        "group": "约克郡",
+        "n": 1211,
+        "share": 0.0602,
+        "pass_rate": 0.4748,
+        "visits": 429.77,
+        "active_days": 20.74,
+        "study_hours": 0.717
+      },
+      {
+        "group": "威尔士",
+        "n": 1329,
+        "share": 0.0661,
+        "pass_rate": 0.462,
+        "visits": 451.81,
+        "active_days": 20.64,
+        "study_hours": 0.753
+      },
+      {
+        "group": "西米德兰兹",
+        "n": 1564,
+        "share": 0.0778,
+        "pass_rate": 0.4527,
+        "visits": 429.84,
+        "active_days": 20.63,
+        "study_hours": 0.717
+      },
+      {
+        "group": "伦敦",
+        "n": 1883,
+        "share": 0.0937,
+        "pass_rate": 0.4493,
+        "visits": 449.06,
+        "active_days": 20.3,
+        "study_hours": 0.749
+      },
+      {
+        "group": "西北",
+        "n": 1766,
+        "share": 0.0878,
+        "pass_rate": 0.4281,
+        "visits": 444.76,
+        "active_days": 20.75,
+        "study_hours": 0.741
+      }
+    ],
+    "chi2": {
+      "chi2": 122.085,
+      "p": "<1e-6",
+      "dof": 12,
+      "cramers_v": 0.0779,
+      "n": 20105,
+      "significant": true
+    },
+    "kw_visits": {
+      "H": 205.71,
+      "p": "<1e-6",
+      "groups": 13,
+      "significant": true
+    },
+    "kw_hours": {
+      "H": 205.969,
+      "p": "<1e-6",
+      "groups": 13,
+      "significant": true
+    },
+    "note": "地区为英国开放大学学习者地域分类（locale），非国籍；差异为观察性关联，不作因果解释。"
+  },
+  "background": {
+    "education": [
+      {
+        "group": "无正式学历",
+        "n": 198,
+        "share": 0.0098,
+        "pass_rate": 0.2778,
+        "visits": 295.09,
+        "active_days": 13.88,
+        "study_hours": 0.492
+      },
+      {
+        "group": "低于A-Level",
+        "n": 8048,
+        "share": 0.4003,
+        "pass_rate": 0.4122,
+        "visits": 431.93,
+        "active_days": 19.96,
+        "study_hours": 0.72
+      },
+      {
+        "group": "A-Level或同等",
+        "n": 8703,
+        "share": 0.4329,
+        "pass_rate": 0.5421,
+        "visits": 472.61,
+        "active_days": 22.39,
+        "study_hours": 0.788
+      },
+      {
+        "group": "高等教育学历",
+        "n": 2975,
+        "share": 0.148,
+        "pass_rate": 0.5795,
+        "visits": 590.49,
+        "active_days": 25.99,
+        "study_hours": 0.984
+      },
+      {
+        "group": "研究生学历",
+        "n": 181,
+        "share": 0.009,
+        "pass_rate": 0.6519,
+        "visits": 616.73,
+        "active_days": 27.25,
+        "study_hours": 1.028
+      }
+    ],
+    "discipline": [
+      {
+        "group": "AAA",
+        "n": 748,
+        "share": 0.0372,
+        "pass_rate": 0.7099,
+        "visits": 661.63,
+        "active_days": 31.09,
+        "study_hours": 1.103
+      },
+      {
+        "group": "GGG",
+        "n": 1701,
+        "share": 0.0846,
+        "pass_rate": 0.6091,
+        "visits": 115.49,
+        "active_days": 9.98,
+        "study_hours": 0.193
+      },
+      {
+        "group": "EEE",
+        "n": 2240,
+        "share": 0.1114,
+        "pass_rate": 0.5772,
+        "visits": 596.66,
+        "active_days": 27.03,
+        "study_hours": 0.995
+      },
+      {
+        "group": "BBB",
+        "n": 4529,
+        "share": 0.2253,
+        "pass_rate": 0.4911,
+        "visits": 243.1,
+        "active_days": 14.7,
+        "study_hours": 0.405
+      },
+      {
+        "group": "FFF",
+        "n": 4648,
+        "share": 0.2312,
+        "pass_rate": 0.4759,
+        "visits": 848.02,
+        "active_days": 28.65,
+        "study_hours": 1.414
+      },
+      {
+        "group": "DDD",
+        "n": 3741,
+        "share": 0.1861,
+        "pass_rate": 0.4333,
+        "visits": 345.86,
+        "active_days": 23.91,
+        "study_hours": 0.577
+      },
+      {
+        "group": "CCC",
+        "n": 2498,
+        "share": 0.1242,
+        "pass_rate": 0.4063,
+        "visits": 461.05,
+        "active_days": 20.22,
+        "study_hours": 0.769
+      }
+    ],
+    "course_num": [
+      {
+        "group": "1 门",
+        "n": 17195,
+        "share": 0.8553,
+        "pass_rate": 0.5085,
+        "visits": 477.11,
+        "active_days": 21.94
+      },
+      {
+        "group": "2 门",
+        "n": 2814,
+        "share": 0.14,
+        "pass_rate": 0.4165,
+        "visits": 452.55,
+        "active_days": 21.88
+      },
+      {
+        "group": "≥3 门",
+        "n": 96,
+        "share": 0.0048,
+        "pass_rate": 0.1771,
+        "visits": 401.78,
+        "active_days": 17.81
+      }
+    ],
+    "chi2_edu": {
+      "chi2": 438.371,
+      "p": "<1e-6",
+      "dof": 4,
+      "cramers_v": 0.1477,
+      "n": 20105,
+      "significant": true
+    },
+    "chi2_disc": {
+      "chi2": 429.832,
+      "p": "<1e-6",
+      "dof": 6,
+      "cramers_v": 0.1462,
+      "n": 20105,
+      "significant": true
+    },
+    "kw_edu_visits": {
+      "H": 359.957,
+      "p": "<1e-6",
+      "groups": 5,
+      "significant": true
+    },
+    "note": "数据集无'专业'自陈字段，以入学学历与所选课程模块（学科方向）作为专业背景代理；课程模块为 OULAD 编码（AAA–GGG），原数据不提供学科中文名，故保留代码。"
+  },
+  "habit": {
+    "types": [
+      {
+        "group": "规律深耕型",
+        "n": 7271,
+        "share": 0.3617,
+        "pass_rate": 0.7571,
+        "lag": 1.05,
+        "active_days": 41.25,
+        "session_min": 2.34,
+        "video_rate": 0.322
+      },
+      {
+        "group": "稳定参与型",
+        "n": 1415,
+        "share": 0.0704,
+        "pass_rate": 0.6375,
+        "lag": 1.31,
+        "active_days": 32.43,
+        "session_min": 1.26,
+        "video_rate": 0.123
+      },
+      {
+        "group": "晚到追赶型",
+        "n": 320,
+        "share": 0.0159,
+        "pass_rate": 0.675,
+        "lag": 11.38,
+        "active_days": 28.56,
+        "session_min": 2.06,
+        "video_rate": 0.249
+      },
+      {
+        "group": "碎片专注型",
+        "n": 3853,
+        "share": 0.1916,
+        "pass_rate": 0.3966,
+        "lag": 4.96,
+        "active_days": 11.84,
+        "session_min": 2.37,
+        "video_rate": 0.215
+      },
+      {
+        "group": "浅触即离型",
+        "n": 7246,
+        "share": 0.3604,
+        "pass_rate": 0.2458,
+        "lag": 34.61,
+        "active_days": 5.5,
+        "session_min": 0.63,
+        "video_rate": 0.048
+      }
+    ],
+    "chi2": {
+      "chi2": 4104.439,
+      "p": "<1e-6",
+      "dof": 4,
+      "cramers_v": 0.4518,
+      "n": 20105,
+      "significant": true
+    },
+    "kw_lag": {
+      "H": 7498.003,
+      "p": "<1e-6",
+      "groups": 5,
+      "significant": true
+    },
+    "time_of_day": {
+      "rows": [
+        {
+          "group": "晚间 (18-21)",
+          "users": 2171,
+          "share": 0.3263
+        },
+        {
+          "group": "下午 (12-17)",
+          "users": 2145,
+          "share": 0.3224
+        },
+        {
+          "group": "上午 (6-11)",
+          "users": 1460,
+          "share": 0.2194
+        },
+        {
+          "group": "深夜 (22-23)",
+          "users": 629,
+          "share": 0.0945
+        },
+        {
+          "group": "凌晨 (0-5)",
+          "users": 249,
+          "share": 0.0374
+        }
+      ],
+      "user_pref": [
+        {
+          "group": "晚间 (18-21)",
+          "share": 0.3263
+        },
+        {
+          "group": "下午 (12-17)",
+          "share": 0.3224
+        },
+        {
+          "group": "上午 (6-11)",
+          "share": 0.2194
+        },
+        {
+          "group": "深夜 (22-23)",
+          "share": 0.0945
+        },
+        {
+          "group": "凌晨 (0-5)",
+          "share": 0.0374
+        }
+      ],
+      "n_users": 6654,
+      "note": "时段为用户主观看时段（短视频 p_hour，0–23 聚合）；OULAD 仅日粒度，二者分层呈现不合并。"
+    },
+    "note": "学习习惯分型由启动滞后、活跃密度、单次时长、资源覆盖四阈值规则生成，可解释、独立于成效；阈值来自真实分布分位，非仿真。"
+  },
+  "interest": {
+    "cat_watch": [
+      {
+        "cat": "影视和短剧",
+        "watch_share": 0.5005,
+        "events": 279297,
+        "like_rate": 0.022,
+        "comment_rate": 0.0012
+      },
+      {
+        "cat": "搞笑",
+        "watch_share": 0.0825,
+        "events": 62859,
+        "like_rate": 0.0224,
+        "comment_rate": 0.0019
+      },
+      {
+        "cat": "美食",
+        "watch_share": 0.046,
+        "events": 48745,
+        "like_rate": 0.014,
+        "comment_rate": 0.0009
+      },
+      {
+        "cat": "游戏",
+        "watch_share": 0.0371,
+        "events": 32257,
+        "like_rate": 0.0258,
+        "comment_rate": 0.0068
+      },
+      {
+        "cat": "生活",
+        "watch_share": 0.0366,
+        "events": 36982,
+        "like_rate": 0.0168,
+        "comment_rate": 0.0032
+      },
+      {
+        "cat": "二次元",
+        "watch_share": 0.0288,
+        "events": 22448,
+        "like_rate": 0.0434,
+        "comment_rate": 0.0076
+      },
+      {
+        "cat": "明星娱乐",
+        "watch_share": 0.0272,
+        "events": 24173,
+        "like_rate": 0.0321,
+        "comment_rate": 0.0033
+      },
+      {
+        "cat": "亲子",
+        "watch_share": 0.023,
+        "events": 27231,
+        "like_rate": 0.0155,
+        "comment_rate": 0.0006
+      },
+      {
+        "cat": "运动",
+        "watch_share": 0.0202,
+        "events": 25917,
+        "like_rate": 0.0208,
+        "comment_rate": 0.0009
+      },
+      {
+        "cat": "才艺",
+        "watch_share": 0.0197,
+        "events": 22696,
+        "like_rate": 0.0177,
+        "comment_rate": 0.0019
+      },
+      {
+        "cat": "音乐",
+        "watch_share": 0.0189,
+        "events": 21510,
+        "like_rate": 0.033,
+        "comment_rate": 0.0027
+      },
+      {
+        "cat": "资讯",
+        "watch_share": 0.0184,
+        "events": 21575,
+        "like_rate": 0.0132,
+        "comment_rate": 0.0032
+      }
+    ],
+    "interest_types": [
+      {
+        "group": "知识求知型",
+        "n": 446,
+        "share": 0.067,
+        "know_share": 0.4542,
+        "ent_share": 0.0771,
+        "diversity": 0.634
+      },
+      {
+        "group": "均衡杂食型",
+        "n": 4212,
+        "share": 0.633,
+        "know_share": 0.0279,
+        "ent_share": 0.4171,
+        "diversity": 0.634
+      },
+      {
+        "group": "娱乐休闲型",
+        "n": 1996,
+        "share": 0.3,
+        "know_share": 0.0058,
+        "ent_share": 0.9343,
+        "diversity": 0.365
+      }
+    ],
+    "edu_subgroup": {
+      "education": {
+        "like_rate": 0.0223,
+        "comment_rate": 0.0003
+      },
+      "all": {
+        "like_rate": 0.0203,
+        "comment_rate": 0.003
+      },
+      "note": "互动强度按类目观看事件计（类目汇总），教育类 vs 全平台。"
+    },
+    "n_users": 6654,
+    "n_categories": 37,
+    "diversity_mean": 0.553,
+    "note": "兴趣由内容观看占比推断，属行为偏好代理而非心理测量；短视频内容偏好不等同学科兴趣，仅作人群描述与方法示范，不用于个体评价。"
+  },
+  "sv_profile": {
+    "city_level": [
+      {
+        "group": "一线城市",
+        "n": 295,
+        "share": 0.0443,
+        "finish_ratio": 0.459,
+        "full_watch_rate": 0.301,
+        "interact_rate": 0.582,
+        "avg_watch_sec": 47.8,
+        "events": 31371
+      },
+      {
+        "group": "新一线城市",
+        "n": 733,
+        "share": 0.1102,
+        "finish_ratio": 0.45,
+        "full_watch_rate": 0.298,
+        "interact_rate": 0.588,
+        "avg_watch_sec": 45.8,
+        "events": 79804
+      },
+      {
+        "group": "二线城市",
+        "n": 994,
+        "share": 0.1494,
+        "finish_ratio": 0.485,
+        "full_watch_rate": 0.324,
+        "interact_rate": 0.634,
+        "avg_watch_sec": 48.1,
+        "events": 122023
+      },
+      {
+        "group": "三线城市",
+        "n": 1548,
+        "share": 0.2326,
+        "finish_ratio": 0.48,
+        "full_watch_rate": 0.318,
+        "interact_rate": 0.634,
+        "avg_watch_sec": 49.3,
+        "events": 185246
+      },
+      {
+        "group": "四线城市",
+        "n": 1588,
+        "share": 0.2387,
+        "finish_ratio": 0.474,
+        "full_watch_rate": 0.313,
+        "interact_rate": 0.635,
+        "avg_watch_sec": 48.4,
+        "events": 191926
+      },
+      {
+        "group": "五线城市",
+        "n": 1490,
+        "share": 0.2239,
+        "finish_ratio": 0.46,
+        "full_watch_rate": 0.303,
+        "interact_rate": 0.621,
+        "avg_watch_sec": 49.0,
+        "events": 183163
+      }
+    ],
+    "gender": [
+      {
+        "group": "男",
+        "n": 4217,
+        "share": 0.6338,
+        "finish_ratio": 0.469,
+        "full_watch_rate": 0.31,
+        "interact_rate": 0.628,
+        "avg_watch_sec": 49.1,
+        "events": 497010
+      },
+      {
+        "group": "女",
+        "n": 2437,
+        "share": 0.3662,
+        "finish_ratio": 0.474,
+        "full_watch_rate": 0.314,
+        "interact_rate": 0.617,
+        "avg_watch_sec": 47.0,
+        "events": 297043
+      }
+    ],
+    "age_band": [
+      {
+        "group": "20–24岁",
+        "n": 740,
+        "share": 0.1112,
+        "finish_ratio": 0.431,
+        "full_watch_rate": 0.26,
+        "interact_rate": 0.591,
+        "avg_watch_sec": 38.1,
+        "events": 123867
+      },
+      {
+        "group": "25–34岁",
+        "n": 1209,
+        "share": 0.1817,
+        "finish_ratio": 0.457,
+        "full_watch_rate": 0.291,
+        "interact_rate": 0.615,
+        "avg_watch_sec": 40.8,
+        "events": 161676
+      },
+      {
+        "group": "35–44岁",
+        "n": 1292,
+        "share": 0.1942,
+        "finish_ratio": 0.458,
+        "full_watch_rate": 0.296,
+        "interact_rate": 0.616,
+        "avg_watch_sec": 43.6,
+        "events": 156946
+      },
+      {
+        "group": "45–54岁",
+        "n": 892,
+        "share": 0.1341,
+        "finish_ratio": 0.48,
+        "full_watch_rate": 0.332,
+        "interact_rate": 0.631,
+        "avg_watch_sec": 51.6,
+        "events": 103295
+      },
+      {
+        "group": "55–64岁",
+        "n": 1047,
+        "share": 0.1573,
+        "finish_ratio": 0.481,
+        "full_watch_rate": 0.328,
+        "interact_rate": 0.632,
+        "avg_watch_sec": 55.7,
+        "events": 105327
+      },
+      {
+        "group": "65岁以上",
+        "n": 1474,
+        "share": 0.2215,
+        "finish_ratio": 0.5,
+        "full_watch_rate": 0.343,
+        "interact_rate": 0.646,
+        "avg_watch_sec": 56.6,
+        "events": 142942
+      }
+    ],
+    "main_seg": [
+      {
+        "group": "凌晨 (0-5)",
+        "n": 249,
+        "share": 0.0374,
+        "finish_ratio": 0.484,
+        "full_watch_rate": 0.33,
+        "interact_rate": 0.61,
+        "avg_watch_sec": 53.6,
+        "events": 20832
+      },
+      {
+        "group": "上午 (6-11)",
+        "n": 1460,
+        "share": 0.2194,
+        "finish_ratio": 0.468,
+        "full_watch_rate": 0.312,
+        "interact_rate": 0.62,
+        "avg_watch_sec": 47.8,
+        "events": 167892
+      },
+      {
+        "group": "下午 (12-17)",
+        "n": 2145,
+        "share": 0.3224,
+        "finish_ratio": 0.462,
+        "full_watch_rate": 0.304,
+        "interact_rate": 0.614,
+        "avg_watch_sec": 47.2,
+        "events": 283771
+      },
+      {
+        "group": "晚间 (18-21)",
+        "n": 2171,
+        "share": 0.3263,
+        "finish_ratio": 0.478,
+        "full_watch_rate": 0.314,
+        "interact_rate": 0.638,
+        "avg_watch_sec": 49.0,
+        "events": 256223
+      },
+      {
+        "group": "深夜 (22-23)",
+        "n": 629,
+        "share": 0.0945,
+        "finish_ratio": 0.475,
+        "full_watch_rate": 0.318,
+        "interact_rate": 0.623,
+        "avg_watch_sec": 49.4,
+        "events": 65335
+      }
+    ],
+    "community": [
+      {
+        "group": "乡村",
+        "n": 2228,
+        "share": 0.3348,
+        "finish_ratio": 0.474,
+        "full_watch_rate": 0.311,
+        "interact_rate": 0.633,
+        "avg_watch_sec": 50.8,
+        "events": 292848
+      },
+      {
+        "group": "城区",
+        "n": 1324,
+        "share": 0.199,
+        "finish_ratio": 0.446,
+        "full_watch_rate": 0.286,
+        "interact_rate": 0.589,
+        "avg_watch_sec": 43.6,
+        "events": 155864
+      },
+      {
+        "group": "镇区",
+        "n": 686,
+        "share": 0.1031,
+        "finish_ratio": 0.459,
+        "full_watch_rate": 0.309,
+        "interact_rate": 0.61,
+        "avg_watch_sec": 46.5,
+        "events": 88367
+      }
+    ],
+    "kw_city": {
+      "H": 14.641,
+      "p": 0.012,
+      "groups": 6,
+      "significant": true
+    },
+    "kw_gender": {
+      "H": 0.508,
+      "p": 0.476,
+      "groups": 2,
+      "significant": false
+    },
+    "kw_age": {
+      "H": 48.324,
+      "p": "<1e-6",
+      "groups": 6,
+      "significant": true
+    },
+    "kw_seg": {
+      "H": 7.037,
+      "p": 0.134,
+      "groups": 5,
+      "significant": false
+    },
+    "n_users": 6654,
+    "n_cities": 365,
+    "city_top": [
+      {
+        "group": "北京",
+        "n": 99
+      },
+      {
+        "group": "石家庄",
+        "n": 97
+      },
+      {
+        "group": "邯郸",
+        "n": 86
+      },
+      {
+        "group": "临沂",
+        "n": 83
+      },
+      {
+        "group": "保定",
+        "n": 78
+      },
+      {
+        "group": "济宁",
+        "n": 76
+      },
+      {
+        "group": "沧州",
+        "n": 76
+      },
+      {
+        "group": "哈尔滨",
+        "n": 75
+      },
+      {
+        "group": "天津",
+        "n": 74
+      },
+      {
+        "group": "徐州",
+        "n": 72
+      }
+    ],
+    "finish_range": 0.035,
+    "note": "城市等级/城市/社区类型来自短视频数据 fre_city_level/fre_city/fre_community_type，为中国国内地域（非英国 OULAD）；性别年龄为用户自陈属性。观看完成度为 watch_time/duration 截断 1 的代理，非真实完课；全部为观察性关联。"
+  },
+  "tianchi": {
+    "playback_speed": [
+      {
+        "group": "0.75×",
+        "n": 396,
+        "share": 0.1515,
+        "progress_delta": 15.66,
+        "interaction_cnt": 8.34,
+        "score_ratio": null,
+        "satisfaction": null
+      },
+      {
+        "group": "1×",
+        "n": 1099,
+        "share": 0.4204,
+        "progress_delta": 16.27,
+        "interaction_cnt": 8.27,
+        "score_ratio": null,
+        "satisfaction": null
+      },
+      {
+        "group": "1.25×",
+        "n": 346,
+        "share": 0.1324,
+        "progress_delta": 16.2,
+        "interaction_cnt": 8.5,
+        "score_ratio": null,
+        "satisfaction": null
+      },
+      {
+        "group": "1.5×",
+        "n": 384,
+        "share": 0.1469,
+        "progress_delta": 16.32,
+        "interaction_cnt": 8.62,
+        "score_ratio": null,
+        "satisfaction": null
+      },
+      {
+        "group": "1.75×",
+        "n": 389,
+        "share": 0.1488,
+        "progress_delta": 16.6,
+        "interaction_cnt": 8.85,
+        "score_ratio": null,
+        "satisfaction": null
+      }
+    ],
+    "device": [
+      {
+        "group": "Mobile",
+        "n": 2135,
+        "share": 0.427,
+        "progress_delta": 9.48,
+        "interaction_cnt": 11.45,
+        "score_ratio": 0.721,
+        "satisfaction": 3.92
+      },
+      {
+        "group": "Tablet",
+        "n": 1702,
+        "share": 0.3404,
+        "progress_delta": 9.39,
+        "interaction_cnt": 11.79,
+        "score_ratio": 0.727,
+        "satisfaction": 3.92
+      },
+      {
+        "group": "PC",
+        "n": 1163,
+        "share": 0.2326,
+        "progress_delta": 9.63,
+        "interaction_cnt": 11.61,
+        "score_ratio": 0.715,
+        "satisfaction": 3.89
+      }
+    ],
+    "client_os": [
+      {
+        "group": "Android",
+        "n": 1932,
+        "share": 0.3864,
+        "progress_delta": 9.59,
+        "interaction_cnt": 11.74,
+        "score_ratio": 0.727,
+        "satisfaction": 3.78
+      },
+      {
+        "group": "iOS",
+        "n": 1059,
+        "share": 0.2118,
+        "progress_delta": 9.14,
+        "interaction_cnt": 11.35,
+        "score_ratio": 0.717,
+        "satisfaction": 4.0
+      },
+      {
+        "group": "iPadOS",
+        "n": 846,
+        "share": 0.1692,
+        "progress_delta": 9.47,
+        "interaction_cnt": 11.58,
+        "score_ratio": 0.725,
+        "satisfaction": 4.08
+      },
+      {
+        "group": "Windows 11",
+        "n": 428,
+        "share": 0.0856,
+        "progress_delta": 9.48,
+        "interaction_cnt": 11.27,
+        "score_ratio": 0.715,
+        "satisfaction": 3.76
+      },
+      {
+        "group": "macOS",
+        "n": 373,
+        "share": 0.0746,
+        "progress_delta": 9.75,
+        "interaction_cnt": 11.79,
+        "score_ratio": 0.705,
+        "satisfaction": 4.44
+      },
+      {
+        "group": "Windows 10",
+        "n": 362,
+        "share": 0.0724,
+        "progress_delta": 9.69,
+        "interaction_cnt": 11.83,
+        "score_ratio": 0.727,
+        "satisfaction": 3.74
+      }
+    ],
+    "network": [
+      {
+        "group": "WiFi",
+        "n": 2990,
+        "share": 0.598,
+        "progress_delta": 9.39,
+        "interaction_cnt": 11.61,
+        "score_ratio": 0.723,
+        "satisfaction": 3.87
+      },
+      {
+        "group": "4G",
+        "n": 713,
+        "share": 0.1426,
+        "progress_delta": 9.8,
+        "interaction_cnt": 11.19,
+        "score_ratio": 0.72,
+        "satisfaction": 3.83
+      },
+      {
+        "group": "5G",
+        "n": 708,
+        "share": 0.1416,
+        "progress_delta": 9.32,
+        "interaction_cnt": 11.73,
+        "score_ratio": 0.721,
+        "satisfaction": 3.95
+      },
+      {
+        "group": "有线",
+        "n": 589,
+        "share": 0.1178,
+        "progress_delta": 9.77,
+        "interaction_cnt": 11.9,
+        "score_ratio": 0.719,
+        "satisfaction": 4.18
+      }
+    ],
+    "preview": [
+      {
+        "group": "课前预习",
+        "n": 472,
+        "share": 0.1806,
+        "progress_delta": 16.84,
+        "interaction_cnt": 8.54,
+        "score_ratio": null,
+        "satisfaction": null
+      },
+      {
+        "group": "常规回看",
+        "n": 2142,
+        "share": 0.8194,
+        "progress_delta": 16.09,
+        "interaction_cnt": 8.43,
+        "score_ratio": null,
+        "satisfaction": null
+      }
+    ],
+    "assessment": [
+      {
+        "group": "无标签",
+        "n": 4299,
+        "share": 0.8598,
+        "progress_delta": 10.83,
+        "interaction_cnt": 10.0,
+        "score_ratio": 0.765,
+        "satisfaction": 3.91
+      },
+      {
+        "group": "及格边缘",
+        "n": 402,
+        "share": 0.0804,
+        "progress_delta": 1.73,
+        "interaction_cnt": 21.44,
+        "score_ratio": 0.639,
+        "satisfaction": null
+      },
+      {
+        "group": "待关注",
+        "n": 162,
+        "share": 0.0324,
+        "progress_delta": 1.79,
+        "interaction_cnt": 21.26,
+        "score_ratio": 0.468,
+        "satisfaction": null
+      },
+      {
+        "group": "学优表现",
+        "n": 137,
+        "share": 0.0274,
+        "progress_delta": 1.67,
+        "interaction_cnt": 21.55,
+        "score_ratio": 0.958,
+        "satisfaction": null
+      }
+    ],
+    "kw_speed_progress": {
+      "H": 1.823,
+      "p": 0.768,
+      "groups": 5,
+      "significant": false
+    },
+    "mw_preview_progress": {
+      "U": 521168.0,
+      "p": 0.291,
+      "n_preview": 472,
+      "n_other": 2142,
+      "significant": false
+    },
+    "n_events": 5000,
+    "n_learners": 715,
+    "n_preview": 472,
+    "n_video_events": 2614,
+    "note": "倍速/设备/操作系统/网络/预习标签来自天池脱敏微课样本（国内），全部真实。原始数据将非视频事件的倍速统一记为 1.0× 且其进度增益≈0，会造成虚假差异；故倍速与预习对照严格限定在 video_play 事件（2,614 条）内，避免该结构性伪影。设备/OS/网络为全事件分布；progress_delta=观看后进度−观看前进度；预习=remark 含‘课前预习’。均为观察性关联，非因果。"
+  }
+}

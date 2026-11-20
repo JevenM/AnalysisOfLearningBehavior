@@ -1,0 +1,73 @@
+[
+  {
+    "form": "MOOC",
+    "dataset": "HMXPC13 (edX) / OULAD / KDD Cup 2015 学堂在线",
+    "unit": "人—课",
+    "raw_rows": 24000,
+    "sample_rows": 6000,
+    "label": "取得认证 / 通过（结果性标签）",
+    "positive_rate": 0.1895,
+    "field_availability": {
+      "visit_count": 0.857,
+      "active_days": 0.875,
+      "video_events": 0.428,
+      "forum_posts": 0.966,
+      "quiz_avg": 0.58,
+      "engagement_span_days": 0.868
+    },
+    "window": "edX 2012—2013 学年 / OULAD 2013—2014 / 学堂在线 2015",
+    "caveat": "三平台量纲与缺失结构不同；先平台内填补与标准化，再进入统一框架，禁止直接合并原始计数；已剔除与 certified 同源的考核成绩字段及记录完整度偏差项以防结果泄漏；edX/OULAD/学堂在线仅有课程级聚合、无事件时间戳，无法做时序切分，所得 AUC 只能解释为关联强度而非可部署的早期预警性能"
+  },
+  {
+    "form": "微课",
+    "dataset": "中国高校慕课课程多维画像与学习行为脱敏样本（阿里云天池）",
+    "unit": "人—课（章节级微资源会话）",
+    "raw_rows": 5000,
+    "sample_rows": 723,
+    "label": "单元测验通过 is_passed（过程—结果性标签）",
+    "positive_rate": 0.852,
+    "median_resource_sec": 424.0,
+    "n_resources": 4655,
+    "n_sessions": 816,
+    "alt_label_coverage": 1.0,
+    "bad_timestamp_rows": 15,
+    "window": "课程开课周期内单次会话（duration_sec 中位数约 7 min）",
+    "caveat": "微课是资源粒度而非独立平台；occur_time 存在 15 条未来年份脏数据，仅用于跨度时剔除；主标签为单元测验通过，特征剔除 score/is_passed/进度增益以防标签泄漏，进度增益上四分位仅作稳健性替代标签"
+  },
+  {
+    "form": "短视频",
+    "dataset": "清华 FIB 实验室 WWW 2025 移动短视频行为、属性与内容数据集",
+    "unit": "用户 × 7 日观测窗口（前 5 日特征 → 后 2 日标签）",
+    "raw_rows": 794053,
+    "filtered_rows": 17402,
+    "early_rows": 13587,
+    "late_rows": 3815,
+    "sample_rows": 1469,
+    "label": "后 2 日知识类内容回访（按时间切分的行为持续性标签）",
+    "positive_rate": 0.1967,
+    "filter_rule": "泛知识类：一级类目 教育14 / 科学29 / 读书38 / 历史21",
+    "root_counts": {
+      "读书": 6449,
+      "历史": 4147,
+      "教育": 3726,
+      "科学": 3080
+    },
+    "dli_mean": 0.4657,
+    "edu_share_of_all": 0.0219,
+    "n_users_all": 6654,
+    "n_videos_all": 31496,
+    "window": "20220916—20220922（7 天；切分点 20220920）",
+    "caveat": "开放的是 sampled 版而非论文全量；教育类子样本并非官方预筛，需按 root_id 自行筛选；仅 7 天窗口、无课程结构与学业结果，采用前 5 日预测后 2 日回访的时间切分，标签为行为持续性而非学习成效，不得解释为完课率或达标率"
+  },
+  {
+    "form": "课堂对照",
+    "dataset": "UCI #320 Student Performance（葡萄牙两所中学）",
+    "unit": "人—学科（传统课堂）",
+    "raw_rows": 1044,
+    "sample_rows": 1044,
+    "label": "期末成绩 G3 ≥ 12（结果性标签，无在线行为）",
+    "positive_rate": 0.4885,
+    "window": "2005—2006 学年问卷与成绩单",
+    "caveat": "该数据集不是微课、也不含任何在线行为日志；本课题仅将其作为零在线对照端点，用于检验投入—成效关联的形态无关性，严禁当作微课数据或与前三类合并训练；建模不使用 G1/G2 以避免结果泄漏"
+  }
+]

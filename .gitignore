@@ -5,3 +5,11 @@ out/*.csv
 notebooks/*
 __pycache__/*.pyc
 __pycache__/main.cpython-314.pyc
+# 双管线合并：原始数据集目录不入库（约 600MB）
+选题7_最终交付/02_数据与数据集/raw/
+选题7_最终交付/04_运行结果_基线快照/
+*.zip
+*.xls
+备份/*
+
+选题7_最终交付/03_源代码/__pycache__/*

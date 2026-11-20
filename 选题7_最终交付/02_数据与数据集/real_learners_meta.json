@@ -1,0 +1,52 @@
+{
+  "source": "OULAD (Open University Learning Analytics Dataset)",
+  "source_tables": [
+    "studentInfo.csv",
+    "studentVle.csv",
+    "vle.csv",
+    "studentAssessment.csv",
+    "assessments.csv"
+  ],
+  "presentations": [
+    "2013J",
+    "2014J"
+  ],
+  "rows": 20105,
+  "learners": 18634,
+  "courses": 13,
+  "positive_rate": 0.494,
+  "label_definition": "certificate = final_result in {Pass, Distinction}，真实学业结果，非行为派生",
+  "proxy_definitions": {
+    "study_hours": "累计点击 × 0.1 分钟/次 / 60，等效投入代理，非真实计时",
+    "avg_session_min": "累计点击 × 0.1 / 活跃天数，等效代理",
+    "video_rate": "访问过的 oucontent 资源数 / 该课程 oucontent 资源总数，内容覆盖代理",
+    "forum_posts": "forumng 类资源点击数，互动行为代理"
+  },
+  "columns": [
+    "record_id",
+    "learner_id",
+    "course_id",
+    "course_name",
+    "discipline",
+    "region",
+    "education",
+    "gender",
+    "age",
+    "visit_count",
+    "active_days",
+    "study_hours",
+    "avg_session_min",
+    "forum_posts",
+    "first_active_lag",
+    "video_rate",
+    "assign_rate",
+    "quiz_avg",
+    "final_grade",
+    "certificate",
+    "final_result",
+    "early_w2_clicks",
+    "early_w2_days",
+    "early_w4_clicks",
+    "early_w4_days"
+  ]
+}
