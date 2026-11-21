@@ -18,9 +18,16 @@ import pandas as pd
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
 DATA = os.path.join(ROOT, "02_数据与数据集")
-RES = os.path.join(ROOT, "04_运行结果")
+RES = os.environ.get("DASH_SOURCE") or os.path.join(ROOT, "04_运行结果")
+OUT = os.environ.get("DASH_OUT", "persona_dashboard.html")
 
-mm = json.load(open(os.path.join(RES, "multimodal_results.json"), encoding="utf-8"))
+_req = os.path.join(RES, "multimodal_results.json")
+if not os.path.isfile(_req):
+    # 沙箱构建（DASH_SOURCE 指向沙箱目录）且沙箱范围不跑四形态 → 无数据源，跳过
+    print(f"SKIP {os.path.basename(RES)} 无 multimodal_results.json，"
+          "跳过沙箱版形态画像看板（该看板仅反映四形态测评）")
+    raise SystemExit(0)
+mm = json.load(open(_req, encoding="utf-8"))
 df = pd.read_csv(os.path.join(DATA, "multimodal_all.csv"))
 
 DIMS = mm["meta"]["dims"]                       # engage persist complete interact context
@@ -220,10 +227,10 @@ tpl_path = os.path.join(HERE, "persona_dashboard.template.html")
 tpl = open(tpl_path, encoding="utf-8").read()
 out = tpl.replace("__PERSONA_DATA__", data)
 assert "__PERSONA_DATA__" not in out
-out_path = os.path.join(HERE, "persona_dashboard.html")
+out_path = os.path.join(HERE, OUT)
 with open(out_path, "w", encoding="utf-8") as f:
     f.write(out)
-print(f"[OK] persona_dashboard.html 已生成：{len(out):,} 字符，内联数据 {len(data):,} 字符")
+print(f"[OK] {OUT} 已生成：{len(out):,} 字符，内联数据 {len(data):,} 字符（数据源 {RES}）")
 for form in FORM_ORDER:
     b = bundle["forms"][form]
     print(f"     {form:<6} 总体 {b['n']:>5} 条 / 画像 {b['k']} 类 / 散点 {b['sampled']:>4} / AUC {b['auc']:.4f}")

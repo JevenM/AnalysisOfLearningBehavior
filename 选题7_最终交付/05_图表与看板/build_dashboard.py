@@ -20,11 +20,24 @@ from collections import Counter, OrderedDict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
-RES = os.path.join(ROOT, "04_运行结果")
+# DASH_SOURCE 可指向沙箱目录（04_运行结果_沙箱）构建沙箱版看板；
+# DASH_OUT 指定输出文件名（如 dashboard.sandbox.html）。缺省为正式构建。
+RES = os.environ.get("DASH_SOURCE") or os.path.join(ROOT, "04_运行结果")
+OUT_NAME = os.environ.get("DASH_OUT", "dashboard.html")
+# 沙箱构建时，沙箱范围不重跑四形态/内容画像，缺失的扩展证据文件回退正式目录
+FALLBACK = (os.path.join(ROOT, "04_运行结果")
+            if os.path.abspath(RES) != os.path.join(ROOT, "04_运行结果") else None)
+
+
+def _src(name):
+    p = os.path.join(RES, name)
+    if not os.path.isfile(p) and FALLBACK:
+        p = os.path.join(FALLBACK, name)
+    return p
 
 
 def _jload(name):
-    return json.load(open(os.path.join(RES, name), encoding="utf-8"))
+    return json.load(open(_src(name), encoding="utf-8"))
 
 
 def _drop_nan(x):
@@ -39,7 +52,7 @@ def _drop_nan(x):
 
 
 def _csv_rows(name):
-    with open(os.path.join(RES, name), encoding="utf-8-sig") as f:
+    with open(_src(name), encoding="utf-8-sig") as f:
         return list(csv.DictReader(f))
 
 
@@ -50,12 +63,12 @@ EV = _drop_nan(_jload("up_eval_summary.json"))
 P = _drop_nan(_jload("profile_results.json"))
 
 # 学习者总数（up_learners.csv：1 行 = 1 名学习者，带表头）
-with open(os.path.join(RES, "up_learners.csv"), encoding="utf-8") as f:
+with open(_src("up_learners.csv"), encoding="utf-8") as f:
     N_LEARNERS = max(sum(1 for _ in f) - 1, 0)
 
 # 六源构成：从 up_unified.csv 按来源列计数（列名兼容 source/data_source/source_repo）
 sources = OrderedDict()
-unified_path = os.path.join(RES, "up_unified.csv")
+unified_path = _src("up_unified.csv")
 with open(unified_path, encoding="utf-8-sig") as f:
     rd = csv.reader(f)
     header = next(rd)
@@ -140,11 +153,19 @@ insight = {
 # 图片由本脚本从 04_运行结果/ 同步到 figures/，看板以相对路径引用，离线可用。
 import shutil
 
-FIG_DIR = os.path.join(HERE, "figures")
+FIG_SUB = os.environ.get("DASH_FIG_SUB", "")  # 沙箱构建时为 "sandbox"（figures/sandbox/）
+FIG_DIR = os.path.join(HERE, "figures", FIG_SUB) if FIG_SUB else os.path.join(HERE, "figures")
 os.makedirs(FIG_DIR, exist_ok=True)
-for f in os.listdir(RES):
-    if f.startswith("up_") and f.endswith(".png"):
-        shutil.copyfile(os.path.join(RES, f), os.path.join(FIG_DIR, f))
+for f in sorted(set(os.listdir(RES)) |
+                (set(os.listdir(FALLBACK)) if FALLBACK and os.path.isdir(FALLBACK) else set())):
+    if not (f.startswith("up_") and f.endswith(".png")):
+        continue
+    src_png = os.path.join(RES, f)
+    if not os.path.isfile(src_png) and FALLBACK:
+        src_png = os.path.join(FALLBACK, f)  # 沙箱未产出该图时回退正式图，保证渲染完整
+    if os.path.isfile(src_png):
+        shutil.copyfile(src_png, os.path.join(FIG_DIR, f))
+insight["fig_prefix"] = f"figures/{FIG_SUB}/" if FIG_SUB else "figures/"
 
 
 def _d1(mapping):
@@ -245,8 +266,8 @@ data = json.dumps(insight, ensure_ascii=False, separators=(",", ":"))
 assert "</script" not in data.lower(), "数据中含有会截断 script 的字符串"
 out = tpl.replace("__DATA__", data)
 assert "__DATA__" not in out
-with open(os.path.join(HERE, "dashboard.html"), "w", encoding="utf-8") as f:
+with open(os.path.join(HERE, OUT_NAME), "w", encoding="utf-8") as f:
     f.write(out)
-print(f"[OK] dashboard.html 已生成：{len(out):,} 字符，内联数据 {len(data):,} 字符")
+print(f"[OK] {OUT_NAME} 已生成：{len(out):,} 字符，内联数据 {len(data):,} 字符（数据源 {RES}）")
 print(f"     六源 {N_LEARNERS:,} 名学习者 / K={UM.get('k')} / 轮廓系数 {UM.get('silhouette'):.3f}（{UM.get('backend')} 后端）")
 print(f"     画像 {len(personas)} 类 / 干预队列 {len(queues)} 类 / 优化建议 {sum(len(v) for v in suggestions.values())} 条 / 数据源 {len(sources)} 个")

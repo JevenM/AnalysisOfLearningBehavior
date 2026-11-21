@@ -1,27 +1,30 @@
 {
   "k": 4,
-  "silhouette": 0.8248769298157576,
+  "silhouette": 0.5519890189170837,
   "personas": {
-    "Low-Engagement Weak-Performance Learner": 7399,
-    "Independent Deep Learner (High Engagement)": 533,
-    "Independent Deep Learner": 68
+    "At-Risk / Disengaged": 53281,
+    "Independent Deep Learner": 11445,
+    "Low-Engagement Strong-Performance Learner": 753,
+    "Guided Learner": 1165
   },
-  "cert_acc": 0.9720833333333333,
-  "cert_recall_risk": 0.9828465461288827,
-  "rf_auc_early": 0.9489873367868811,
-  "rf_auc_full": 0.9996224606094088,
+  "cert_acc": 0.9549364809442833,
+  "cert_recall_risk": 0.9746434231378764,
+  "rf_auc_early": 0.8824342285099785,
+  "rf_auc_full": 0.9778754049709877,
   "gm_trends": {
     "平稳": 9911,
     "下降": 1400,
     "上升": 46
   },
   "ahp_cr": 0.016,
-  "quality_mean": 40.7,
+  "quality_mean": 45.5,
   "sd_best": "加强资源供给",
   "sd_growth": 233.3,
   "queues": {
-    "none": 6395,
-    "enrichment": 1605
+    "none": 45292,
+    "review": 6468,
+    "support": 2904,
+    "enrichment": 11980
   },
   "apriori_top": {
     "antecedent": "论坛互动、读资源",
@@ -30,7 +33,7 @@
     "confidence": 0.988,
     "lift": 2.8
   },
-  "suggestions": 7,
+  "suggestions": 10,
   "budget": {
     "budget_ratio": 0.45,
     "budget": 199183.0,

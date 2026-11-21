@@ -331,13 +331,13 @@ Object.keys(FIGS).forEach(sid => {
   if (!box) return;
   box.innerHTML = FIGS[sid].map(f =>
     `<div class="figcard" onclick="figLb('${f.f}')">` +
-    `<img loading="lazy" src="figures/${f.f}" alt="${esc(f.t)}">` +
+    `<img loading="lazy" src="${D.fig_prefix || "figures/"}${f.f}" alt="${esc(f.t)}">` +
     `<div class="fcap"><b>${esc(f.t)}</b><span>${esc(f.c)}</span></div></div>`).join("");
 });
 function figLb(name) {
   let meta = null;
   Object.values(FIGS).forEach(arr => arr.forEach(x => { if (x.f === name) meta = x; }));
-  $("figlbImg").src = "figures/" + name;
+  $("figlbImg").src = (D.fig_prefix || "figures/") + name;
   $("figlbCap").innerHTML = meta ? `<b>${esc(meta.t)}</b> — ${esc(meta.c)}` : esc(name);
   $("figlb").style.display = "flex";
 }

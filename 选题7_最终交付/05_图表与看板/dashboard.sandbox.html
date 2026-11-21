@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>学习者行为数据分析 · 主看板（六源统一口径）</title>
+<style>
+:root{--navy:#1F4E79;--blue:#2E75B6;--orange:#C55A11;--green:#548235;
+  --ink:#1B2733;--muted:#68788A;--line:#DCE5EE;--bg:#F5F8FB;--card:#fff;--soft:#F0F5FA}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:0 4vw}
+.hero{background:linear-gradient(120deg,#153A5B 0%,#1F4E79 55%,#2E75B6 100%);color:#fff;padding:36px 0 28px}
+.hero h1{margin:8px 0 6px;font-size:28px;font-weight:700;letter-spacing:.5px}
+.hero .lead{font-size:14.5px;opacity:.93;max-width:900px;line-height:1.75}
+.hero a{color:#BFD8F0}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:22px}
+.kpi{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:13px 15px}
+.kpi b{display:block;font-size:23px;font-weight:700;line-height:1.2}
+.kpi span{font-size:11.5px;opacity:.85}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.nav{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;gap:4px;flex-wrap:wrap;padding:9px 4vw}
+.nav a{font-size:12.5px;color:var(--muted);padding:5px 11px;border-radius:18px;text-decoration:none}
+.nav a:hover{background:var(--soft);color:var(--navy)}
+.section{padding:34px 0 6px}
+.sec-h{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+.sec-no{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:var(--navy);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.sec-h h2{margin:0;font-size:20px;color:var(--navy)}
+.answer{font-size:14.5px;line-height:1.8;color:#2A3B4D;margin:10px 0 16px}
+.answer b{color:var(--navy)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(31,78,121,.05);padding:18px 20px}
+.pcard h3{margin:0 0 10px;font-size:14px;color:var(--navy)}
+.viz{overflow-x:auto}
+.hintline{font-size:11.5px;color:var(--muted);margin-top:10px}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1000px){.pgrid{grid-template-columns:repeat(2,1fr)}}
+.persona{border-top:4px solid var(--navy)}
+.persona .nm{font-weight:700;font-size:15px;color:var(--navy)}
+.persona .en{font-size:11px;color:var(--muted)}
+.persona .num{font-size:26px;font-weight:700;color:var(--navy);margin:6px 0 2px}
+.persona .num small{font-size:12px;color:var(--muted);font-weight:400}
+.persona .desc{font-size:12.5px;color:#3E5670;line-height:1.7;margin:8px 0}
+.persona .reco{font-size:12px;color:#1E5B3F;background:#EAF4EC;border-left:3px solid var(--green);padding:7px 10px;border-radius:0 7px 7px 0;line-height:1.6}
+.warngrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.warncard{text-align:center;padding:20px}
+.warncard .w{font-size:13px;color:var(--muted)}
+.warncard .a{font-size:30px;font-weight:700;margin:6px 0}
+.warncard .d{font-size:12px;color:var(--muted)}
+.pillrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.pill{display:inline-block;font-size:12px;background:var(--soft);border:1px solid var(--line);border-left:3px solid var(--blue);
+  color:#2A3B4D;padding:5px 11px;border-radius:7px}
+.qlist{display:flex;flex-direction:column;gap:8px}
+.qitem{font-size:12.5px;color:#3E5670;line-height:1.7;padding:8px 12px;background:var(--soft);border-radius:8px}
+.qitem b{color:var(--navy)}
+footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font-size:12px;color:var(--muted);line-height:1.8}
+.figblock{margin-top:18px}
+.fighead{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.fighead b{color:var(--navy)}
+.figrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.figcard{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:zoom-in;transition:transform .15s,box-shadow .15s}
+.figcard:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(31,78,121,.14)}
+.figcard img{width:100%;display:block;background:#fff}
+.figcard .fcap{padding:10px 13px;font-size:12.5px;line-height:1.6}
+.figcard .fcap b{color:var(--navy);display:block;margin-bottom:4px;font-size:12.5px}
+.figcard .fcap span{color:#3E5670}
+#figlb{position:fixed;inset:0;background:rgba(10,20,35,.92);display:none;z-index:80;align-items:center;justify-content:center;flex-direction:column;gap:12px;cursor:zoom-out}
+#figlb img{max-width:92vw;max-height:78vh;background:#fff;border-radius:10px}
+#figlb .lb2{color:#E7EEF9;font-size:14px;max-width:82vw;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div style="opacity:.82;font-size:13px;letter-spacing:1px">《系统工程原理》课程实践项目 · 选题 7</div>
+    <h1>学习者行为数据分析（六类数据集统一口径）</h1>
+    <p class="lead">慕课、微课、短视频、编程练习、传统课堂等六类真实公开数据集合并成一张总表后统一分析：
+    学习者可以分成哪几类、投入与结果的关系、平台据此该怎么安排帮扶。每节先给结论，再看图表；所有数字都来自实跑结果文件。
+    这是<b>主看板（总览，先看这里）</b>，配套专题：
+    <a href="persona_dashboard.html">形态画像看板</a>（四形态分组与散点联动）、
+    <a href="profile_dashboard.html">内容画像看板</a>（时段/兴趣/人口属性差异检验）、
+    <a href="model_console.html">建模控制台</a>（改参数/换数据重跑，需启动 <code>model_console.py</code>）；
+    全部图表的算法与数据来源见 <a href="conclusion.md">conclusion.md</a>。</p>
+    <div class="kpis" id="kpis"></div>
+  </div>
+</header>
+<nav class="nav"><div class="wrap">
+  <a href="#s1">四类学习者</a><a href="#s2">投入与结果</a><a href="#s3">节律与兴趣</a>
+  <a href="#s4">行为序列</a><a href="#s5">早期预警</a><a href="#s6">评价与行动</a><a href="#s7">数据来源</a>
+</div></nav>
+
+<section class="section" id="s1"><div class="wrap">
+  <div class="sec-h"><div class="sec-no">1</div><h2>学习者可以分成哪几类</h2></div>
+  <div class="answer" id="a1"></div>
+  <div class="pgrid" id="personas"></div>
+  <div class="figblock"><div class="fighead"><b>本环节（聚类画像）的建模证据图</b> —— 管线实跑产出，每图标注其证明的结论；点击放大</div>
+    <div class="figrow" id="figs1"></div></div>
+</div></section>
+
+<section class="section" id="s2"><div class="wrap">
+  <div class="sec-h"><div class="sec-no">2</div><h2>投入和结果的关系有多大</h2></div>
+  <div class="answer" id="a2"></div>
+  <div class="cols">
+    <div class="pcard"><h3>与成绩最相关的行为（Pearson 相关系数 r）</h3>
+      <div class="viz" id="corr"></div>
+      <div class="hintline">r 介于 -1~1，越接近 1 关联越强；活跃天数（坚持出勤）是第一相关因子。</div></div>
+    <div class="pcard"><h3>行为特征重要性 Top5（随机森林）</h3>
+      <div class="viz" id="feat"></div>
+      <div class="hintline">哪个特征被模型用得越多越重要；与相关分析互相印证。</div></div>
+  </div>
+  <div class="figblock"><div class="fighead"><b>本环节（相关分析与投入分层）的建模证据图</b> —— 管线实跑产出，每图标注其证明的结论；点击放大</div>
+    <div class="figrow" id="figs2"></div></div>
+</div></section>
+
+<section class="section" id="s3"><div class="wrap">
+  <div class="sec-h"><div class="sec-no">3</div><h2>大家什么时候学、喜欢看什么</h2></div>
+  <div class="answer" id="a3"></div>
+  <div class="cols">
+    <div class="pcard"><h3>统一管线的登录节律分型</h3><div class="viz" id="timepat"></div>
+      <div class="hintline">按全体登录时间分布自动归类（六源合并口径）。</div></div>
+    <div class="pcard"><h3>短视频用户主观看时段（国内内容级数据）</h3><div class="viz" id="tod"></div>
+      <div class="hintline">内容消费的高峰时段，知识内容可"搭车"分发。</div></div>
+  </div>
+  <div class="cols" style="margin-top:16px">
+    <div class="pcard"><h3>短视频内容类目观看占比 Top8</h3><div class="viz" id="cats"></div>
+      <div class="hintline">影视短剧等泛娱乐内容占据大头，知识内容需嵌入泛娱乐消费路径。</div></div>
+    <div class="pcard"><h3>用户兴趣类型与城市等级完成度</h3>
+      <div class="pillrow" id="itypes"></div><div class="viz" id="city"></div>
+      <div class="hintline">兴趣类型按知识/娱乐偏好分位划分；城市等级间完成度差异平缓。</div></div>
+  </div>
+  <div class="figblock"><div class="fighead"><b>本环节（时序模式挖掘）的建模证据图</b> —— 管线实跑产出，点击放大</div>
+    <div class="figrow" id="figs3"></div></div>
+</div></section>
+
+<section class="section" id="s4"><div class="wrap">
+  <div class="sec-h"><div class="sec-no">4</div><h2>点击序列里藏着什么模式</h2></div>
+  <div class="answer" id="a4"></div>
+  <div class="cols">
+    <div class="pcard"><h3>逐人行为序列三类模式（滞后序列分析）</h3><div class="viz" id="lsa"></div>
+      <div class="hintline">按相邻两次点击的转换规律归类；"刷课"指高频重复点击。</div></div>
+    <div class="pcard"><h3>最显著的点击转换（调整残差 z 分数）</h3><div class="pillrow" id="lsatop"></div>
+      <div class="hintline">|z|&gt;1.96 为统计显著；连续刷视频极其普遍，学完资源不回视频。</div></div>
+  </div>
+  <div class="pcard" style="margin-top:16px"><h3>强关联规则（Apriori）与核心资源（PageRank）</h3>
+    <div class="pillrow" id="apriori"></div><div class="pillrow" id="sna"></div>
+    <div class="hintline">提升度 Lift 表示规则比随机组合强多少倍；少数资源承载多数访问，应优先保障可用性。</div></div>
+  <div class="figblock"><div class="fighead"><b>本环节（行为序列与资源挖掘）的建模证据图</b> —— 管线实跑产出，每图标注其证明的结论；点击放大</div>
+    <div class="figrow" id="figs4"></div></div>
+</div></section>
+
+<section class="section" id="s5"><div class="wrap">
+  <div class="sec-h"><div class="sec-no">5</div><h2>能不能提前发现掉队风险</h2></div>
+  <div class="answer" id="a5"></div>
+  <div class="warngrid" id="warn"></div>
+  <div class="cols" style="margin-top:16px">
+    <div class="pcard"><h3>逐人投入趋势预判（灰色模型 GM(1,1)）</h3><div class="viz" id="gm"></div>
+      <div class="hintline">用极少早期数据外推个人投入走势，便于提前分配资源。</div></div>
+    <div class="pcard"><h3>哪些行为最能带动成绩</h3><div class="viz" id="feat2"></div>
+      <div class="hintline">同第 2 屏特征重要性，供干预设计参考。</div></div>
+  </div>
+  <div class="figblock"><div class="fighead"><b>本环节（预测与早期预警）的建模证据图</b> —— 管线实跑产出，点击放大</div>
+    <div class="figrow" id="figs5"></div></div>
+</div></section>
+
+<section class="section" id="s6"><div class="wrap">
+  <div class="sec-h"><div class="sec-no">6</div><h2>统一评价与行动建议</h2></div>
+  <div class="answer" id="a6"></div>
+  <div class="cols">
+    <div class="pcard"><h3>统一学习质量分层（AHP+模糊综合评价，百分制）</h3><div class="viz" id="quality"></div>
+      <div class="hintline">把六源行为统一折算成质量分后分层；分低不代表人不行，只说明当前行为数据上还需推动。</div></div>
+    <div class="pcard"><h3>干预队列分配（逐人）</h3><div class="viz" id="queues"></div>
+      <div class="hintline">按画像与证据把学习者分入四类队列，教师精力优先投向"重点支持/教师复核"。</div></div>
+  </div>
+  <div class="cols" style="margin-top:16px">
+    <div class="pcard"><h3>策略仿真与权重依据</h3>
+      <div class="pillrow" id="sd"></div><div class="pillrow" id="ahp"></div>
+      <div class="hintline">SD=系统动力学 52 周仿真；AHP 权重经一致性检验（CR&lt;0.1）。</div></div>
+    <div class="pcard"><h3>优化建议（逐条可执行）</h3><div class="qlist" id="sugg"></div></div>
+  </div>
+  <div class="figblock"><div class="fighead"><b>本环节（统一评价与策略仿真）的建模证据图</b> —— 管线实跑产出，每图标注其证明的结论；点击放大</div>
+    <div class="figrow" id="figs6"></div></div>
+</div></section>
+
+<section class="section" id="s7"><div class="wrap">
+  <div class="sec-h"><div class="sec-no">7</div><h2>数据从哪里来</h2></div>
+  <div class="answer" id="a7"></div>
+  <div class="cols">
+    <div class="pcard"><h3>六类数据源构成（学习者数）</h3><div class="viz" id="sources"></div>
+      <div class="hintline">慕课（HarvardX/MITx）、清华短视频、ASSISTments 编程练习、OULAD、UCI 学生成绩（课堂对照）、天池微课——全部真实公开数据，无仿真样本。</div></div>
+    <div class="pcard"><h3>口径与伦理边界</h3><div class="qlist" id="ethics"></div></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  全部数字来自 <code>04_运行结果/</code> 实跑 JSON/CSV（up_*.json、up_*.csv、profile_results.json），构建脚本 build_dashboard.py 只做结构裁剪不改动数字；
+  抽样种子 seed=20260101 仅用于可复现抽样。群体结论为观察性关联，不用于个体评价或惩戒。
+  算法与数据来源逐图解读见 <a href="conclusion.md"><code>conclusion.md</code></a>。
+</div></footer>
+
+<script id="data" type="application/json">{"overview":{"n":8000,"sources":{"real:harvardx_mitx_person_course":8000},"k":4,"sil":0.8248769298157576,"backend":"cpu"},"personas":[{"name":"Low-Engagement Weak-Performance Learner","cn":"Low-Engagement Weak-Performance Learner","n":7399,"share":92.5,"desc":"","reco":"按簇中心特征定制内容策略"},{"name":"Independent Deep Learner (High Engagement)","cn":"Independent Deep Learner (High Engagement)","n":533,"share":6.7,"desc":"高投入、深度探索内容、测验得分高、极少求助。","reco":"研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。"},{"name":"Independent Deep Learner","cn":"自主深度型","n":68,"share":0.8,"desc":"高投入、深度探索内容、测验得分高、极少求助。","reco":"研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。"}],"tier_lift":"完成率 +41.0%, 成绩 +16.5 分","corr_top":[{"label":"avg_quiz_score","r":1.0},{"label":"active_days","r":0.694},{"label":"total_clicks","r":0.692},{"label":"resource_clicks","r":0.69},{"label":"video_clicks","r":0.449}],"time_patterns":{"常规型学习":4439,"夜间型学习":3517,"集中式周末学习":3309,"碎片化高频学习":92},"tod":[{"group":"晚间 (18-21)","users":2171,"share":0.3263},{"group":"下午 (12-17)","users":2145,"share":0.3224},{"group":"上午 (6-11)","users":1460,"share":0.2194},{"group":"深夜 (22-23)","users":629,"share":0.0945},{"group":"凌晨 (0-5)","users":249,"share":0.0374}],"cats":[{"name":"影视和短剧","share":50.0},{"name":"搞笑","share":8.2},{"name":"美食","share":4.6},{"name":"游戏","share":3.7},{"name":"生活","share":3.7},{"name":"二次元","share":2.9},{"name":"明星娱乐","share":2.7},{"name":"亲子","share":2.3}],"itypes":[{"name":"知识求知型","share":6.7},{"name":"均衡杂食型","share":63.3},{"name":"娱乐休闲型","share":30.0}],"city":[{"name":"一线城市","share":4.4,"finish":45.9},{"name":"新一线城市","share":11.0,"finish":45.0},{"name":"二线城市","share":14.9,"finish":48.5},{"name":"三线城市","share":23.3,"finish":48.0},{"name":"四线城市","share":23.9,"finish":47.4},{"name":"五线城市","share":22.4,"finish":46.0}],"sv_users":6654,"sv_cities":365,"lsa_patterns":{"刷课":6298,"正常":4830,"跳步学习":229},"lsa_top":[{"transition":"video→video","z":427.68},{"transition":"resource→video","z":-283.1},{"transition":"video→resource","z":-281.02},{"transition":"resource→resource","z":238.44},{"transition":"video→forum","z":-226.5}],"apriori_top":[{"antecedent":"论坛互动、读资源","consequent":"OULAD 课程资源","support":0.319,"confidence":0.988,"lift":2.8},{"antecedent":"OULAD 课程资源、论坛互动","consequent":"读资源","support":0.319,"confidence":0.998,"lift":2.75},{"antecedent":"读资源","consequent":"OULAD 课程资源","support":0.352,"confidence":0.968,"lift":2.74}],"short_only_pct":58.5,"sna_top":["S542811","S703721","S703737","S542864","S542807"],"cert_acc":0.9720833333333333,"best_model":"GradientBoosting","auc_early":0.9489873367868811,"auc_full":0.9996224606094088,"top5_features":{"avg_quiz_score":1.0,"active_days":0.0,"resource_clicks":0.0,"video_clicks":0.0,"total_clicks":0.0},"gm_trends":{"平稳":9911,"下降":1400,"上升":46},"quality_levels":{"差":7674,"中":326},"quality_mean":40.7,"ahp_weights":{"学习行为":0.32,"学习效果":0.558,"互动参与":0.122},"ahp_cr":0.016,"sd_results":{"基线策略":{"final_engagement":0.008,"growth_pct":-97.4},"加强资源供给":{"final_engagement":1.0,"growth_pct":233.3},"加强平台激励":{"final_engagement":0.226,"growth_pct":-24.7},"综合优化策略":{"final_engagement":1.0,"growth_pct":233.3}},"sd_best":"加强资源供给","queues":[{"name":"持续观察","n":6395},{"name":"拓展培养","n":1605}],"suggestions":{"画像差异化运营":[{"target":"Independent Deep Learner","advice":"开放项目与进阶资源优先推送，邀请担任社区助教"},{"target":"Independent Deep Learner (High Engagement)","advice":"开放项目与进阶资源优先推送，邀请担任社区助教"},{"target":"Low-Engagement Weak-Performance Learner","advice":"按簇中心特征定制内容策略"}],"早期学业预警":[{"target":"0 名高风险学生（结课概率<0.2）","advice":"当学生连续 7 天未登录、视频完播率骤降、作业逾期时自动触发预警，辅导员 48 小时内一对一介入；预警名单见 up_early_warning_students.csv"}],"场景化资源优化":[{"target":"慕课长视频（拖拽 nan 次）","advice":"长视频拆分为 8-12 分钟微模块，前置学习目标提示，高拖拽片段重新剪辑压缩"},{"target":"短视频（完播率 35%）","advice":"在短视频中增加知识点锚点与章节跳转卡片，配套 1 分钟随堂小测，提升碎片化学习的知识留存率"}],"平台长期策略（SD 仿真）":[{"target":"加强资源供给","advice":"仿真显示 52 周后「加强资源供给」下学习者整体投入水平最高（1.0），建议以资源供给 + 激励机制双轮驱动并降低学习疲劳衰减"}]},"fig_prefix":"figures/sandbox/","figs":{"1":[{"f":"up_elbow_silhouette.png","t":"环节证据 · K 选择（肘部+轮廓双准则）","c":"在 K=2–8 候选中自动选定 K=4：轮廓系数 0.825、肘部拐点 K=4，两准则一致——聚类数由数据决定而非人为指定。"},{"f":"up_pca_clusters.png","t":"环节证据 · PCA 二维聚类投影","c":"主成分平面上画像簇边界清晰、簇间距离远大于簇内距离——分群结构真实存在。"},{"f":"up_tsne_clusters.png","t":"环节证据 · t-SNE 非线性嵌入","c":"非线性降维同样呈现紧凑分簇：分组结论对降维方法稳健。"},{"f":"up_umap_clusters.png","t":"环节证据 · UMAP 降维投影","c":"第三种降维方法复现相同结构，三种视角交叉验证聚类可靠性。"},{"f":"up_radar_personas.png","t":"环节证据 · 四类画像行为中心雷达","c":"各画像行为中心差异集中在投入维度（点击/活跃/互动）——画像由行为塑造，而非人口标签。"},{"f":"up_heatmap_features.png","t":"环节证据 · 聚类 × 行为特征热力图","c":"逐特征比对四类行为中心：总点击与活跃天数是区分度最强的特征，直接用于画像命名。"}],"2":[{"f":"up_correlation_top_factors.png","t":"环节证据 · 行为 × 成绩相关排序","c":"与成绩关联最强的行为是“测验均分”（r=1.000，显著）——坚持出勤比单次爆发更能解释成绩。"},{"f":"up_engagement_tiers.png","t":"环节证据 · 投入分层增益","c":"高投入组相对低投入组：完成率 +41.0%, 成绩 +16.5 分——投入分层的增益可量化，是干预优先级的直接依据。"},{"f":"up_demographics_cross.png","t":"环节证据 · 人口属性 × 行为交叉","c":"不同性别/年龄/学历群体的行为差异存在但幅度有限——行为特征比背景属性更能预测结果。"},{"f":"up_rf_feature_importance.png","t":"环节证据 · 随机森林特征重要性","c":"模型最依赖“测验均分”——与相关分析两套独立方法得出同一结论，相互印证。"}],"3":[{"f":"up_temporal_patterns.png","t":"环节证据 · 登录节律分型分布","c":"学习者自动归为 4 类节律，最多为“常规型学习”（4439 人）——推送与直播时段设计应贴合节律分布。"}],"4":[{"f":"up_lsa_transition_graph.png","t":"环节证据 · LSA 行为模式转移图","c":"逐人行为序列归为三型：刷课 6298 人 / 正常 4830 人 / 跳步学习 229 人——高频“刷课”型最多，需要完整学习路径引导而非放任刷量。"},{"f":"up_sna_network.png","t":"环节证据 · SNA 资源共现网络","c":"少数资源承载多数访问（Top：S542811、S703721、S703737…）——核心资源应优先保障可用性与加载速度。"},{"f":"up_apriori_rules.png","t":"环节证据 · Apriori 关联规则","c":"最强规则「论坛互动、读资源 → OULAD 课程资源」（置信度 0.988，提升度 2.8）——规则的先后关系可直接设计成资源引导推荐。"},{"f":"up_scene_comparison.png","t":"环节证据 · 慕课/短视频场景对比","c":"完播率慕课长视频 0.39 vs 短视频 0.348，倍速使用率差异显著——两种内容场景的交互设计需差异化。"}],"5":[{"f":"up_model_feature_importance.png","t":"环节证据 · 预测特征重要性 Top10","c":"仅用前 4 周行为即可预警：早期 AUC 94.9%、全量 AUC 100.0%；“测验均分”是最关键的早期信号——第 4 周就应触发干预。"}],"6":[{"f":"up_quality_score_distribution.png","t":"环节证据 · 学习质量评分分布","c":"全体质量分均值 40.7/100，分布右偏——少数高投入个体拉高均值，干预应聚焦长尾低分群体而非均值本身。"},{"f":"up_sd_simulation.png","t":"环节证据 · 系统动力学（SD）策略仿真","c":"52 周策略仿真：最优策略「加强资源供给」最终参与度增幅 +233.3%——供给型策略具复利效应，激励型策略长期衰减。"}]}}</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById("data").textContent);
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const COL = ["#1F4E79","#C55A11","#548235","#2E75B6","#7B4FA8","#2A9D8F"];
+
+/* 通用水平条形图（SVG） */
+function hbars(items, {color = "#2E75B6", w = 460, rowH = 30, unit = "", fmtFn = null, max = null} = {}) {
+  if (!items.length) return "（数据缺失）";
+  const L = 128, R = 76, T = 6, plot = w - L - R;
+  const mx = max || Math.max(...items.map(d => Math.abs(d.value)), 1e-9);
+  const fmt = fmtFn || (v => unit ? (v * 100).toFixed(1) + "%" : Math.abs(v) >= 100 ? Math.round(v).toLocaleString() : (+v).toFixed(3));
+  let s = `<svg viewBox="0 0 ${w} ${items.length * rowH + T + 4}" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei,PingFang SC,sans-serif">`;
+  items.forEach((d, i) => {
+    const y = T + i * rowH, len = Math.max(2, Math.abs(d.value) / mx * plot), c = d.color || COL[i % COL.length];
+    s += `<text x="${L - 7}" y="${y + rowH / 2 + 1}" font-size="11" fill="#334155" text-anchor="end">${esc(d.label)}</text>`;
+    s += `<rect x="${L}" y="${y + 4}" width="${len}" height="${rowH - 12}" rx="3" fill="${c}" opacity=".88"/>`;
+    s += `<text x="${L + len + 6}" y="${y + rowH / 2 + 1}" font-size="11" fill="#1F3864" font-weight="bold">${fmt(d.value)}</text>`;
+  });
+  return s + "</svg>";
+}
+const mk = obj => Object.entries(obj || {}).map(([label, value]) => ({label, value}));
+const pct1 = v => (v * 100).toFixed(1) + "%";
+const CN = {active_days: "活跃天数", avg_quiz_score: "测验均分", forum_posts: "论坛发帖",
+            quiz_attempts: "测验次数", resource_clicks: "资源点击", total_clicks: "总点击"};
+
+/* KPI */
+$("kpis").innerHTML = [
+  [D.overview.n.toLocaleString(), "六源合并学习者 / 人"],
+  [Object.keys(D.overview.sources || {}).length + " 类", "真实公开数据源"],
+  [`K=${D.overview.k}（${(+D.overview.sil).toFixed(3)}）`, "聚类类数（轮廓系数）"],
+  [(D.cert_acc * 100).toFixed(1) + "%", "达标判断准确率"],
+  [(D.auc_early * 100).toFixed(1) + "%", "第4周早期预警 AUC"]
+].map(([b, t]) => `<div class="kpi"><b>${b}</b><span>${t}</span></div>`).join("");
+
+/* S1 四类画像 */
+const top2 = D.personas[0].share + D.personas[1].share;
+$("a1").innerHTML = `六类数据集合并后共 <b>${D.overview.n.toLocaleString()} 名学习者</b>，统一聚类分成 <b>${D.overview.k} 类</b>
+（轮廓系数 ${(+D.overview.sil).toFixed(3)}，K-means ${D.overview.backend === "torch" ? "在 GPU 上" : ""}完成，跨数据集口径统一）。
+最大的两类合计约 <b>${top2.toFixed(1)}%</b>，其中"风险流失型"占绝对多数——绝大多数学习者在当前平台上投入很低，干预空间巨大。
+每张卡片下方给出对应的运营建议。`;
+$("personas").innerHTML = D.personas.map(p => `
+  <div class="pcard persona"><div class="nm">${esc(p.cn)}</div><div class="en">${esc(p.name)}</div>
+    <div class="num">${p.n.toLocaleString()}<small> 人 · ${p.share.toFixed(1)}%</small></div>
+    <div class="desc">${esc(p.desc) || "按簇中心特征定制内容策略。"}</div>
+    <div class="reco">建议：${esc(p.reco) || "—"}</div></div>`).join("");
+
+/* S2 投入与结果 */
+$("a2").innerHTML = `投入分层直接兑换成结果：统一管线把学习者按投入度分组后，<b>最高组比最低组 ${esc(D.tier_lift)}</b>。
+"坚持出勤"（活跃天数）同时是相关分析和随机森林重要性的第一因子——改善持续性比冲刺单次测验更有效。`;
+$("corr").innerHTML = hbars(D.corr_top.map(d => ({label: CN[d.label] || d.label, value: d.r})),
+                            {fmtFn: v => "r=" + (+v).toFixed(3), max: 1});
+$("feat").innerHTML = hbars(mk(D.top5_features).map(d => ({label: CN[d.label] || d.label, value: d.value})), {fmtFn: v => (+v).toFixed(3)});
+
+/* S3 节律与兴趣 */
+$("a3").innerHTML = `合并口径下登录节律分四类，<b>常规型与夜间型是主流</b>；国内短视频内容级数据显示消费高峰在<b>下午与晚间</b>。
+内容偏好高度娱乐化——知识内容做短、放进这些时段，才能被看到。`;
+$("timepat").innerHTML = hbars(mk(D.time_patterns).sort((a, b) => b.value - a.value), {fmtFn: v => Math.round(v).toLocaleString() + " 人"});
+$("tod").innerHTML = hbars(D.tod.map(r => ({label: r.group, value: r.share})), {fmtFn: pct1});
+$("cats").innerHTML = hbars(D.cats.map(c => ({label: c.name, value: c.share})), {fmtFn: v => v.toFixed(1) + "%"});
+$("itypes").innerHTML = D.itypes.map(t => `<span class="pill">${esc(t.name)} ${t.share}%</span>`).join("");
+$("city").innerHTML = hbars(D.city.map(c => ({label: c.name, value: c.finish})), {fmtFn: pct1, rowH: 26});
+
+/* S4 行为序列 */
+const lsaTotal = Object.values(D.lsa_patterns || {}).reduce((a, b) => a + b, 0);
+$("a4").innerHTML = `相邻两次点击的转换规律（滞后序列分析）把学习者分成三类：<b>"刷课"（高频重复点击）${D.lsa_patterns["刷课"].toLocaleString()} 人、
+正常推进 ${D.lsa_patterns["正常"].toLocaleString()} 人、跳步学习 ${D.lsa_patterns["跳步学习"].toLocaleString()} 人</b>。
+只看短视频不进完整慕课的学习者占 <b>${D.short_only_pct}%</b>——跨形态引流是最大增量空间。`;
+$("lsa").innerHTML = hbars(mk(D.lsa_patterns).sort((a, b) => b.value - a.value), {color: "#C55A11", fmtFn: v => Math.round(v).toLocaleString() + " 人"});
+$("lsatop").innerHTML = (D.lsa_top || []).slice(0, 5).map(t =>
+  `<span class="pill">${esc(t.transition)}：z=${t.z >= 0 ? "+" : ""}${(+t.z).toFixed(1)}</span>`).join("");
+$("apriori").innerHTML = D.apriori_top.map(a =>
+  `<span class="pill">${esc(a.antecedent)} → ${esc(a.consequent)}：置信度 ${(a.confidence * 100).toFixed(1)}%、提升度 ${a.lift}</span>`).join("");
+$("sna").innerHTML = (D.sna_top || []).map((r, i) =>
+  `<span class="pill" style="border-left-color:${COL[i % COL.length]}">PageRank 核心资源 ${i + 1}：${esc(r)}</span>`).join("");
+
+/* S5 预警与趋势 */
+$("a5").innerHTML = `不用等到期末。只用<b>开学前 4 周</b>的累计行为，随机森林就能把"谁可能掉队"和"谁大概率达标"区分开——
+区分度（AUC）<b>${(D.auc_early * 100).toFixed(1)}%</b>（100% 表示完全区分，50% 等于瞎猜）；整学期全量特征可达 ${(D.auc_full * 100).toFixed(1)}%。
+第 4 周是干预最佳平衡点：判断已够准，窗口还够长。`;
+$("warn").innerHTML = [["开学前 4 周特征", D.auc_early, "只用前 4 周行为即可预警"],
+                       ["全量特征（整学期）", D.auc_full, "信息最全，供学期复盘"]].map((w, i) => `
+  <div class="pcard warncard"><div class="w">${w[0]}</div>
+  <div class="a" style="color:${i ? "#548235" : "#C55A11"}">${(w[1] * 100).toFixed(1)}%</div>
+  <div class="d">区分能力 AUC（5 折交叉验证，非准确率）</div>
+  <div class="d" style="margin-top:8px">${w[2]}</div></div>`).join("");
+$("gm").innerHTML = hbars(mk(D.gm_trends).sort((a, b) => b.value - a.value), {color: "#8FAADC", fmtFn: v => Math.round(v).toLocaleString() + " 人"});
+$("feat2").innerHTML = hbars(mk(D.top5_features).map(d => ({label: CN[d.label] || d.label, value: d.value})), {fmtFn: v => (+v).toFixed(3)});
+
+/* S6 评价与行动 */
+const qBad = D.quality_levels["差"] || 0, qGood = (D.quality_levels["良"] || 0) + (D.quality_levels["中"] || 0) + (D.quality_levels["优"] || 0);
+$("a6").innerHTML = `AHP（权重经一致性检验 CR=${D.ahp_cr}&lt;0.1）+ 模糊综合评价把六源行为折算成百分制质量分：
+均值仅 <b>${(+D.quality_mean).toFixed(1)} 分</b>，"差"档 ${qBad.toLocaleString()} 人——总量大、质量低，平台优化空间明确。
+据此逐人生成干预队列，并给出可执行的优化建议。`;
+$("quality").innerHTML = hbars(mk(D.quality_levels).sort((a, b) => b.value - a.value), {fmtFn: v => Math.round(v).toLocaleString() + " 人"});
+$("queues").innerHTML = hbars(D.queues.map(q => ({label: q.name, value: q.n})), {color: "#548235", fmtFn: v => Math.round(v).toLocaleString() + " 人"});
+const sdSorted = Object.entries(D.sd_results || {}).sort((a, b) => b[1].final_engagement - a[1].final_engagement);
+$("sd").innerHTML = sdSorted.map(([name, v]) => {
+  const best = name === D.sd_best;
+  return `<span class="pill" style="${best ? "border-left:3px solid #548235" : ""}">SD 仿真·${esc(name)}：活跃度终值 ${(v.final_engagement * 100).toFixed(0)}%（${v.growth_pct >= 0 ? "+" : ""}${v.growth_pct}%）${best ? "✓ 推荐" : ""}</span>`;
+}).join("");
+$("ahp").innerHTML = Object.entries(D.ahp_weights || {}).map(([n, v]) =>
+  `<span class="pill">AHP 权重·${esc(n)}：${(v * 100).toFixed(1)}%</span>`).join("");
+$("sugg").innerHTML = Object.entries(D.suggestions || {}).map(([cat, items]) =>
+  `<div class="qitem"><b>${esc(cat)}</b>（${items.length} 条）：` +
+  items.map(it => `${esc(it.target)}——${esc(it.advice)}`).join("；") + "</div>").join("");
+
+/* S7 数据来源 */
+$("a7").innerHTML = `项目分析的是<b>六类真实公开数据集的合并总表</b>（不单独拆分任何一个数据集）：
+慕课（HarvardX/MITx）、清华 FIB 短视频、ASSISTments 编程练习、OULAD 开放大学、UCI 学生成绩（课堂对照）、天池微课。
+合并后共 <b>${D.overview.n.toLocaleString()} 名学习者</b>。数据都是公开真实数据，没有仿真样本；seed=20260101 仅用于可复现抽样。
+下面这些差异都是观察性关联，不对个人做评价。`;
+$("sources").innerHTML = hbars(mk(D.overview.sources).map(d => ({label: d.label.replace(/^real:/, ""), value: d.value})),
+                               {fmtFn: v => Math.round(v).toLocaleString()});
+$("ethics").innerHTML = [
+  "观看完成度为观看时长/视频时长截断 1 的代理，非真实完课率。",
+  "兴趣由内容观看占比推断，属行为偏好代理，非心理测量。",
+  "倍速、设备、网络、预习均为观察性标签，关联非因果。",
+  "全部结论为群体层面观察性关联，不用于个体评价或惩戒。"
+].map(t => `<div class="qitem">${esc(t)}</div>`).join("");
+
+/* 各屏证据图渲染（管线实跑 PNG，figures/ 相对路径，按环节嵌入 + 实跑结论） */
+const FIGS = D.figs || {};
+Object.keys(FIGS).forEach(sid => {
+  const box = document.getElementById("figs" + sid);
+  if (!box) return;
+  box.innerHTML = FIGS[sid].map(f =>
+    `<div class="figcard" onclick="figLb('${f.f}')">` +
+    `<img loading="lazy" src="${D.fig_prefix || "figures/"}${f.f}" alt="${esc(f.t)}">` +
+    `<div class="fcap"><b>${esc(f.t)}</b><span>${esc(f.c)}</span></div></div>`).join("");
+});
+function figLb(name) {
+  let meta = null;
+  Object.values(FIGS).forEach(arr => arr.forEach(x => { if (x.f === name) meta = x; }));
+  $("figlbImg").src = (D.fig_prefix || "figures/") + name;
+  $("figlbCap").innerHTML = meta ? `<b>${esc(meta.t)}</b> — ${esc(meta.c)}` : esc(name);
+  $("figlb").style.display = "flex";
+}
+$("figlb").onclick = () => { $("figlb").style.display = "none"; };
+</script>
+<div id="figlb"><img id="figlbImg" alt=""><div class="lb2" id="figlbCap"></div></div>
+</body>
+</html>

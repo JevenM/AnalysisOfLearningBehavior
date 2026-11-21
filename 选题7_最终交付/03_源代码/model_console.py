@@ -75,9 +75,6 @@ STAGES = {
     "dash_profile":     ("内容画像看板", os.path.join(DASH, "build_profile_dashboard.py"), [], "dash"),
 }
 SCOPE_STAGES = {
-    "full": ["multimodal", "profile", "up_build_unified", "up_cluster", "up_mine",
-             "up_associate", "up_predict", "up_evaluate", "up_decide", "up_report",
-             "dash_main", "dash_persona", "dash_profile"],
     "pipeline": ["up_build_unified", "up_cluster", "up_mine", "up_associate",
                  "up_predict", "up_evaluate", "up_decide", "up_report",
                  "dash_main", "dash_persona", "dash_profile"],
@@ -87,7 +84,8 @@ SCOPE_STAGES = {
                        "up_evaluate", "up_decide", "up_report"],
 }
 DASH_FILES = {"dashboard.html", "persona_dashboard.html", "profile_dashboard.html",
-              "model_console.html"}
+              "dashboard.sandbox.html", "persona_dashboard.sandbox.html",
+              "profile_dashboard.sandbox.html", "model_console.html"}
 RUN_FILES = {"up_report.md", "up_metrics.json", "up_eval_summary.json",
              "multimodal_results.json", "profile_results.json", "up_queues.csv",
              "up_optimization_suggestions.csv", "up_persona_recommendations.csv"}
@@ -292,7 +290,7 @@ def _run_chain(scope: str, cmds) -> None:
         with _LOCK:
             RUN_STATE["rc"] = 0
         _log(f"[链路结束] scope={scope}，共 {len(cmds)} 步，结果目录 {RUN_STATE['out_dir']}")
-        if scope == "full":
+        if scope == "pipeline":
             _log("[提示] 正式结果已更新：在“结果看板”区刷新三个看板链接查看")
     except Exception as e:  # noqa: BLE001
         _log(f"[异常] {type(e).__name__}: {e}")
@@ -432,9 +430,41 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     with open(fp, "rb") as f:
                         self._send(200, f.read(), "image/png")
+            elif path.startswith("/dash/figures/"):
+                # 看板内嵌的证据图（figures/ 相对路径引用），经控制台访问时在此提供；
+                # 允许一层子目录（正式 figures/ 与沙箱 figures/sandbox/ 两套）
+                m = re.match(r"^/dash/figures/((?:[\w\-]+/)?[\w\-]+\.(?:png|jpe?g|svg))$", path)
+                fp = os.path.join(DASH, "figures", *m.group(1).split("/")) if m else ""
+                if m and os.path.isfile(fp):
+                    ctype = {"png": "image/png", "jpg": "image/jpeg",
+                             "jpeg": "image/jpeg", "svg": "image/svg+xml"
+                             }[m.group(1).rsplit(".", 1)[-1].lower()]
+                    with open(fp, "rb") as f:
+                        self._send(200, f.read(), ctype)
+                else:
+                    self._json({"error": "图片不存在（先运行管线构建看板）"}, 404)
             elif path.startswith("/dash/") and os.path.basename(path) in DASH_FILES:
-                with open(os.path.join(DASH, os.path.basename(path)), "rb") as f:
-                    self._send(200, f.read(), "text/html; charset=utf-8")
+                base = os.path.basename(path)
+                # scope=sandbox 且对应沙箱看板已构建 → 切换到沙箱版（*.sandbox.html）
+                if re.search(r"[?&]scope=sandbox", self.path):
+                    cand = base.replace(".html", ".sandbox.html")
+                    if os.path.isfile(os.path.join(DASH, cand)):
+                        base = cand
+                fp = os.path.join(DASH, base)
+                if not os.path.isfile(fp):
+                    self._json({"error": "看板未构建（先运行管线；沙箱看板由自动刷新监视器生成）"}, 404)
+                else:
+                    with open(fp, encoding="utf-8") as f:
+                        html_txt = f.read()
+                    sandbox_view = base.endswith(".sandbox.html")
+                    badge = ("沙箱测试数据（04_运行结果_沙箱 目录）——用于参数/数据验证，非正式结果"
+                             if sandbox_view else "正式结果（04_运行结果 目录，六源合并总表）")
+                    color = "#B7791F" if sandbox_view else "#2E7D4F"
+                    banner = (f'<div style="position:sticky;top:0;z-index:999;background:{color};'
+                              f'color:#fff;padding:7px 4vw;font-size:13px;font-weight:600;'
+                              f'text-align:center;letter-spacing:.5px">当前显示：{badge}</div>')
+                    html_txt = html_txt.replace("<body>", "<body>" + banner, 1)
+                    self._send(200, html_txt.encode("utf-8"), "text/html; charset=utf-8")
             elif path.startswith("/files/") and os.path.basename(path) in RUN_FILES:
                 fp = os.path.join(RUN, os.path.basename(path))
                 if os.path.exists(fp):

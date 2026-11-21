@@ -1,16 +1,16 @@
 {
-  "silhouette": 0.8137385845184326,
-  "k": 3,
-  "knee_k": 5,
-  "backend": "torch",
+  "silhouette": 0.8248769298157576,
+  "k": 4,
+  "knee_k": 4,
+  "backend": "cpu",
   "k_scores": {
     "2": 0.838,
-    "3": 0.814,
-    "4": 0.715,
-    "5": 0.699,
-    "6": 0.645,
-    "7": 0.627,
-    "8": 0.63
+    "3": 0.841,
+    "4": 0.825,
+    "5": 0.807,
+    "6": 0.697,
+    "7": 0.701,
+    "8": 0.7
   },
   "n_fit_samples": 8000,
   "cluster_cols": [
@@ -32,16 +32,16 @@
   "best_model": "GradientBoosting",
   "top5_features": {
     "avg_quiz_score": 1.0,
-    "video_clicks": 0.0,
-    "total_clicks": 0.0,
     "active_days": 0.0,
-    "resource_clicks": 0.0
+    "resource_clicks": 0.0,
+    "video_clicks": 0.0,
+    "total_clicks": 0.0
   },
   "logreg_acc": 0.9954166666666666,
   "logreg_auc": 0.9996772544141804,
   "rf_auc_full": 0.9996224606094088,
   "rf_auc_early": 0.9489873367868811,
-  "persona_pred_acc": 0.9945,
+  "persona_pred_acc": 0.9947500000000001,
   "gm_trends": {
     "平稳": 9911,
     "下降": 1400,

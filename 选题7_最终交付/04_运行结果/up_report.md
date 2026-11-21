@@ -1,5 +1,5 @@
 # 学习者画像分析报告（统一管线 up_）
-生成时间: 2026-11-20 22:02:57
+生成时间: 2026-11-21 11:47:29
 
 ## 数据概览
 - 学生总数: 66644，数据来源: {'real:harvardx_mitx_person_course': 50000, 'real:thu_shortvideo': 6654, 'real:edudata_assistments_2009': 4217, 'real:oulad': 4014, 'real:uci_student_performance': 1044, 'real:tianchi_mooc_2024_2025': 715}
@@ -33,7 +33,7 @@
 - 时间行为模式分布: {'常规型学习': 4439, '夜间型学习': 3517, '集中式周末学习': 3309, '碎片化高频学习': 92}
 - 关联规则: 论坛互动、读资源 → OULAD 课程资源 (support=0.319, conf=0.988, lift=2.8)
 - 关联规则: OULAD 课程资源、论坛互动 → 读资源 (support=0.319, conf=0.998, lift=2.75)
-- 关联规则: OULAD 课程资源、做测验 → 读资源 (support=0.084, conf=0.996, lift=2.74)
+- 关联规则: 读资源 → OULAD 课程资源 (support=0.352, conf=0.968, lift=2.74)
 - 只看短视频跳过完整慕课的学生占比: 58.5%
 - 场景行为差异: {'慕课长视频': {'完播率': 0.39, '倍速使用率': 0.424, '平均拖拽次数': nan}, '短视频': {'完播率': 0.348, '倍速使用率': 0.0, '平均拖拽次数': nan}}
 - 与成绩最相关的行为因素: active_days(r=0.715), avg_quiz_score(r=0.711), total_clicks(r=0.537), resource_clicks(r=0.35), forum_posts(r=0.313)

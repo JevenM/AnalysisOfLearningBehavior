@@ -10,11 +10,17 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
-RES = os.path.join(ROOT, "04_运行结果")
+RES = os.environ.get("DASH_SOURCE") or os.path.join(ROOT, "04_运行结果")
 TPL = os.path.join(HERE, "profile_dashboard.template.html")
-OUT = os.path.join(HERE, "profile_dashboard.html")
+OUT = os.path.join(HERE, os.environ.get("DASH_OUT", "profile_dashboard.html"))
 
-P = json.load(open(os.path.join(RES, "profile_results.json"), encoding="utf-8"))
+_req = os.path.join(RES, "profile_results.json")
+if not os.path.isfile(_req):
+    # 沙箱构建（DASH_SOURCE 指向沙箱目录）且沙箱范围不跑内容画像 → 无数据源，跳过
+    print(f"SKIP {os.path.basename(RES)} 无 profile_results.json，"
+          "跳过沙箱版内容画像看板（该看板仅反映内容级画像）")
+    raise SystemExit(0)
+P = json.load(open(_req, encoding="utf-8"))
 html = open(TPL, encoding="utf-8").read()
 assert "__PROFILE_DATA__" in html, "模板缺少数据占位符"
 html = html.replace("__PROFILE_DATA__", json.dumps(P, ensure_ascii=False))
