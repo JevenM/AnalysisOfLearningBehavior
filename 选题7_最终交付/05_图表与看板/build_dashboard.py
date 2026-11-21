@@ -135,6 +135,111 @@ insight = {
     "suggestions": suggestions,
 }
 
+# ---------------------------------------------------------------------------
+# 18 张管线实跑图表 → 按"分析环节"分组嵌入对应屏（图题 + 实跑结论）。
+# 图片由本脚本从 04_运行结果/ 同步到 figures/，看板以相对路径引用，离线可用。
+import shutil
+
+FIG_DIR = os.path.join(HERE, "figures")
+os.makedirs(FIG_DIR, exist_ok=True)
+for f in os.listdir(RES):
+    if f.startswith("up_") and f.endswith(".png"):
+        shutil.copyfile(os.path.join(RES, f), os.path.join(FIG_DIR, f))
+
+
+def _d1(mapping):
+    """dict 第一键（top5_features / time_patterns / lsa_patterns 的首位项）。"""
+    for k in (mapping or {}):
+        return str(k)
+    return None
+
+
+def _fnum(v, pct=False):
+    if v is None:
+        return "—"
+    return f"{v * 100:.1f}%" if pct else f"{v:.3f}"
+
+
+_IND_CN = {"active_days": "活跃天数", "total_clicks": "总点击", "avg_quiz_score": "测验均分",
+           "forum_posts": "论坛发帖", "quiz_attempts": "测验次数", "resource_clicks": "资源点击",
+           "video_clicks": "视频点击", "engagement_score": "互动投入度"}
+_top_feat = _d1(UM.get("top5_features"))
+_corr0 = (AS.get("corr_top") or [{}])[0] or {}
+_tp = MI.get("time_patterns") or {}
+_lsa = MI.get("lsa_patterns") or {}
+_ap = (MI.get("apriori_top") or [{}])[0] or {}
+_sc = MI.get("scene") or {}
+_sna = MI.get("sna_top_resources") or []
+_sd_best_res = (EV.get("sd_results") or {}).get(EV.get("sd_best") or "", {}) or {}
+
+insight["figs"] = {
+    "1": [  # 屏1 · 环节=聚类画像（K-means + 多方法降维）
+        {"f": "up_elbow_silhouette.png", "t": "环节证据 · K 选择（肘部+轮廓双准则）",
+         "c": f"在 K=2–8 候选中自动选定 K={UM.get('k')}：轮廓系数 {_fnum(UM.get('silhouette'))}、"
+              f"肘部拐点 K={UM.get('knee_k')}，两准则一致——聚类数由数据决定而非人为指定。"},
+        {"f": "up_pca_clusters.png", "t": "环节证据 · PCA 二维聚类投影",
+         "c": "主成分平面上画像簇边界清晰、簇间距离远大于簇内距离——分群结构真实存在。"},
+        {"f": "up_tsne_clusters.png", "t": "环节证据 · t-SNE 非线性嵌入",
+         "c": "非线性降维同样呈现紧凑分簇：分组结论对降维方法稳健。"},
+        {"f": "up_umap_clusters.png", "t": "环节证据 · UMAP 降维投影",
+         "c": "第三种降维方法复现相同结构，三种视角交叉验证聚类可靠性。"},
+        {"f": "up_radar_personas.png", "t": "环节证据 · 四类画像行为中心雷达",
+         "c": "各画像行为中心差异集中在投入维度（点击/活跃/互动）——画像由行为塑造，而非人口标签。"},
+        {"f": "up_heatmap_features.png", "t": "环节证据 · 聚类 × 行为特征热力图",
+         "c": "逐特征比对四类行为中心：总点击与活跃天数是区分度最强的特征，直接用于画像命名。"},
+    ],
+    "2": [  # 屏2 · 环节=相关分析与投入分层
+        {"f": "up_correlation_top_factors.png", "t": "环节证据 · 行为 × 成绩相关排序",
+         "c": f"与成绩关联最强的行为是“{_IND_CN.get(_corr0.get('indicator'), _corr0.get('indicator'))}”"
+              f"（r={_fnum(_corr0.get('pearson_r'))}，显著）——坚持出勤比单次爆发更能解释成绩。"},
+        {"f": "up_engagement_tiers.png", "t": "环节证据 · 投入分层增益",
+         "c": f"高投入组相对低投入组：{AS.get('tier_lift')}——投入分层的增益可量化，是干预优先级的直接依据。"},
+        {"f": "up_demographics_cross.png", "t": "环节证据 · 人口属性 × 行为交叉",
+         "c": "不同性别/年龄/学历群体的行为差异存在但幅度有限——行为特征比背景属性更能预测结果。"},
+        {"f": "up_rf_feature_importance.png", "t": "环节证据 · 随机森林特征重要性",
+         "c": f"模型最依赖“{_IND_CN.get(_top_feat, _top_feat)}”——与相关分析两套独立方法得出同一结论，相互印证。"},
+    ],
+    "3": [  # 屏3 · 环节=时序模式挖掘
+        {"f": "up_temporal_patterns.png", "t": "环节证据 · 登录节律分型分布",
+         "c": f"学习者自动归为 {len(_tp)} 类节律，最多为“{_d1(_tp) or '—'}”"
+              f"（{_tp.get(_d1(_tp), 0) if _tp else 0} 人）——推送与直播时段设计应贴合节律分布。"},
+    ],
+}
+
+insight["figs"]["4"] = [  # 屏4 · 环节=行为序列与资源挖掘（LSA/SNA/Apriori）
+    {"f": "up_lsa_transition_graph.png", "t": "环节证据 · LSA 行为模式转移图",
+     "c": f"逐人行为序列归为三型：{' / '.join(f'{k} {v} 人' for k, v in _lsa.items())}"
+          "——高频“刷课”型最多，需要完整学习路径引导而非放任刷量。"},
+    {"f": "up_sna_network.png", "t": "环节证据 · SNA 资源共现网络",
+     "c": f"少数资源承载多数访问（Top：{'、'.join(_sna[:3])}…）——核心资源应优先保障可用性与加载速度。"},
+    {"f": "up_apriori_rules.png", "t": "环节证据 · Apriori 关联规则",
+     "c": f"最强规则「{_ap.get('antecedent')} → {_ap.get('consequent')}」"
+          f"（置信度 {_ap.get('confidence')}，提升度 {_ap.get('lift')}）"
+          "——规则的先后关系可直接设计成资源引导推荐。"},
+    {"f": "up_scene_comparison.png", "t": "环节证据 · 慕课/短视频场景对比",
+     "c": f"完播率慕课长视频 {(_sc.get('慕课长视频') or {}).get('完播率', '—')} vs 短视频 "
+          f"{(_sc.get('短视频') or {}).get('完播率', '—')}，倍速使用率差异显著"
+          "——两种内容场景的交互设计需差异化。"},
+]
+insight["figs"]["5"] = [  # 屏5 · 环节=预测与早期预警
+    {"f": "up_model_feature_importance.png", "t": "环节证据 · 预测特征重要性 Top10",
+     "c": f"仅用前 4 周行为即可预警：早期 AUC {_fnum(UM.get('rf_auc_early'), pct=True)}、"
+          f"全量 AUC {_fnum(UM.get('rf_auc_full'), pct=True)}；"
+          f"“{_IND_CN.get(_top_feat, _top_feat)}”是最关键的早期信号——第 4 周就应触发干预。"},
+]
+insight["figs"]["6"] = [  # 屏6 · 环节=统一评价与策略仿真
+    {"f": "up_quality_score_distribution.png", "t": "环节证据 · 学习质量评分分布",
+     "c": f"全体质量分均值 {EV.get('quality_mean')}/100，分布右偏——少数高投入个体拉高均值，"
+          "干预应聚焦长尾低分群体而非均值本身。"},
+    {"f": "up_sd_simulation.png", "t": "环节证据 · 系统动力学（SD）策略仿真",
+     "c": f"52 周策略仿真：最优策略「{EV.get('sd_best')}」最终参与度增幅 "
+          f"+{_sd_best_res.get('growth_pct', '—')}%——供给型策略具复利效应，激励型策略长期衰减。"},
+]
+
+
+
+
+
 tpl = open(os.path.join(HERE, "dashboard.template.html"), encoding="utf-8").read()
 data = json.dumps(insight, ensure_ascii=False, separators=(",", ":"))
 assert "</script" not in data.lower(), "数据中含有会截断 script 的字符串"

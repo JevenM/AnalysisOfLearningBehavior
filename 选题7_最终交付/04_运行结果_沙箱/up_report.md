@@ -1,9 +1,9 @@
 # 学习者画像分析报告（统一管线 up_）
-生成时间: 2026-11-21 10:12:13
+生成时间: 2026-11-21 10:36:24
 
 ## 数据概览
 - 学生总数: 8000，数据来源: {'real:harvardx_mitx_person_course': 8000}
-- 聚类数 K = 4，Silhouette = 0.825，计算后端 = cpu
+- 聚类数 K = 3，Silhouette = 0.814，计算后端 = torch
 
 ## 主成分降维（PCA）
 - 主成分命名: []
@@ -33,18 +33,17 @@
 - 时间行为模式分布: {'常规型学习': 4439, '夜间型学习': 3517, '集中式周末学习': 3309, '碎片化高频学习': 92}
 - 关联规则: 论坛互动、读资源 → OULAD 课程资源 (support=0.319, conf=0.988, lift=2.8)
 - 关联规则: OULAD 课程资源、论坛互动 → 读资源 (support=0.319, conf=0.998, lift=2.75)
-- 关联规则: 读资源 → OULAD 课程资源 (support=0.352, conf=0.968, lift=2.74)
+- 关联规则: OULAD 课程资源、做测验 → 读资源 (support=0.084, conf=0.996, lift=2.74)
 - 只看短视频跳过完整慕课的学生占比: 58.5%
 - 场景行为差异: {'慕课长视频': {'完播率': 0.39, '倍速使用率': 0.424, '平均拖拽次数': nan}, '短视频': {'完播率': 0.348, '倍速使用率': 0.0, '平均拖拽次数': nan}}
 - 与成绩最相关的行为因素: avg_quiz_score(r=1.0), active_days(r=0.694), total_clicks(r=0.692), resource_clicks(r=0.69), video_clicks(r=0.449)
 - 投入分层提升幅度: 高投入组较低投入组 完成率 +41.0%, 成绩 +16.5 分
 - SD 仿真最优策略: 加强资源供给（52 周投入水平 1.0)
 - 优化建议: 7 条（详见 up_optimization_suggestions.csv）
-| persona                                    |   n_students |   share_pct | description            | content_recommendation      |
-|:-------------------------------------------|-------------:|------------:|:-----------------------|:----------------------------|
-| Independent Deep Learner                   |           68 |         0.8 | 高投入、深度探索内容、测验得分高、极少求助。 | 研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。 |
-| Independent Deep Learner (High Engagement) |          533 |         6.7 | 高投入、深度探索内容、测验得分高、极少求助。 | 研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。 |
-| Low-Engagement Weak-Performance Learner    |         7399 |        92.5 | nan                    | 按簇中心特征定制内容策略                |
+                                   persona  n_students  share_pct            description      content_recommendation
+                  Independent Deep Learner         125        1.6 高投入、深度探索内容、测验得分高、极少求助。 研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。
+Independent Deep Learner (High Engagement)         509        6.4 高投入、深度探索内容、测验得分高、极少求助。 研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。
+   Low-Engagement Weak-Performance Learner        7366       92.1                    NaN                按簇中心特征定制内容策略
 
 ## 干预队列统计
 
@@ -53,5 +52,6 @@
 
 ## 需要教师复核的学生（review/support 队列示例，前 20）
 
-| student_id   | persona   | avg_quiz_score   | queue   | suggested_action   | evidence   |
-|--------------|-----------|------------------|---------|--------------------|------------|
+Empty DataFrame
+Columns: [student_id, persona, avg_quiz_score, queue, suggested_action, evidence]
+Index: []

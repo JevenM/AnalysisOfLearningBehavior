@@ -409,6 +409,29 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/results":
                 m = re.search(r"[?&]scope=([a-z_]+)", self.path)
                 self._json(results_with_prev(m.group(1) if m else "sandbox"))
+            elif path == "/api/figures":
+                m = re.search(r"[?&]scope=(canonical|sandbox)", self.path)
+                sandbox = bool(m and m.group(1) == "sandbox")
+                d = SANDBOX if sandbox else RUN
+                figs = sorted(
+                    ({"name": f,
+                      "mtime": os.path.getmtime(os.path.join(d, f))}
+                     for f in os.listdir(d)
+                     if f.lower().endswith(".png") and
+                     os.path.isfile(os.path.join(d, f))),
+                    key=lambda x: x["name"])
+                self._json({"ok": True,
+                            "scope": "sandbox" if sandbox else "canonical",
+                            "figures": figs})
+            elif path.startswith("/fig/"):
+                m = re.match(r"^/fig/(canonical|sandbox)/([\w\-]+\.png)$", path)
+                d = (SANDBOX if m.group(1) == "sandbox" else RUN) if m else None
+                fp = os.path.join(d, m.group(2)) if m else ""
+                if not m or not os.path.isfile(fp):
+                    self._json({"error": "图表不存在（先运行管线）"}, 404)
+                else:
+                    with open(fp, "rb") as f:
+                        self._send(200, f.read(), "image/png")
             elif path.startswith("/dash/") and os.path.basename(path) in DASH_FILES:
                 with open(os.path.join(DASH, os.path.basename(path)), "rb") as f:
                     self._send(200, f.read(), "text/html; charset=utf-8")
@@ -467,10 +490,17 @@ def main() -> int:
     print("选题7 建模控制台（可交互验证程序）")
     print(f"  控制台: {url}")
     print("  看板:   {0}dash/dashboard.html".format(url))
+    print("  看板自动刷新监视器已随控制台启动（跑完管线自动重建三个看板）")
     print("  停止:   Ctrl+C")
     print("=" * 60)
     if not a.no_browser:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
+    # 看板自动刷新监视器：绕过控制台单独跑 up_*.py 后，看板也会自动重建
+    import auto_refresh_dashboards as autod
+    threading.Thread(target=autod.watch_loop, daemon=True,
+                     kwargs={"interval": 5.0,
+                             "running_check": lambda: RUN_STATE["running"]}
+                     ).start()
     httpd = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     try:
         httpd.serve_forever()

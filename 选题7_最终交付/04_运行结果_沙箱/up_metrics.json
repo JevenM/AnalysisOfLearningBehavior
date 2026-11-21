@@ -20,5 +20,31 @@
     "resource_clicks",
     "video_clicks",
     "avg_quiz_score"
-  ]
+  ],
+  "RandomForest_grade_acc": 0.9995833333333334,
+  "RandomForest_grade_recall": 0.9772727272727273,
+  "RandomForest_grade_precision": 0.99375,
+  "GradientBoosting_grade_acc": 1.0,
+  "GradientBoosting_grade_recall": 1.0,
+  "GradientBoosting_grade_precision": 1.0,
+  "cert_acc": 0.9720833333333333,
+  "cert_recall_risk": 0.9828465461288827,
+  "best_model": "GradientBoosting",
+  "top5_features": {
+    "avg_quiz_score": 1.0,
+    "video_clicks": 0.0,
+    "total_clicks": 0.0,
+    "active_days": 0.0,
+    "resource_clicks": 0.0
+  },
+  "logreg_acc": 0.9954166666666666,
+  "logreg_auc": 0.9996772544141804,
+  "rf_auc_full": 0.9996224606094088,
+  "rf_auc_early": 0.9489873367868811,
+  "persona_pred_acc": 0.9945,
+  "gm_trends": {
+    "平稳": 9911,
+    "下降": 1400,
+    "上升": 46
+  }
 }

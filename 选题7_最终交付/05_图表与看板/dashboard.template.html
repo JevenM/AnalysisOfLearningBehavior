@@ -57,6 +57,19 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei
 .qitem{font-size:12.5px;color:#3E5670;line-height:1.7;padding:8px 12px;background:var(--soft);border-radius:8px}
 .qitem b{color:var(--navy)}
 footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font-size:12px;color:var(--muted);line-height:1.8}
+.figblock{margin-top:18px}
+.fighead{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.fighead b{color:var(--navy)}
+.figrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.figcard{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:zoom-in;transition:transform .15s,box-shadow .15s}
+.figcard:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(31,78,121,.14)}
+.figcard img{width:100%;display:block;background:#fff}
+.figcard .fcap{padding:10px 13px;font-size:12.5px;line-height:1.6}
+.figcard .fcap b{color:var(--navy);display:block;margin-bottom:4px;font-size:12.5px}
+.figcard .fcap span{color:#3E5670}
+#figlb{position:fixed;inset:0;background:rgba(10,20,35,.92);display:none;z-index:80;align-items:center;justify-content:center;flex-direction:column;gap:12px;cursor:zoom-out}
+#figlb img{max-width:92vw;max-height:78vh;background:#fff;border-radius:10px}
+#figlb .lb2{color:#E7EEF9;font-size:14px;max-width:82vw;text-align:center;line-height:1.6}
 </style>
 </head>
 <body>
@@ -84,6 +97,8 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
   <div class="sec-h"><div class="sec-no">1</div><h2>学习者可以分成哪几类</h2></div>
   <div class="answer" id="a1"></div>
   <div class="pgrid" id="personas"></div>
+  <div class="figblock"><div class="fighead"><b>本环节（聚类画像）的建模证据图</b> —— 管线实跑产出，每图标注其证明的结论；点击放大</div>
+    <div class="figrow" id="figs1"></div></div>
 </div></section>
 
 <section class="section" id="s2"><div class="wrap">
@@ -97,6 +112,8 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
       <div class="viz" id="feat"></div>
       <div class="hintline">哪个特征被模型用得越多越重要；与相关分析互相印证。</div></div>
   </div>
+  <div class="figblock"><div class="fighead"><b>本环节（相关分析与投入分层）的建模证据图</b> —— 管线实跑产出，每图标注其证明的结论；点击放大</div>
+    <div class="figrow" id="figs2"></div></div>
 </div></section>
 
 <section class="section" id="s3"><div class="wrap">
@@ -115,6 +132,8 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
       <div class="pillrow" id="itypes"></div><div class="viz" id="city"></div>
       <div class="hintline">兴趣类型按知识/娱乐偏好分位划分；城市等级间完成度差异平缓。</div></div>
   </div>
+  <div class="figblock"><div class="fighead"><b>本环节（时序模式挖掘）的建模证据图</b> —— 管线实跑产出，点击放大</div>
+    <div class="figrow" id="figs3"></div></div>
 </div></section>
 
 <section class="section" id="s4"><div class="wrap">
@@ -129,6 +148,8 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
   <div class="pcard" style="margin-top:16px"><h3>强关联规则（Apriori）与核心资源（PageRank）</h3>
     <div class="pillrow" id="apriori"></div><div class="pillrow" id="sna"></div>
     <div class="hintline">提升度 Lift 表示规则比随机组合强多少倍；少数资源承载多数访问，应优先保障可用性。</div></div>
+  <div class="figblock"><div class="fighead"><b>本环节（行为序列与资源挖掘）的建模证据图</b> —— 管线实跑产出，每图标注其证明的结论；点击放大</div>
+    <div class="figrow" id="figs4"></div></div>
 </div></section>
 
 <section class="section" id="s5"><div class="wrap">
@@ -141,6 +162,8 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
     <div class="pcard"><h3>哪些行为最能带动成绩</h3><div class="viz" id="feat2"></div>
       <div class="hintline">同第 2 屏特征重要性，供干预设计参考。</div></div>
   </div>
+  <div class="figblock"><div class="fighead"><b>本环节（预测与早期预警）的建模证据图</b> —— 管线实跑产出，点击放大</div>
+    <div class="figrow" id="figs5"></div></div>
 </div></section>
 
 <section class="section" id="s6"><div class="wrap">
@@ -158,6 +181,8 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
       <div class="hintline">SD=系统动力学 52 周仿真；AHP 权重经一致性检验（CR&lt;0.1）。</div></div>
     <div class="pcard"><h3>优化建议（逐条可执行）</h3><div class="qlist" id="sugg"></div></div>
   </div>
+  <div class="figblock"><div class="fighead"><b>本环节（统一评价与策略仿真）的建模证据图</b> —— 管线实跑产出，每图标注其证明的结论；点击放大</div>
+    <div class="figrow" id="figs6"></div></div>
 </div></section>
 
 <section class="section" id="s7"><div class="wrap">
@@ -298,6 +323,26 @@ $("ethics").innerHTML = [
   "倍速、设备、网络、预习均为观察性标签，关联非因果。",
   "全部结论为群体层面观察性关联，不用于个体评价或惩戒。"
 ].map(t => `<div class="qitem">${esc(t)}</div>`).join("");
+
+/* 各屏证据图渲染（管线实跑 PNG，figures/ 相对路径，按环节嵌入 + 实跑结论） */
+const FIGS = D.figs || {};
+Object.keys(FIGS).forEach(sid => {
+  const box = document.getElementById("figs" + sid);
+  if (!box) return;
+  box.innerHTML = FIGS[sid].map(f =>
+    `<div class="figcard" onclick="figLb('${f.f}')">` +
+    `<img loading="lazy" src="figures/${f.f}" alt="${esc(f.t)}">` +
+    `<div class="fcap"><b>${esc(f.t)}</b><span>${esc(f.c)}</span></div></div>`).join("");
+});
+function figLb(name) {
+  let meta = null;
+  Object.values(FIGS).forEach(arr => arr.forEach(x => { if (x.f === name) meta = x; }));
+  $("figlbImg").src = "figures/" + name;
+  $("figlbCap").innerHTML = meta ? `<b>${esc(meta.t)}</b> — ${esc(meta.c)}` : esc(name);
+  $("figlb").style.display = "flex";
+}
+$("figlb").onclick = () => { $("figlb").style.display = "none"; };
 </script>
+<div id="figlb"><img id="figlbImg" alt=""><div class="lb2" id="figlbCap"></div></div>
 </body>
 </html>

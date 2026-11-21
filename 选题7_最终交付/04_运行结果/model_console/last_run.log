@@ -364,3 +364,64 @@
 [10:30:19]   [up 3] 完成
 [10:30:20] [完成] 统一管线[2] 聚类画像 耗时 198.9s
 [10:30:20] [2/7] 统一管线[3] 行为挖掘
+[10:34:56]     中文字体已配置: Microsoft YaHei
+[10:34:56]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[10:34:56]   [up 4] 挖掘层（SNA/LSA/时序/Apriori/场景）
+[10:34:56]     SNA 完成: 11357 学习者 / 18221 资源节点; PageRank Top 资源: ['S542811', 'S703721', 'S703737']
+[10:34:56]     LSA 完成: 行为模式分布 {'刷课': 6298, '正常': 4830, '跳步学习': 229}
+[10:34:56]     时序模式分布: {'常规型学习': 4439, '夜间型学习': 3517, '集中式周末学习': 3309, '碎片化高频学习': 92}
+[10:34:56]     Apriori 规则 21 条; 只看短视频跳过完整慕课占比: 58.5%
+[10:34:56]     场景对比: {'慕课长视频': {'完播率': 0.39, '倍速使用率': 0.424, '平均拖拽次数': nan}, '短视频': {'完播率': 0.348, '倍速使用率': 0.0, '平均拖拽次数': nan}}
+[10:34:56]     警告: 人口维度 ['region'] 在输入数据中无有效值，跳过该维度统计
+[10:34:56]     人口结构: 核心群体 {'gender': '男', 'age_band': '26-30', 'education': '本科'}
+[10:34:56]   [up 4] 完成
+[10:34:59] [完成] 统一管线[3] 行为挖掘 耗时 278.3s
+[10:34:59] [3/7] 统一管线[4] 相关与分层
+[10:35:23]     中文字体已配置: Microsoft YaHei
+[10:35:23]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[10:35:23]   [up 5] 关联层（相关/异质性/投入分层）
+[10:35:23]     相关性 Top3（成绩）: [{'indicator': 'avg_quiz_score', 'pearson_r': 1.0}, {'indicator': 'active_days', 'pearson_r': 0.694}, {'indicator': 'total_clicks', 'pearson_r': 0.692}]
+[10:35:23]     投入分层: 高投入组较低投入组 完成率 +41.0%, 成绩 +16.5 分
+[10:35:23]   [up 5] 完成
+[10:35:23] [完成] 统一管线[4] 相关与分层 耗时 24.6s
+[10:35:23] [4/7] 统一管线[5] 预测与预警
+[10:36:00]   D:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:1160: RuntimeWarning: overflow encountered in exp
+[10:36:00]     return (x0[0] - b / a) * np.exp(-a * k) + b / a
+[10:36:00]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\numpy\lib\function_base.py:1448: RuntimeWarning: invalid value encountered in subtract
+[10:36:00]     a = op(a[slice1], a[slice2])
+[10:36:00]     中文字体已配置: Microsoft YaHei
+[10:36:00]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[10:36:00]   [up 6] 预测层（RF/GBDT/LogReg/预警/GM(1,1)）
+[10:36:00]     RF 学业表现预测: 最终成绩 R²=1.000 (MAE=0.01), 完成率 R²=0.833, 完成判定 acc=0.972
+[10:36:00]     扩展建模: 最佳模型=GradientBoosting 成绩等级 acc=1.000 recall=1.000; 认证 acc=0.972; Top5 关键行为: ['avg_quiz_score', 'video_clicks', 'total_clicks', 'active_days', 'resource_clicks']
+[10:36:00]     LogisticRegression 成功预测: acc=0.995 AUC=1.000
+[10:36:00]     RandomForest 风险预测 5-fold AUC: 全特征=1.000  早期特征(['total_clicks', 'active_days'])=0.949
+[10:36:00]     RandomForest 由行为预测画像标签: acc=0.995 (classes=['Independent Deep Learner', 'Independent Deep Learner (High Engagement)', 'Low-Engagement Weak-Performance Learner'])
+[10:36:00]     GM(1,1) 完成: 有效预测 11357/11357 人, 趋势分布 {'平稳': 9911, '下降': 1400, '上升': 46}, 模型精度分布 {'合格': 11223, '优': 75, '良': 59}
+[10:36:00]   [up 6] 完成
+[10:36:01] [完成] 统一管线[5] 预测与预警 耗时 37.8s
+[10:36:01] [5/7] 统一管线[6] 评价与 SD 仿真
+[10:36:09]     中文字体已配置: Microsoft YaHei
+[10:36:09]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[10:36:09]   [up 7] 评价层（AHP+模糊评判 / SD 仿真）
+[10:36:09]     AHP 权重: {'学习行为': 0.32, '学习效果': 0.558, '互动参与': 0.122}  一致性 CR=0.016 (通过)
+[10:36:09]     学习质量评分: 均值=40.7, 等级分布 {'差': 7674, '中': 326}
+[10:36:09]     SD 仿真: 52 周后最优策略 = 加强资源供给（投入水平 1.0）
+[10:36:09]   [up 7] 完成
+[10:36:09] [完成] 统一管线[6] 评价与 SD 仿真 耗时 8.1s
+[10:36:09] [6/7] 统一管线[7] 决策与建议
+[10:36:18]     中文字体已配置: Microsoft YaHei
+[10:36:18]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[10:36:18]   [up 8] 决策层（队列/推荐/建议）
+[10:36:18]     优化建议: 输出 7 条落地策略
+[10:36:18]     干预队列分布: {'none': 6395, 'enrichment': 1605}
+[10:36:18]   [up 8] 完成
+[10:36:19] [完成] 统一管线[7] 决策与建议 耗时 9.8s
+[10:36:19] [7/7] 统一管线[8] 汇总报告
+[10:36:24]     中文字体已配置: Microsoft YaHei
+[10:36:24]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[10:36:24]   [up 9] 输出层（汇总报告）
+[10:36:24]     报告已生成: D:\Git\AnalysisOfLearningBehavior\选题7_最终交付\04_运行结果_沙箱\up_report.md (2386 字符)
+[10:36:24]   [up 9] 完成
+[10:36:24] [完成] 统一管线[8] 汇总报告 耗时 5.7s
+[10:36:24] [链路结束] scope=sandbox_upload，共 7 步，结果目录 D:\Git\AnalysisOfLearningBehavior\选题7_最终交付\04_运行结果_沙箱

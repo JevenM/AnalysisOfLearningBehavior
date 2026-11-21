@@ -46,6 +46,15 @@ padding:4px 9px;cursor:pointer;font-size:12.5px}
 .stagebox input{margin-right:4px}
 .flash{animation:fl 1.2s}@keyframes fl{0%{background:#3a2c10}100%{background:transparent}}
 code{color:#9fd0ff}
+.figs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.fig{background:var(--card2);border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:zoom-in}
+.fig img{width:100%;display:block;background:#fff}
+.fig .cap{font-size:12px;padding:6px 9px;color:var(--tx)}
+.fig .cap small{color:var(--dim)}
+#lightbox{position:fixed;inset:0;background:rgba(5,8,14,.9);display:none;z-index:99;
+align-items:center;justify-content:center;flex-direction:column;gap:10px;cursor:zoom-out}
+#lightbox img{max-width:92vw;max-height:82vh;background:#fff;border-radius:8px}
+#lightbox .cap{font-size:14px;color:var(--tx)}
 </style>
 </head>
 <body>
@@ -121,7 +130,13 @@ code{color:#9fd0ff}
     SD 周数调大 → 资源供给策略复利效应更显著、激励策略衰减更深；
     更换输入数据 → 画像人数与预测指标随新样本重算，可对比默认六源结果解释差异来源。</p>
   </div>
+  <div class="card">
+    <h2>⑥ 中间图表（随运行实时产出） <span id="figScope" class="tag"></span>
+      <button class="gray" id="figRefresh" style="margin-left:auto;padding:4px 10px;font-size:12px">刷新</button></h2>
+    <div id="figs" class="figs"><p class="note">运行结束后自动刷新；运行中每 15 秒轮询——聚类、挖掘、预测、评价各阶段一完成，对应图表即出现在此处。点击任意图放大查看。</p></div>
+  </div>
 </div>
+<div id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div></div>
 </div>
 
 <script>
@@ -207,7 +222,87 @@ function renderResults(r){
     (curScope==='full'?' · 正式看板已同步刷新':'（沙箱结果不影响正式看板）')+'</p>';
   box.innerHTML=html;
 }
-function loadResults(){fetch('/api/results?scope='+curScope).then(r=>r.json()).then(renderResults);}
+const FIG_CN={'up_elbow_silhouette':'K 选择：肘部 + 轮廓双准则','up_pca_clusters':'PCA 二维聚类投影',
+ 'up_tsne_clusters':'t-SNE 聚类结构','up_umap_clusters':'UMAP 聚类结构','up_radar_personas':'四类画像雷达图',
+ 'up_heatmap_features':'聚类 × 行为特征热力图','up_sna_network':'SNA 资源共现网络（PageRank）',
+ 'up_lsa_transition_graph':'LSA 行为模式转移图','up_temporal_patterns':'时序学习模式分布',
+ 'up_apriori_rules':'Apriori 关联规则','up_scene_comparison':'慕课/短视频场景对比',
+ 'up_correlation_top_factors':'行为 × 结果相关 Top 因子','up_demographics_cross':'人口属性 × 行为交叉对比',
+ 'up_engagement_tiers':'投入分层与结果差异','up_model_feature_importance':'预测特征重要性 Top10',
+ 'up_rf_feature_importance':'随机森林特征重要性','up_quality_score_distribution':'学习质量评分分布',
+ 'up_sd_simulation':'系统动力学（SD）策略仿真'};
+let figCache='',lastFigPoll=0,curRes=null;
+/* 图表按分析环节分组：每组=主看板对应屏 + 该环节应体现的结论 */
+const FIG_GROUPS=[
+ {id:'c1',name:'环节① 聚类画像（K-means + 多方法降维）',
+  desc:'对应主看板第 1 屏，回答"学习者可以分成几类、各类是谁"。结论：K 由肘部+轮廓双准则自动选定，PCA/t-SNE/UMAP 三种降维交叉验证聚类结构，画像差异来自行为而非人口标签。',
+  files:['up_elbow_silhouette.png','up_pca_clusters.png','up_tsne_clusters.png','up_umap_clusters.png','up_radar_personas.png','up_heatmap_features.png']},
+ {id:'c2',name:'环节② 相关分析与投入分层',
+  desc:'对应主看板第 2 屏，回答"投入和结果的关系有多大"。结论：活跃天数是与成绩关联最强的行为；高投入组完成率/成绩增益可量化；相关与随机森林两套独立方法互证。',
+  files:['up_correlation_top_factors.png','up_engagement_tiers.png','up_demographics_cross.png','up_rf_feature_importance.png']},
+ {id:'c3',name:'环节③ 时序模式挖掘',
+  desc:'对应主看板第 3 屏，回答"大家什么时候学"。结论：节律分型自动归类，推送与直播时段设计应贴合节律分布。',
+  files:['up_temporal_patterns.png']},
+ {id:'c4',name:'环节④ 行为序列与资源挖掘（LSA/SNA/Apriori）',
+  desc:'对应主看板第 4 屏，回答"点击序列里藏着什么模式"。结论：高频"刷课"型最多需路径引导；少数核心资源承载多数访问应优先保障；最强关联规则可直接用于资源推荐。',
+  files:['up_lsa_transition_graph.png','up_sna_network.png','up_apriori_rules.png','up_scene_comparison.png']},
+ {id:'c5',name:'环节⑤ 预测与早期预警',
+  desc:'对应主看板第 5 屏，回答"能不能提前发现掉队风险"。结论：仅用前 4 周行为即可预警（区分度 AUC 而非准确率），特征重要性给出干预靶点。',
+  files:['up_model_feature_importance.png']},
+ {id:'c6',name:'环节⑥ 统一评价与策略仿真',
+  desc:'对应主看板第 6 屏，回答"平台该怎么办"。结论：质量分右偏、干预聚焦长尾低分群体；SD 仿真筛出最优供给型策略（复利效应）。',
+  files:['up_quality_score_distribution.png','up_sd_simulation.png']}
+];
+function dynConcl(name,cur){
+  if(!cur)return null;
+  switch(name){
+    case 'up_elbow_silhouette.png':
+      return `本次运行：自动选定 K=${cur.k!=null?cur.k:'—'}，轮廓系数 ${fmt('silhouette',cur.silhouette)}。`;
+    case 'up_model_feature_importance.png':
+      return `本次运行：早期预警 AUC ${fmt('rf_auc_early',cur.rf_auc_early)}，全量 ${fmt('rf_auc_full',cur.rf_auc_full)}——第 4 周即可触发干预。`;
+    case 'up_quality_score_distribution.png':
+      return `本次运行：质量分均值 ${fmt('quality_mean',cur.quality_mean)}——干预应聚焦长尾低分群体。`;
+    case 'up_sd_simulation.png':
+      return `本次运行：最优策略「${cur.sd_best||'—'}」（${fmt('sd_growth',cur.sd_growth)}）——供给型策略具复利效应。`;
+    default:return null;
+  }
+}
+function loadFigs(force){
+  const url='/api/figures?scope='+(curScope==='full'?'canonical':'sandbox');
+  fetch(url).then(r=>r.json()).then(d=>{
+    if(!d.ok)return;
+    $('figScope').textContent=d.scope==='sandbox'?'沙箱结果':'正式结果';
+    const sig=d.figures.map(f=>f.name+':'+f.mtime).join('|');
+    if(!force&&sig===figCache)return;
+    figCache=sig;
+    const have={};d.figures.forEach(f=>have[f.name]=f.mtime);
+    const cur=curRes;
+    let html='';
+    for(const g of FIG_GROUPS){
+      const files=g.files.filter(f=>have[f]);
+      if(!files.length)continue;
+      html+=`<h3>${g.name}</h3><p class="note">${g.desc}</p><div class="figs">`;
+      html+=files.map(f=>{
+        const cn=FIG_CN[f]||f.replace(/\.png$/,'');
+        const dc=dynConcl(f,cur);
+        return `<div class="fig" onclick="showFig('${d.scope}','${f}')">`+
+          `<img loading="lazy" src="/fig/${d.scope}/${f}?v=${Math.floor(have[f])}">`+
+          `<div class="cap"><b>${cn}</b>${dc?'<br><span style="color:#8fb8e8">'+dc+'</span>':''}`+
+          `<br><small>${f}</small></div></div>`;
+      }).join('');
+      html+='</div>';
+    }
+    $('figs').innerHTML=html||
+      '<p class="note">该目录暂无图表——先在"③ 运行"中执行一次（沙箱约 1–3 分钟，正式约 5–10 分钟）。</p>';
+  }).catch(()=>{});
+}
+function showFig(scope,name){
+  const cn=FIG_CN[name]||name.replace(/\.png$/,'');
+  $('lbImg').src='/fig/'+scope+'/'+name+'?v='+Date.now();
+  $('lbCap').textContent=cn+'（'+(scope==='sandbox'?'沙箱结果':'正式结果')+'）';
+  $('lightbox').style.display='flex';
+}
+function loadResults(){fetch('/api/results?scope='+curScope).then(r=>r.json()).then(r=>{curRes=r.current;renderResults(r);loadFigs();});}
 function setBadge(run){
   const b=$('runBadge');
   if(run.running){b.className='badge busy';b.textContent='运行中 · '+(run.stage||'…');}
@@ -225,6 +320,9 @@ function pollLog(){
     }
     setBadge(d.run);
     $('logStage').textContent=d.run.stage||'';
+    // 运行中：阶段变化或每 15 秒刷新一次图表（mtime 缓存，无新图则不重绘）
+    if(d.run.running&&(Date.now()-lastFigPoll>15000||
+       (lastRun&&lastRun.stage!==d.run.stage))){lastFigPoll=Date.now();loadFigs();}
     if(lastRun&&lastRun.running&&!d.run.running){logN=0;loadResults();}
     lastRun=d.run;
   }).catch(()=>{});
@@ -290,7 +388,7 @@ $('runBtn').onclick=async()=>{
   curScope=v==='pipeline'||v==='full'||v==='single'?'full':'sandbox';
   pollLog();
 };
-loadState().then(()=>loadResults());
+loadState().then(()=>{loadResults();loadFigs(true);});
 setInterval(pollLog,900);
 </script>
 </body>
