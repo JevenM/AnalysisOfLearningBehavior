@@ -1,0 +1,24 @@
+{
+  "silhouette": 0.8137385845184326,
+  "k": 3,
+  "knee_k": 5,
+  "backend": "torch",
+  "k_scores": {
+    "2": 0.838,
+    "3": 0.814,
+    "4": 0.715,
+    "5": 0.699,
+    "6": 0.645,
+    "7": 0.627,
+    "8": 0.63
+  },
+  "n_fit_samples": 8000,
+  "cluster_cols": [
+    "total_clicks",
+    "active_days",
+    "forum_posts",
+    "resource_clicks",
+    "video_clicks",
+    "avg_quiz_score"
+  ]
+}

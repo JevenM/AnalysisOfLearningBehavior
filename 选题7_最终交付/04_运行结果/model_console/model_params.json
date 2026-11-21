@@ -1,0 +1,8 @@
+{
+  "k": 0,
+  "min_support": 0.05,
+  "min_conf": 0.4,
+  "sd_weeks": 52,
+  "budget_ratio": 0.45,
+  "device": "auto"
+}

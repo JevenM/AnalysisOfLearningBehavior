@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>建模控制台 · 参数修改与现场验证</title>
+<style>
+:root{--bg:#0e1420;--card:#161e2e;--card2:#1b2537;--line:#2a3550;--tx:#dbe4f5;--dim:#8fa0bd;
+--acc:#4da3ff;--ok:#3ecf8e;--warn:#ffb454;--bad:#ff6b7a;--mono:'Consolas','Courier New',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:14px/1.6 'Microsoft YaHei',sans-serif;padding:24px}
+a{color:var(--acc);text-decoration:none}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;margin-bottom:6px}
+h1{font-size:22px}
+.sub{color:var(--dim);font-size:12.5px;margin-bottom:16px}
+nav.links{margin-left:auto;display:flex;gap:10px;font-size:13px}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;margin-bottom:10px;color:var(--acc)}
+.card h3{font-size:13px;margin:10px 0 6px;color:var(--dim)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+label{color:var(--dim);font-size:13px}
+input[type=number],select,input[type=file]{background:var(--card2);border:1px solid var(--line);color:var(--tx);
+border-radius:6px;padding:5px 8px;font-size:13px;max-width:200px}
+button{background:var(--acc);border:0;color:#04101f;font-weight:700;border-radius:7px;
+padding:8px 14px;cursor:pointer;font-size:13.5px}
+button.gray{background:#39465f;color:var(--tx)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.runrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;align-items:center}
+#log{background:#0a0f19;border:1px solid var(--line);border-radius:8px;padding:12px;
+font:12px/1.55 var(--mono);height:300px;overflow:auto;white-space:pre-wrap;color:#a8c7e8}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.idle{background:#2a3550;color:var(--dim)}.busy{background:#8a5b16;color:#ffd48a}
+.done{background:#174734;color:var(--ok)}.fail{background:#5a1c26;color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--dim);font-weight:600}
+td.num{font-family:var(--mono)}
+.up{color:var(--ok)}.down{color:var(--warn)}.same{color:var(--dim)}
+.tag{font-size:11px;padding:1px 7px;border-radius:99px;background:#243050;color:var(--dim);margin-left:6px}
+.note{color:var(--dim);font-size:12.5px;margin-top:8px}
+kbd{background:var(--card2);border:1px solid var(--line);border-radius:4px;padding:0 6px;font-size:12px}
+.stagebox{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.stagebox label{background:var(--card2);border:1px solid var(--line);border-radius:6px;
+padding:4px 9px;cursor:pointer;font-size:12.5px}
+.stagebox input{margin-right:4px}
+.flash{animation:fl 1.2s}@keyframes fl{0%{background:#3a2c10}100%{background:transparent}}
+code{color:#9fd0ff}
+</style>
+</head>
+<body>
+<header>
+  <h1>建模控制台</h1>
+  <nav class="links">
+    <a href="/dash/dashboard.html" target="_blank">主看板</a>
+    <a href="/dash/persona_dashboard.html" target="_blank">形态画像看板</a>
+    <a href="/dash/profile_dashboard.html" target="_blank">内容画像看板</a>
+    <a href="/files/up_report.md" target="_blank">管线报告</a>
+  </nav>
+</header>
+<p class="sub">课程要求对应：可交互验证程序 —— 修改参数 / 更换输入数据 → 重跑建模链 → 查看预测结果与干预建议，
+并与上一次运行自动对比（变化高亮），用于答辩现场解释结果变化。启动服务：<kbd>python 03_源代码/model_console.py</kbd></p>
+
+<div class="grid">
+<div>
+  <div class="card">
+    <h2>① 建模参数</h2>
+    <div class="row"><label>聚类数 K（0=自动：肘部+轮廓）</label><input id="p_k" type="number" min="0" max="8" step="1"></div>
+    <div class="row"><label>计算设备</label><select id="p_device"><option value="auto">auto</option><option value="cpu">cpu</option><option value="gpu">gpu</option></select></div>
+    <div class="row"><label>Apriori 最小支撑度</label><input id="p_ms" type="number" min="0.01" max="0.30" step="0.01"></div>
+    <div class="row"><label>Apriori 最小置信度</label><input id="p_mc" type="number" min="0.1" max="0.95" step="0.05"></div>
+    <div class="row"><label>SD 仿真周数</label><input id="p_w" type="number" min="8" max="260" step="4"></div>
+    <div class="row"><label>多形态预算比例（0-1 规划）</label><input id="p_br" type="number" min="0.05" max="1" step="0.05"></div>
+    <div class="runrow"><button id="saveP">保存参数</button><button class="gray" id="resetP">恢复默认</button></div>
+    <p class="note">参数保存后立即生效于后续运行；K=0 表示肘部拐点+轮廓系数自动选优（正式结果 K=4，轮廓 0.552）。</p>
+  </div>
+
+  <div class="card">
+    <h2>② 输入数据</h2>
+    <div class="row"><label>当前正式总表</label><span id="dataInfo" style="font-family:var(--mono)"></span></div>
+    <div class="row"><label>上传自定义学习者总表（up_unified.csv 同 schema）</label></div>
+    <div class="row">
+      <select id="upTarget"><option value="sandbox">写入沙箱（推荐，不动正式结果）</option><option value="canonical">替换正式总表（自动备份默认表）</option></select>
+      <input type="file" id="upFile" accept=".csv">
+    </div>
+    <div class="runrow"><button class="gray" id="resetData">恢复默认数据 / 清空沙箱</button></div>
+    <p class="note">内置测试文件：02_数据与数据集/测试上传数据/test_upload_harvardx_holdout.csv
+    （8,000 名未参与建模的留出学习者）。必需列：student_id、source、total_clicks、active_days、final_grade、success、completion_rate。
+    上传到沙箱后，运行"沙箱试验（用已上传数据）"即从聚类画像起跑；沙箱事件流沿用默认数据。</p>
+  </div>
+
+  <div class="card">
+    <h2>③ 运行</h2>
+    <div class="row"><label>运行范围</label>
+      <select id="scope">
+        <option value="sandbox">沙箱试验（全管线 → 04_运行结果_沙箱，不动正式结果）</option>
+        <option value="sandbox_upload">沙箱试验（用已上传数据，从聚类起跑）</option>
+        <option value="pipeline">正式 · 统一管线 + 三看板</option>
+        <option value="full">正式 · 全链路（含四形态/内容画像）</option>
+        <option value="single">单阶段（正式目录）</option>
+      </select>
+    </div>
+    <div id="stagePick" class="stagebox" style="display:none"></div>
+    <div class="runrow"><button id="runBtn">按新参数运行</button><span id="runBadge" class="badge idle">空闲</span></div>
+    <p class="note">沙箱约 1–3 分钟（含 RF/GBDT 交叉验证）；正式全链路更久。运行期间日志实时滚动。</p>
+  </div>
+</div>
+
+<div>
+  <div class="card">
+    <h2>④ 运行日志 <span id="logStage" class="tag"></span></h2>
+    <div id="log"></div>
+  </div>
+  <div class="card">
+    <h2>⑤ 结果摘要与变化对比 <span id="resScope" class="tag"></span></h2>
+    <div id="results"><p class="note">运行结束后自动刷新；与"本次运行前"的快照对比，变化行高亮（绿=升高，黄=降低）。</p></div>
+    <h3>答辩解释口径（参数 → 预期变化方向）</h3>
+    <p class="note">K 调大 → 画像更细、轮廓系数通常下降、风险型占比拆分；
+    Apriori 支持度调低 → 挖掘出更多长尾规则、Top 规则可能更换；
+    预算比例调低 → 0-1 规划可投单元减少、预期新增高成效人数下降但单位预算效率上升；
+    SD 周数调大 → 资源供给策略复利效应更显著、激励策略衰减更深；
+    更换输入数据 → 画像人数与预测指标随新样本重算，可对比默认六源结果解释差异来源。</p>
+  </div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let logN=0,lastRun=null,curScope='sandbox';
+const KEY_CN={k:'聚类数 K',silhouette:'轮廓系数',cert_acc:'达标判断准确率',cert_recall_risk:'风险类召回率',
+ rf_auc_early:'早期预警 AUC(4周)',rf_auc_full:'全量特征 AUC',quality_mean:'质量分均值',ahp_cr:'AHP 一致性 CR',
+ sd_best:'SD 最优策略',sd_growth:'SD 最优策略增幅',suggestions:'优化建议条数',
+ 'budget.budget_ratio':'预算比例','budget.budget':'预算(元)','budget.opt_gain':'规划最优增益(人)',
+ 'budget.heur_gain':'经验法增益(人)','budget.uniform_gain':'普惠法增益(人)'};
+const PCT=new Set(['cert_acc','cert_recall_risk','rf_auc_early','rf_auc_full','ahp_cr']);
+const PCT1=new Set(['silhouette','budget.budget_ratio']);
+const QUEUE_CN={'none':'持续观察','enrichment':'拓展培养','review':'教师复核','support':'重点支持'};
+const PERSONA_CN={'At-Risk / Disengaged':'风险流失型','Independent Deep Learner':'自主深度型',
+'Guided Learner':'引导依赖型','Guided Learner (High Engagement)':'引导依赖型(高投入)',
+'Low-Engagement Strong-Performance Learner':'低投入高绩效型','风险流失型':'风险流失型',
+'自主深度型':'自主深度型','引导依赖型':'引导依赖型','低投入高绩效型':'低投入高绩效型'};
+const STAGE_LIST=[['multimodal','四形态测评'],['profile','内容级画像'],['up_build_unified','六源融合'],
+ ['up_cluster','聚类画像'],['up_mine','行为挖掘'],['up_associate','相关分层'],['up_predict','预测预警'],
+ ['up_evaluate','评价SD'],['up_decide','决策建议'],['up_report','汇总报告'],['dash_main','主看板'],
+ ['dash_persona','形态看板'],['dash_profile','内容看板']];
+
+function fmt(key,v){
+  if(v===null||v===undefined||v==='')return '—';
+  if(key==='k')return 'K='+v;
+  if(key==='sd_best')return String(v);
+  if(key==='sd_growth')return (v>0?'+':'')+(+v).toFixed(1)+'%';
+  if(PCT.has(key))return (v*100).toFixed(1)+'%';
+  if(PCT1.has(key))return (+v).toFixed(3);
+  if(typeof v==='number')return v.toLocaleString('zh-CN',{maximumFractionDigits:2});
+  if(typeof v==='object')return JSON.stringify(v);
+  return String(v);
+}
+function cmp(key,a,b){
+  if(typeof a!=='number'||typeof b!=='number')return String(b)===String(a)?'same':'chg';
+  if(Math.abs(a-b)<1e-9)return 'same';
+  return b>a?'up':'down';
+}
+function row(key,prev,cur){
+  const cls=cmp(key,prev,cur);
+  const arrow=cls==='up'?' ▲':cls==='down'?' ▼':cls==='chg'?' ～':'';
+  const hl=cls!=='same'?' class="flash"':'';
+  return `<tr${hl}><td>${KEY_CN[key]||key}</td><td class="num">${fmt(key,prev)}</td>`+
+    `<td class="num ${cls}">${fmt(key,cur)}${arrow}</td></tr>`;
+}
+function block(title,keys,prev,cur){
+  let html=`<h3>${title}</h3><table><tr><th>指标</th><th>上次运行</th><th>本次运行</th></tr>`;
+  for(const k of keys){
+    const get=(r,key)=>key.startsWith('budget.')?(r&&r.budget||{})[key.slice(7)]:(r?r[key]:undefined);
+    html+=row(k,get(prev,k),get(cur,k));
+  }
+  return html+'</table>';
+}
+function distTable(title,prevMap,curMap,cn){
+  const keys=Array.from(new Set([...Object.keys(curMap||{}),...Object.keys(prevMap||{})]));
+  if(!keys.length)return '';
+  let html=`<h3>${title}</h3><table><tr><th>分组</th><th>上次(人)</th><th>本次(人)</th><th>变化</th></tr>`;
+  for(const k of keys){
+    const a=(prevMap||{})[k]||0,b=(curMap||{})[k]||0,d=b-a;
+    const cls=d>0?'up':d<0?'down':'same';
+    html+=`<tr><td>${(cn&&cn[k])||k}</td><td class="num">${a.toLocaleString()}</td>`+
+      `<td class="num">${b.toLocaleString()}</td><td class="num ${cls}">${d>0?'+':''}${d.toLocaleString()}</td></tr>`;
+  }
+  return html+'</table>';
+}
+function renderResults(r){
+  $('resScope').textContent='scope='+curScope+' · '+(r.out_dir||'').split(/[\\/]/).pop();
+  const box=$('results');
+  if(!r.current){box.innerHTML='<p class="note">该目录暂无运行结果——先在"③ 运行"中执行一次。</p>';return;}
+  const p=r.previous,c=r.current;
+  let html='';
+  html+=block('预测与聚类',['k','silhouette','cert_acc','cert_recall_risk','rf_auc_early','rf_auc_full','suggestions'],p,c);
+  html+=block('评价与决策',['quality_mean','ahp_cr','sd_best','sd_growth'],p,c);
+  if((c.budget||{}).opt_gain!=null)html+=block('多形态 0-1 规划',['budget.budget_ratio','budget.budget','budget.opt_gain','budget.heur_gain','budget.uniform_gain'],p,c);
+  html+=distTable('四类画像人数',p&&p.personas,c.personas,PERSONA_CN);
+  html+=distTable('干预队列人数',p&&p.queues,c.queues,QUEUE_CN);
+  if(c.apriori_top&&c.apriori_top.antecedent)
+    html+=`<h3>Apriori Top 规则（本次）</h3><p class="note"><code>${c.apriori_top.antecedent} → ${c.apriori_top.consequent}</code>　置信度 ${(c.apriori_top.confidence*100).toFixed(1)}%，提升度 ${(+c.apriori_top.lift).toFixed(2)}</p>`;
+  html+='<p class="note">完整明细：<a href="/files/up_metrics.json" target="_blank">up_metrics.json</a> · '+
+    '<a href="/files/up_eval_summary.json" target="_blank">up_eval_summary.json</a> · '+
+    '<a href="/files/up_queues.csv" target="_blank">up_queues.csv</a> · '+
+    '<a href="/files/up_optimization_suggestions.csv" target="_blank">up_optimization_suggestions.csv</a>'+
+    (curScope==='full'?' · 正式看板已同步刷新':'（沙箱结果不影响正式看板）')+'</p>';
+  box.innerHTML=html;
+}
+function loadResults(){fetch('/api/results?scope='+curScope).then(r=>r.json()).then(renderResults);}
+function setBadge(run){
+  const b=$('runBadge');
+  if(run.running){b.className='badge busy';b.textContent='运行中 · '+(run.stage||'…');}
+  else if(run.rc===0){b.className='badge done';b.textContent='完成';}
+  else if(run.rc!=null){b.className='badge fail';b.textContent='失败(退出码 '+run.rc+')';}
+  else{b.className='badge idle';b.textContent='空闲';}
+}
+function pollLog(){
+  fetch('/api/log?n='+logN).then(r=>r.json()).then(d=>{
+    if(d.lines.length){
+      const el=$('log');
+      el.textContent+=d.lines.join('\n')+'\n';
+      el.scrollTop=el.scrollHeight;
+      logN=d.next;
+    }
+    setBadge(d.run);
+    $('logStage').textContent=d.run.stage||'';
+    if(lastRun&&lastRun.running&&!d.run.running){logN=0;loadResults();}
+    lastRun=d.run;
+  }).catch(()=>{});
+}
+async function api(path,opt){
+  const r=await fetch(path,opt);const j=await r.json();
+  if(j.error&&!j.ok)alert(j.error);
+  return j;
+}
+async function loadState(){
+  const s=await api('/api/state');
+  const p=s.params;
+  $('p_k').value=p.k;$('p_device').value=p.device;$('p_ms').value=p.min_support;
+  $('p_mc').value=p.min_conf;$('p_w').value=p.sd_weeks;$('p_br').value=p.budget_ratio;
+  const dm=s.data;
+  $('dataInfo').textContent=(dm.custom?'自定义数据':'默认六源数据')+' · '+
+    (dm.rows!=null?dm.rows.toLocaleString()+' 行':'—')+(dm.sandbox_ready?' · 沙箱已备':'');
+  setBadge(s.run);
+  return s;
+}
+$('saveP').onclick=async()=>{
+  await api('/api/params',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({k:+$('p_k').value,device:$('p_device').value,
+      min_support:+$('p_ms').value,min_conf:+$('p_mc').value,
+      sd_weeks:+$('p_w').value,budget_ratio:+$('p_br').value})});
+  await loadState();
+  $('saveP').textContent='已保存';setTimeout(()=>$('saveP').textContent='保存参数',1200);
+};
+$('resetP').onclick=async()=>{await api('/api/params/reset',{method:'POST'});await loadState();};
+$('resetData').onclick=async()=>{
+  if(!confirm('恢复默认总表并清空沙箱？'))return;
+  await api('/api/data/reset',{method:'POST'});await loadState();
+};
+$('upFile').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const text=await f.text();
+  const j=await api('/api/data?target='+$('upTarget').value+'&filename='+encodeURIComponent(f.name),
+    {method:'POST',headers:{'Content-Type':'text/csv'},body:text});
+  if(j.ok)alert('上传成功：'+(j.rows!=null?j.rows.toLocaleString():'?')+' 行'+(j.note?'\n'+j.note:''));
+  e.target.value='';await loadState();
+};
+$('scope').onchange=e=>{
+  const v=e.target.value;
+  curScope=(v==='full'||v==='pipeline'||v==='single')?'full':'sandbox';
+  $('stagePick').style.display=v==='single'?'flex':'none';
+  loadResults();
+};
+$('stagePick').innerHTML=STAGE_LIST.map(([k,n])=>
+  `<label><input type="checkbox" value="${k}">${n}</label>`).join('');
+$('runBtn').onclick=async()=>{
+  const v=$('scope').value;
+  let scope=v,stages=null;
+  if(v==='single'){
+    stages=[...document.querySelectorAll('#stagePick input:checked')].map(x=>x.value);
+    if(!stages.length){alert('单阶段运行请先勾选阶段');return;}
+  }
+  $('runBtn').disabled=true;
+  const j=await api('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({scope,stages})});
+  $('runBtn').disabled=false;
+  if(!j.ok){alert(j.error||'启动失败');return;}
+  logN=0;$('log').textContent='';
+  curScope=v==='pipeline'||v==='full'||v==='single'?'full':'sandbox';
+  pollLog();
+};
+loadState().then(()=>loadResults());
+setInterval(pollLog,900);
+</script>
+</body>
+</html>

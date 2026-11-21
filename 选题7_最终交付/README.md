@@ -29,6 +29,25 @@ python 03_源代码/run_all.py --device gpu          # 统一管线聚类启用 
 
 一键链的执行顺序与依赖：`multimodal.py（四形态测评）→ profile_modeling.py（内容级画像）→ **统一管线 up_1..up_8（主线）** → 三个看板`，每步独立子进程、失败即停、可重复运行（幂等覆盖）。默认**不重新下载、不生成仿真数据**。
 
+### 建模控制台（可交互验证程序，答辩现场改参重跑）
+
+对应指南 4.4（1）（2）"可交互界面 + 现场更换输入数据或参数重新运行"：
+
+```bash
+python 03_源代码/model_console.py      # 启动本地控制台（自动打开浏览器 http://127.0.0.1:8000/）
+```
+
+- **改参数**：聚类数 K（0=自动）/ 计算设备 / Apriori 支持度与置信度 / SD 仿真周数 / 多形态预算比例；
+- **换数据**：上传自定义学习者总表（up_unified.csv 同 schema），一键恢复默认六源数据；
+  **内置测试文件** `02_数据与数据集/测试上传数据/test_upload_harvardx_holdout.csv`
+  （8,000 名未参与建模的留出学习者，真实数据零重叠；`python 03_源代码/build_test_upload.py` 可再生成）；
+  上传格式要求与 6 步测试流程见 `06_支撑文档/运行说明.md` 方式 0.6；
+- **重跑**：沙箱模式（写入 `04_运行结果_沙箱/`，不动正式结果，约 1–3 分钟）或正式模式
+  （写入 `04_运行结果/` 并自动刷新三个看板）；
+- **看变化**：每次运行自动与上一次快照对比，预测指标 / 四类画像 / 干预队列 / 优化建议的
+  变化逐行高亮（▲▼），直接支撑答辩"解释结果变化"；
+- 页面与三个看板互链（`model_console.html`，由控制台服务托管）。
+
 ### 统一管线（主线，`03_源代码/up_*.py`）
 
 融合 **6 类真实公开数据集**（HarvardX-MITx 50,000 / 清华短视频 6,654 / ASSISTments 4,217 /
@@ -57,6 +76,7 @@ up_report.py          汇总报告 → up_report.md
 | **形态画像看板** | `05_图表与看板/persona_dashboard.html`（慕课/微课/短视频/课堂四形态切换 + 画像群探索 + 散点联动） |
 | **内容画像看板** | `05_图表与看板/profile_dashboard.html`（观看时段 / 兴趣爱好 / 短视频人口属性 / 天池倍速标签，可排序表格 + 差异检验） |
 | **全图表解读手册** | `05_图表与看板/conclusion.md`（全部图表逐一标注：算法全称、输入数据、实跑结果、怎么读、与后续环节关系、结论；按系统工程分析步骤与代码运行流程组织） |
+| **建模控制台（改参重跑）** | `05_图表与看板/model_console.html`（需先 `python 03_源代码/model_console.py` 启动本地服务；改参数/换数据→重跑→结果对比，对应课程可交互验证要求） |
 
 ### 三看板导读：区别、联系与讲解顺序
 
@@ -171,6 +191,7 @@ python 05_图表与看板/build_profile_dashboard.py  # 刷新内容画像看板
 │   └── README.md
 ├── 03_源代码/
 │   ├── run_all.py                     ★ 一键运行入口（--check 体检 / --device GPU）
+│   ├── model_console.py               ★ 建模控制台服务（可交互改参/换数据重跑，标准库实现）
 │   ├── common.py                      GPU 聚类引擎 ClusterEngine / 路径 / 日志 / 绘图公共库
 │   ├── evaluators.py                  AHP/熵权唯一实现（统一管线与多形态链共用）
 │   ├── up_adapters.py                 6 类真实数据源适配器（统一 schema + 事件流）
@@ -197,6 +218,7 @@ python 05_图表与看板/build_profile_dashboard.py  # 刷新内容画像看板
 │   ├── profile_dashboard.html          内容画像看板（时段/兴趣/短视频属性/天池标签）
 │   ├── profile_dashboard.template.html / build_profile_dashboard.py
 │   ├── conclusion.md                  全图表解读手册（逐一标注算法/数据/结果/结论）
+│   ├── model_console.html             建模控制台页面（由 03_源代码/model_console.py 托管）
 │   └── figures/                        fig01—fig03（方法学）、fig11—fig14（多形态）、fig20—fig22（内容画像）
 └── 06_支撑文档/
     ├── 数据说明.md / 多形态数据说明.md

@@ -1,0 +1,366 @@
+[08:59:43] 沙箱补齐事件流表（沿用默认数据，供挖掘/预警演示）
+[08:59:56] 沙箱补齐事件流表（沿用默认数据，供挖掘/预警演示）
+[09:00:15] [开始] scope=sandbox_upload，参数 {'k': 0, 'device': 'auto', 'min_support': 0.05, 'min_conf': 0.4, 'sd_weeks': 52, 'budget_ratio': 0.45}，7 个阶段
+[09:00:15] [1/7] 统一管线[2] 聚类画像
+[09:00:35]     中文字体已配置: Microsoft YaHei
+[09:00:35]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:00:35]   [up 3] 分析层（PCA + 聚类画像）
+[09:00:35]   [up 3] 失败: FileNotFoundError: [Errno 2] No such file or directory: 'd:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果_沙箱\\up_unified.csv'
+[09:00:35]   Traceback (most recent call last):
+[09:00:35]     File "d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_cluster.py", line 36, in main
+[09:00:35]       uni = pd.read_csv(os.path.join(args.out_dir, "up_unified.csv"),
+[09:00:35]                         encoding="utf-8-sig")
+[09:00:35]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\pandas\io\parsers\readers.py", line 1866, in read_csv
+[09:00:35]       return _read(filepath_or_buffer, kwds)
+[09:00:35]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\pandas\io\parsers\readers.py", line 423, in _read
+[09:00:35]       parser = TextFileReader(filepath_or_buffer, **kwds)
+[09:00:35]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\pandas\io\parsers\readers.py", line 2721, in __init__
+[09:00:35]       self._engine = self._make_engine(f, self.engine)
+[09:00:35]                      ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+[09:00:35]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\pandas\io\parsers\readers.py", line 2988, in _make_engine
+[09:00:35]       self.handles = get_handle(
+[09:00:35]                      ~~~~~~~~~~^
+[09:00:35]           f,
+[09:00:35]           ^^
+[09:00:35]       ...<6 lines>...
+[09:00:35]           storage_options=self.options.get("storage_options", None),
+[09:00:35]           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[09:00:35]       )
+[09:00:35]       ^
+[09:00:35]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\pandas\io\common.py", line 945, in get_handle
+[09:00:35]       handle = open(
+[09:00:35]           handle,
+[09:00:35]       ...<3 lines>...
+[09:00:35]           newline="",
+[09:00:35]       )
+[09:00:35]   FileNotFoundError: [Errno 2] No such file or directory: 'd:\\Git\\AnalysisOfLearningBehavior\\选题7_最终交付\\04_运行结果_沙箱\\up_unified.csv'
+[09:00:35] [失败] 统一管线[2] 聚类画像 退出码 1，链路停止
+[09:00:39] [数据] 沙箱目录已清空
+[09:01:48] 沙箱补齐事件流表（沿用默认数据，供挖掘/预警演示）
+[09:01:48] [数据] 沙箱输入已替换: sample2000.csv（2000 行）→ 沙箱链路将从“聚类画像”起跑
+[09:01:48] [开始] scope=sandbox_upload，参数 {'k': 0, 'device': 'auto', 'min_support': 0.05, 'min_conf': 0.4, 'sd_weeks': 52, 'budget_ratio': 0.45}，7 个阶段
+[09:01:48] [1/7] 统一管线[2] 聚类画像
+[09:01:51]     中文字体已配置: Microsoft YaHei
+[09:01:51]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:01:51]   [up 3] 分析层（PCA + 聚类画像）
+[09:01:51]     聚类特征（缺失率 ≤ 40%）: ['total_clicks', 'active_days', 'avg_session_min', 'forum_posts', 'resource_clicks', 'video_clicks', 'quiz_attempts', 'avg_quiz_score', 'help_requests', 'accuracy', 'avg_response_time', 'engagement_score', 'hint_usage', 'success_rate']
+[09:01:51]     PCA 主成分命名: PC1=学习投入度(50.1%), PC2=学习投入度(次要)(13.8%), PC3=互动活跃度(11.4%), PC4=学习投入度(次要)(10.3%)
+[09:01:52]     自动选择 K = 6（轮廓系数 0.619，肘部拐点 K=6，各 K 综合得分: {2: 0.0, 3: 0.5, 4: 0.7, 5: 0.85, 6: 1.0, 7: 0.73, 8: 0.44}）
+[09:01:53]     K-Means(K=6, backend=cpu)  Silhouette(基于 2000 样本) = 0.619
+[09:01:53]     PCA 方差解释率: PC1=50.1%, PC2=13.8%
+[09:01:54]     非线性嵌入可视化: 2000 样本
+[09:01:54]     t-SNE: perplexity=30 (大数据集需 1-2 分钟)
+[09:02:05]     UMAP: n_neighbors=15, min_dist=0.1 (约 10-30 秒)
+[09:02:26]     画像分布: {'Low-Engagement Strong-Performance Learner': 1044, 'At-Risk / Disengaged': 423, 'Guided Learner': 328, 'Guided Learner (High Engagement)': 205}
+[09:02:26]   [up 3] 完成
+[09:02:27] [完成] 统一管线[2] 聚类画像 耗时 38.3s
+[09:02:27] [2/7] 统一管线[3] 行为挖掘
+[09:02:30]     中文字体已配置: Microsoft YaHei
+[09:02:30]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:02:30]   [up 4] 挖掘层（SNA/LSA/时序/Apriori/场景）
+[09:06:30]     SNA 完成: 11357 学习者 / 18221 资源节点; PageRank Top 资源: ['S542811', 'S703721', 'S703737']
+[09:06:32]     LSA 完成: 行为模式分布 {'刷课': 6298, '正常': 4830, '跳步学习': 229}
+[09:06:38]     时序模式分布: {'常规型学习': 4439, '夜间型学习': 3517, '集中式周末学习': 3309, '碎片化高频学习': 92}
+[09:06:42]     Apriori 规则 21 条; 只看短视频跳过完整慕课占比: 58.5%
+[09:06:45]     场景对比: {'慕课长视频': {'完播率': 0.39, '倍速使用率': 0.424, '平均拖拽次数': nan}, '短视频': {'完播率': 0.348, '倍速使用率': 0.0, '平均拖拽次数': nan}}
+[09:06:45]     人口结构: 核心群体 {'gender': '男', 'age_band': '≤17', 'region': '城市', 'education': '高中'}
+[09:06:46]   [up 4] 完成
+[09:06:46] [完成] 统一管线[3] 行为挖掘 耗时 259.4s
+[09:06:46] [3/7] 统一管线[4] 相关与分层
+[09:06:49]     中文字体已配置: Microsoft YaHei
+[09:06:49]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:06:49]   [up 5] 关联层（相关/异质性/投入分层）
+[09:06:49]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:06:49]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:06:49]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:06:49]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:06:49]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:06:49]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:06:49]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:06:49]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:06:49]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:06:49]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:06:49]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:06:49]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:06:49]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:06:49]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:06:49]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:06:49]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:06:49]     相关性 Top3（成绩）: [{'indicator': 'avg_quiz_score', 'pearson_r': 0.976}, {'indicator': 'quiz_attempts', 'pearson_r': -0.897}, {'indicator': 'help_requests', 'pearson_r': -0.88}]
+[09:06:49]     异质性分析: 各群体学习时长-成绩相关系数范围 [0.123, 0.225]
+[09:06:50]     投入分层: 高投入组较低投入组 完成率 +5.0%, 成绩 +-9.6 分
+[09:06:50]   [up 5] 完成
+[09:06:50] [完成] 统一管线[4] 相关与分层 耗时 4.2s
+[09:06:50] [4/7] 统一管线[5] 预测与预警
+[09:06:53]     中文字体已配置: Microsoft YaHei
+[09:06:53]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:06:53]   [up 6] 预测层（RF/GBDT/LogReg/预警/GM(1,1)）
+[09:06:54]     RF 学业表现预测: 最终成绩 R²=0.972 (MAE=0.55), 完成率 R²=0.512, 完成判定 acc=0.938
+[09:06:55]   [up 6] 失败: ValueError: y contains 1 class after sample_weight trimmed classes with zero weights, while a minimum of 2 classes are required.
+[09:06:55]   Traceback (most recent call last):
+[09:06:55]     File "d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_predict.py", line 44, in main
+[09:06:55]       ext, ew = performance_model_extended(uni, cols, args.out_dir)
+[09:06:55]                 ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+[09:06:55]     File "d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py", line 1078, in performance_model_extended
+[09:06:56]       clf.fit(X_tr, u_tr["grade_band"])
+[09:06:56]       ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+[09:06:56]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\sklearn\base.py", line 1403, in wrapper
+[09:06:56]       return fit_method(estimator, *args, **kwargs)
+[09:06:56]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\sklearn\ensemble\_gb.py", line 688, in fit
+[09:06:56]       y = self._encode_y(y=y, sample_weight=None)
+[09:06:56]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\sklearn\ensemble\_gb.py", line 1554, in _encode_y
+[09:06:56]       raise ValueError(
+[09:06:56]       ...<3 lines>...
+[09:06:56]       )
+[09:06:56]   ValueError: y contains 1 class after sample_weight trimmed classes with zero weights, while a minimum of 2 classes are required.
+[09:06:56] [失败] 统一管线[5] 预测与预警 退出码 1，链路停止
+[09:07:00] [数据] 沙箱目录已清空
+[09:08:55] 沙箱补齐事件流表（沿用默认数据，供挖掘/预警演示）
+[09:08:55] [数据] 沙箱输入已替换: sample2000.csv（2000 行）→ 沙箱链路将从“聚类画像”起跑
+[09:08:55] [开始] scope=sandbox_upload，参数 {'k': 0, 'device': 'auto', 'min_support': 0.05, 'min_conf': 0.4, 'sd_weeks': 52, 'budget_ratio': 0.45}，7 个阶段
+[09:08:55] [1/7] 统一管线[2] 聚类画像
+[09:08:58]     中文字体已配置: Microsoft YaHei
+[09:08:58]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:08:58]   [up 3] 分析层（PCA + 聚类画像）
+[09:08:58]     聚类特征（缺失率 ≤ 40%）: ['total_clicks', 'active_days', 'avg_session_min', 'forum_posts', 'resource_clicks', 'video_clicks', 'quiz_attempts', 'avg_quiz_score', 'help_requests', 'accuracy', 'avg_response_time', 'engagement_score', 'hint_usage', 'success_rate']
+[09:08:58]     PCA 主成分命名: PC1=学习投入度(50.1%), PC2=学习投入度(次要)(13.8%), PC3=互动活跃度(11.4%), PC4=学习投入度(次要)(10.3%)
+[09:08:59]     自动选择 K = 6（轮廓系数 0.619，肘部拐点 K=6，各 K 综合得分: {2: 0.0, 3: 0.5, 4: 0.7, 5: 0.85, 6: 1.0, 7: 0.73, 8: 0.44}）
+[09:09:00]     K-Means(K=6, backend=cpu)  Silhouette(基于 2000 样本) = 0.619
+[09:09:00]     PCA 方差解释率: PC1=50.1%, PC2=13.8%
+[09:09:01]     非线性嵌入可视化: 2000 样本
+[09:09:01]     t-SNE: perplexity=30 (大数据集需 1-2 分钟)
+[09:09:09]     UMAP: n_neighbors=15, min_dist=0.1 (约 10-30 秒)
+[09:09:32]     画像分布: {'Low-Engagement Strong-Performance Learner': 1044, 'At-Risk / Disengaged': 423, 'Guided Learner': 328, 'Guided Learner (High Engagement)': 205}
+[09:09:32]   [up 3] 完成
+[09:09:33] [完成] 统一管线[2] 聚类画像 耗时 37.3s
+[09:09:33] [2/7] 统一管线[3] 行为挖掘
+[09:09:36]     中文字体已配置: Microsoft YaHei
+[09:09:36]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:09:36]   [up 4] 挖掘层（SNA/LSA/时序/Apriori/场景）
+[09:13:36]     SNA 完成: 11357 学习者 / 18221 资源节点; PageRank Top 资源: ['S542811', 'S703721', 'S703737']
+[09:13:38]     LSA 完成: 行为模式分布 {'刷课': 6298, '正常': 4830, '跳步学习': 229}
+[09:13:44]     时序模式分布: {'常规型学习': 4439, '夜间型学习': 3517, '集中式周末学习': 3309, '碎片化高频学习': 92}
+[09:13:47]     Apriori 规则 21 条; 只看短视频跳过完整慕课占比: 58.5%
+[09:13:50]     场景对比: {'慕课长视频': {'完播率': 0.39, '倍速使用率': 0.424, '平均拖拽次数': nan}, '短视频': {'完播率': 0.348, '倍速使用率': 0.0, '平均拖拽次数': nan}}
+[09:13:50]     人口结构: 核心群体 {'gender': '男', 'age_band': '≤17', 'region': '城市', 'education': '高中'}
+[09:13:50]   [up 4] 完成
+[09:13:50] [完成] 统一管线[3] 行为挖掘 耗时 257.7s
+[09:13:50] [3/7] 统一管线[4] 相关与分层
+[09:13:53]     中文字体已配置: Microsoft YaHei
+[09:13:53]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:13:53]   [up 5] 关联层（相关/异质性/投入分层）
+[09:13:53]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:13:53]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:13:53]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:13:53]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:13:53]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:13:53]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:13:53]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:13:53]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:13:53]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:13:53]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:13:53]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:13:53]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:13:53]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:13:53]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:13:53]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:886: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+[09:13:53]     r, p = pearsonr(pair[ind], pair[tgt])
+[09:13:54]     相关性 Top3（成绩）: [{'indicator': 'avg_quiz_score', 'pearson_r': 0.976}, {'indicator': 'quiz_attempts', 'pearson_r': -0.897}, {'indicator': 'help_requests', 'pearson_r': -0.88}]
+[09:13:54]     异质性分析: 各群体学习时长-成绩相关系数范围 [0.123, 0.225]
+[09:13:54]     投入分层: 高投入组较低投入组 完成率 +5.0%, 成绩 +-9.6 分
+[09:13:54]   [up 5] 完成
+[09:13:54] [完成] 统一管线[4] 相关与分层 耗时 4.0s
+[09:13:54] [4/7] 统一管线[5] 预测与预警
+[09:13:57]     中文字体已配置: Microsoft YaHei
+[09:13:57]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:13:57]   [up 6] 预测层（RF/GBDT/LogReg/预警/GM(1,1)）
+[09:13:58]     RF 学业表现预测: 最终成绩 R²=0.972 (MAE=0.55), 完成率 R²=0.512, 完成判定 acc=0.938
+[09:13:59]     警告: 训练集成绩等级仅 1 类（输入数据覆盖面不足），跳过等级分类，仅输出认证二分类与回归口径
+[09:14:00]     扩展建模: 最佳模型=RandomForest 成绩等级: 已跳过（等级单一）; 认证 acc=0.938; Top5 关键行为: ['avg_session_min', 'total_clicks', 'video_clicks', 'engagement_score', 'active_days']
+[09:14:00]     LogisticRegression 成功预测: acc=0.980 AUC=0.998
+[09:14:07]     RandomForest 风险预测 5-fold AUC: 全特征=0.917  早期特征(['total_clicks', 'active_days', 'engagement_score', 'avg_session_min'])=0.903
+[09:14:08]     RandomForest 由行为预测画像标签: acc=0.982 (classes=['At-Risk / Disengaged', 'Guided Learner', 'Guided Learner (High Engagement)', 'Low-Engagement Strong-Performance Learner'])
+[09:14:08]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:1155: RuntimeWarning: overflow encountered in exp
+[09:14:08]     return (x0[0] - b / a) * np.exp(-a * k) + b / a
+[09:14:08]   C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\numpy\lib\_function_base_impl.py:1541: RuntimeWarning: invalid value encountered in subtract
+[09:14:08]     a = op(a[slice1], a[slice2])
+[09:14:19]     GM(1,1) 完成: 有效预测 11357/11357 人, 趋势分布 {'平稳': 9911, '下降': 1400, '上升': 46}, 模型精度分布 {'合格': 11223, '优': 75, '良': 59}
+[09:14:19]   [up 6] 完成
+[09:14:20] [完成] 统一管线[5] 预测与预警 耗时 25.8s
+[09:14:20] [5/7] 统一管线[6] 评价与 SD 仿真
+[09:14:23]     中文字体已配置: Microsoft YaHei
+[09:14:23]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:14:23]   [up 7] 评价层（AHP+模糊评判 / SD 仿真）
+[09:14:23]     AHP 权重: {'学习行为': np.float64(0.32), '学习效果': np.float64(0.558), '互动参与': np.float64(0.122)}  一致性 CR=0.016 (通过)
+[09:14:24]     学习质量评分: 均值=40.5, 等级分布 {'差': 2000}
+[09:14:24]     SD 仿真: 52 周后最优策略 = 加强资源供给（投入水平 1.0）
+[09:14:24]   [up 7] 完成
+[09:14:25] [完成] 统一管线[6] 评价与 SD 仿真 耗时 4.4s
+[09:14:25] [6/7] 统一管线[7] 决策与建议
+[09:14:28]     中文字体已配置: Microsoft YaHei
+[09:14:28]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:14:28]   [up 8] 决策层（队列/推荐/建议）
+[09:14:28]     优化建议: 输出 10 条落地策略
+[09:14:28]     干预队列分布: {'none': 1027, 'support': 973}
+[09:14:28]   [up 8] 完成
+[09:14:29] [完成] 统一管线[7] 决策与建议 耗时 3.9s
+[09:14:29] [7/7] 统一管线[8] 汇总报告
+[09:14:31]     中文字体已配置: Microsoft YaHei
+[09:14:31]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:14:31]   [up 9] 输出层（汇总报告）
+[09:14:32]     报告已生成: d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\04_运行结果_沙箱\up_report.md (5833 字符)
+[09:14:32]   [up 9] 完成
+[09:14:32] [完成] 统一管线[8] 汇总报告 耗时 3.3s
+[09:14:32] [链路结束] scope=sandbox_upload，共 7 步，结果目录 d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\04_运行结果_沙箱
+[09:14:34] [数据] 沙箱目录已清空
+[09:45:48] [数据] 沙箱输入已替换: up_unified.csv（66644 行）→ 沙箱链路将从“聚类画像”起跑
+[09:46:00] [数据] 沙箱输入已替换: up_learners.csv（66644 行）→ 沙箱链路将从“聚类画像”起跑
+[09:56:44] [数据] 沙箱输入已替换: test_upload_harvardx_holdout.csv（8000 行）→ 沙箱链路将从“聚类画像”起跑
+[09:56:44] 沙箱补齐事件流表（沿用默认数据，供挖掘/预警演示）
+[09:56:44] [开始] scope=sandbox_upload，参数 {'k': 0, 'device': 'auto', 'min_support': 0.05, 'min_conf': 0.4, 'sd_weeks': 52, 'budget_ratio': 0.45}，7 个阶段
+[09:56:44] [1/7] 统一管线[2] 聚类画像
+[09:56:47]     中文字体已配置: Microsoft YaHei
+[09:56:47]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:56:47]   [up 3] 分析层（PCA + 聚类画像）
+[09:56:47]     聚类特征（缺失率 ≤ 40%）: ['total_clicks', 'active_days', 'forum_posts', 'resource_clicks', 'video_clicks', 'avg_quiz_score']
+[09:56:47]     PCA 主成分命名: PC1=学习投入度(62.0%), PC2=互动活跃度(16.5%), PC3=资源偏好度(11.2%), PC4=学业表现(5.5%)
+[09:56:54]     自动选择 K = 4（轮廓系数 0.825，肘部拐点 K=4，各 K 综合得分: {2: 0.49, 3: 0.76, 4: 0.95, 5: 0.84, 6: 0.37, 7: 0.23, 8: 0.01}）
+[09:56:56]     K-Means(K=4, backend=cpu)  Silhouette(基于 8000 样本) = 0.825
+[09:56:56]     PCA 方差解释率: PC1=62.0%, PC2=16.5%
+[09:56:57]     非线性嵌入可视化: 8000 样本
+[09:56:57]     t-SNE: perplexity=30 (大数据集需 1-2 分钟)
+[09:57:29]     UMAP: n_neighbors=15, min_dist=0.1 (约 10-30 秒)
+[09:58:33]     画像分布: {'Low-Engagement Weak-Performance Learner': 7399, 'Independent Deep Learner (High Engagement)': 533, 'Independent Deep Learner': 68}
+[09:58:33]   [up 3] 完成
+[09:58:34] [完成] 统一管线[2] 聚类画像 耗时 109.4s
+[09:58:34] [2/7] 统一管线[3] 行为挖掘
+[09:58:37]     中文字体已配置: Microsoft YaHei
+[09:58:37]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[09:58:37]   [up 4] 挖掘层（SNA/LSA/时序/Apriori/场景）
+[10:02:32]     SNA 完成: 11357 学习者 / 18221 资源节点; PageRank Top 资源: ['S542811', 'S703721', 'S703737']
+[10:02:35]     LSA 完成: 行为模式分布 {'刷课': 6298, '正常': 4830, '跳步学习': 229}
+[10:02:41]     时序模式分布: {'常规型学习': 4439, '夜间型学习': 3517, '集中式周末学习': 3309, '碎片化高频学习': 92}
+[10:02:44]     Apriori 规则 21 条; 只看短视频跳过完整慕课占比: 58.5%
+[10:02:47]     场景对比: {'慕课长视频': {'完播率': 0.39, '倍速使用率': 0.424, '平均拖拽次数': nan}, '短视频': {'完播率': 0.348, '倍速使用率': 0.0, '平均拖拽次数': nan}}
+[10:02:47]   [up 4] 失败: IndexError: single positional indexer is out-of-bounds
+[10:02:47]   Traceback (most recent call last):
+[10:02:47]     File "d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_mine.py", line 70, in main
+[10:02:47]       bs = basic_stats_analysis(uni, args.out_dir)
+[10:02:47]     File "d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py", line 814, in basic_stats_analysis
+[10:02:47]       core = {c: demo_df[demo_df["dimension"] == c].iloc[0]["category"]
+[10:02:47]                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+[10:02:47]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\pandas\core\indexing.py", line 1342, in __getitem__
+[10:02:47]       return self._getitem_axis(maybe_callable, axis=axis)
+[10:02:47]              ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[10:02:47]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\pandas\core\indexing.py", line 2432, in _getitem_axis
+[10:02:47]       self._validate_integer(key, axis)
+[10:02:47]       ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+[10:02:47]     File "C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\pandas\core\indexing.py", line 2365, in _validate_integer
+[10:02:47]       raise IndexError("single positional indexer is out-of-bounds")
+[10:02:47]   IndexError: single positional indexer is out-of-bounds
+[10:02:47] [失败] 统一管线[3] 行为挖掘 退出码 1，链路停止
+[10:05:28] [数据] 沙箱输入已替换: test_upload_harvardx_holdout.csv（8000 行）→ 沙箱链路将从“聚类画像”起跑
+[10:05:28] [开始] scope=sandbox_upload，参数 {'k': 0, 'device': 'auto', 'min_support': 0.05, 'min_conf': 0.4, 'sd_weeks': 52, 'budget_ratio': 0.45}，7 个阶段
+[10:05:28] [1/7] 统一管线[2] 聚类画像
+[10:05:31]     中文字体已配置: Microsoft YaHei
+[10:05:31]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[10:05:31]   [up 3] 分析层（PCA + 聚类画像）
+[10:05:31]     聚类特征（缺失率 ≤ 40%）: ['total_clicks', 'active_days', 'forum_posts', 'resource_clicks', 'video_clicks', 'avg_quiz_score']
+[10:05:31]     PCA 主成分命名: PC1=学习投入度(62.0%), PC2=互动活跃度(16.5%), PC3=资源偏好度(11.2%), PC4=学业表现(5.5%)
+[10:05:39]     自动选择 K = 4（轮廓系数 0.825，肘部拐点 K=4，各 K 综合得分: {2: 0.49, 3: 0.76, 4: 0.95, 5: 0.84, 6: 0.37, 7: 0.23, 8: 0.01}）
+[10:05:41]     K-Means(K=4, backend=cpu)  Silhouette(基于 8000 样本) = 0.825
+[10:05:41]     PCA 方差解释率: PC1=62.0%, PC2=16.5%
+[10:05:41]     非线性嵌入可视化: 8000 样本
+[10:05:41]     t-SNE: perplexity=30 (大数据集需 1-2 分钟)
+[10:06:11]     UMAP: n_neighbors=15, min_dist=0.1 (约 10-30 秒)
+[10:07:06]     画像分布: {'Low-Engagement Weak-Performance Learner': 7399, 'Independent Deep Learner (High Engagement)': 533, 'Independent Deep Learner': 68}
+[10:07:06]   [up 3] 完成
+[10:07:07] [完成] 统一管线[2] 聚类画像 耗时 98.5s
+[10:07:07] [2/7] 统一管线[3] 行为挖掘
+[10:07:10]     中文字体已配置: Microsoft YaHei
+[10:07:10]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[10:07:10]   [up 4] 挖掘层（SNA/LSA/时序/Apriori/场景）
+[10:11:10]     SNA 完成: 11357 学习者 / 18221 资源节点; PageRank Top 资源: ['S542811', 'S703721', 'S703737']
+[10:11:12]     LSA 完成: 行为模式分布 {'刷课': 6298, '正常': 4830, '跳步学习': 229}
+[10:11:18]     时序模式分布: {'常规型学习': 4439, '夜间型学习': 3517, '集中式周末学习': 3309, '碎片化高频学习': 92}
+[10:11:22]     Apriori 规则 21 条; 只看短视频跳过完整慕课占比: 58.5%
+[10:11:25]     场景对比: {'慕课长视频': {'完播率': 0.39, '倍速使用率': 0.424, '平均拖拽次数': nan}, '短视频': {'完播率': 0.348, '倍速使用率': 0.0, '平均拖拽次数': nan}}
+[10:11:25]     警告: 人口维度 ['region'] 在输入数据中无有效值，跳过该维度统计
+[10:11:25]     人口结构: 核心群体 {'gender': '男', 'age_band': '26-30', 'education': '本科'}
+[10:11:25]   [up 4] 完成
+[10:11:26] [完成] 统一管线[3] 行为挖掘 耗时 258.8s
+[10:11:26] [3/7] 统一管线[4] 相关与分层
+[10:11:28]     中文字体已配置: Microsoft YaHei
+[10:11:28]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[10:11:28]   [up 5] 关联层（相关/异质性/投入分层）
+[10:11:29]     相关性 Top3（成绩）: [{'indicator': 'avg_quiz_score', 'pearson_r': 1.0}, {'indicator': 'active_days', 'pearson_r': 0.694}, {'indicator': 'total_clicks', 'pearson_r': 0.692}]
+[10:11:29]     投入分层: 高投入组较低投入组 完成率 +41.0%, 成绩 +16.5 分
+[10:11:30]   [up 5] 完成
+[10:11:30] [完成] 统一管线[4] 相关与分层 耗时 4.4s
+[10:11:30] [4/7] 统一管线[5] 预测与预警
+[10:11:33]     中文字体已配置: Microsoft YaHei
+[10:11:33]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[10:11:33]   [up 6] 预测层（RF/GBDT/LogReg/预警/GM(1,1)）
+[10:11:34]     RF 学业表现预测: 最终成绩 R²=1.000 (MAE=0.01), 完成率 R²=0.833, 完成判定 acc=0.972
+[10:11:37]     扩展建模: 最佳模型=GradientBoosting 成绩等级 acc=1.000 recall=1.000; 认证 acc=0.972; Top5 关键行为: ['avg_quiz_score', 'active_days', 'resource_clicks', 'video_clicks', 'total_clicks']
+[10:11:37]     LogisticRegression 成功预测: acc=0.995 AUC=1.000
+[10:11:45]     RandomForest 风险预测 5-fold AUC: 全特征=1.000  早期特征(['total_clicks', 'active_days'])=0.949
+[10:11:46]     RandomForest 由行为预测画像标签: acc=0.995 (classes=['Independent Deep Learner', 'Independent Deep Learner (High Engagement)', 'Low-Engagement Weak-Performance Learner'])
+[10:11:46]   d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:1160: RuntimeWarning: overflow encountered in exp
+[10:11:46]     return (x0[0] - b / a) * np.exp(-a * k) + b / a
+[10:11:46]   C:\Users\maowenjie\AppData\Roaming\Python\Python314\site-packages\numpy\lib\_function_base_impl.py:1541: RuntimeWarning: invalid value encountered in subtract
+[10:11:46]     a = op(a[slice1], a[slice2])
+[10:11:57]     GM(1,1) 完成: 有效预测 11357/11357 人, 趋势分布 {'平稳': 9911, '下降': 1400, '上升': 46}, 模型精度分布 {'合格': 11223, '优': 75, '良': 59}
+[10:11:57]   [up 6] 完成
+[10:11:58] [完成] 统一管线[5] 预测与预警 耗时 28.3s
+[10:11:58] [5/7] 统一管线[6] 评价与 SD 仿真
+[10:12:01]     中文字体已配置: Microsoft YaHei
+[10:12:01]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[10:12:01]   [up 7] 评价层（AHP+模糊评判 / SD 仿真）
+[10:12:01]     AHP 权重: {'学习行为': np.float64(0.32), '学习效果': np.float64(0.558), '互动参与': np.float64(0.122)}  一致性 CR=0.016 (通过)
+[10:12:02]     学习质量评分: 均值=40.7, 等级分布 {'差': 7674, '中': 326}
+[10:12:03]     SD 仿真: 52 周后最优策略 = 加强资源供给（投入水平 1.0）
+[10:12:03]   [up 7] 完成
+[10:12:03] [完成] 统一管线[6] 评价与 SD 仿真 耗时 5.1s
+[10:12:03] [6/7] 统一管线[7] 决策与建议
+[10:12:06]     中文字体已配置: Microsoft YaHei
+[10:12:06]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[10:12:06]   [up 8] 决策层（队列/推荐/建议）
+[10:12:09]     优化建议: 输出 7 条落地策略
+[10:12:09]     干预队列分布: {'none': 6395, 'enrichment': 1605}
+[10:12:09]   [up 8] 完成
+[10:12:10] [完成] 统一管线[7] 决策与建议 耗时 6.5s
+[10:12:10] [7/7] 统一管线[8] 汇总报告
+[10:12:13]     中文字体已配置: Microsoft YaHei
+[10:12:13]     计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）
+[10:12:13]   [up 9] 输出层（汇总报告）
+[10:12:13]     报告已生成: d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\04_运行结果_沙箱\up_report.md (2643 字符)
+[10:12:13]   [up 9] 完成
+[10:12:13] [完成] 统一管线[8] 汇总报告 耗时 3.2s
+[10:12:13] [链路结束] scope=sandbox_upload，共 7 步，结果目录 d:\Git\AnalysisOfLearningBehavior\选题7_最终交付\04_运行结果_沙箱
+[10:26:48] [数据] 沙箱输入已替换: test_upload_harvardx_holdout.csv（8000 行）→ 沙箱链路将从“聚类画像”起跑
+[10:27:01] [开始] scope=sandbox_upload，参数 {'k': 0, 'device': 'auto', 'min_support': 0.05, 'min_conf': 0.4, 'sd_weeks': 52, 'budget_ratio': 0.45}，7 个阶段
+[10:27:01] [1/7] 统一管线[2] 聚类画像
+[10:30:19]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\umap\distances.py:1063: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+[10:30:19]     @numba.jit()
+[10:30:19]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\umap\distances.py:1071: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+[10:30:19]     @numba.jit()
+[10:30:19]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\umap\distances.py:1086: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+[10:30:19]     @numba.jit()
+[10:30:19]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\umap\umap_.py:660: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+[10:30:19]     @numba.jit()
+[10:30:19]     中文字体已配置: Microsoft YaHei
+[10:30:19]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[10:30:19]   [up 3] 分析层（PCA + 聚类画像）
+[10:30:19]     聚类特征（缺失率 ≤ 40%）: ['total_clicks', 'active_days', 'forum_posts', 'resource_clicks', 'video_clicks', 'avg_quiz_score']
+[10:30:19]     PCA 主成分命名: PC1=学习投入度(62.0%), PC2=互动活跃度(16.5%), PC3=资源偏好度(11.2%), PC4=学业表现(5.5%)
+[10:30:19]     自动选择 K = 3（轮廓系数 0.814，肘部拐点 K=5，各 K 综合得分: {2: 0.5, 3: 0.75, 4: 0.47, 5: 0.67, 6: 0.26, 7: 0.14, 8: 0.01}）
+[10:30:19]     K-Means(K=3, backend=torch)  Silhouette(基于 8000 样本) = 0.814
+[10:30:19]     PCA 方差解释率: PC1=62.0%, PC2=16.5%
+[10:30:19]     非线性嵌入可视化: 8000 样本
+[10:30:19]     t-SNE: perplexity=30 (大数据集需 1-2 分钟)
+[10:30:19]     UMAP: n_neighbors=15, min_dist=0.1 (约 10-30 秒)
+[10:30:19]     画像分布: {'Low-Engagement Weak-Performance Learner': 7366, 'Independent Deep Learner (High Engagement)': 509, 'Independent Deep Learner': 125}
+[10:30:19]   [up 3] 完成
+[10:30:20] [完成] 统一管线[2] 聚类画像 耗时 198.9s
+[10:30:20] [2/7] 统一管线[3] 行为挖掘

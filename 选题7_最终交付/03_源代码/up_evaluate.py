@@ -24,6 +24,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="统一管线阶段[7]：评价层")
     ap.add_argument("--device", choices=["auto", "cpu", "gpu"], default=None, help="计算设备：默认读取环境变量 WB_DEVICE（由 run_all.py 贯通），可显式覆盖")
     ap.add_argument("--out-dir", default=OUT_DIR, help="产物目录")
+    ap.add_argument("--sd-weeks", type=int, default=52,
+                    help="系统动力学仿真周数（默认 52）")
     args = ap.parse_args(argv)
     detect_device(args.device or os.environ.get("WB_DEVICE", "auto"))
     open_log(args.out_dir)
@@ -41,7 +43,7 @@ def main(argv=None) -> int:
             .merge(qs, on="student_id", how="left")
         uni.to_csv(learners_path, index=False, encoding="utf-8-sig")
 
-        sd = sd_simulation(args.out_dir)
+        sd = sd_simulation(args.out_dir, weeks=args.sd_weeks)
         summary = {"ahp_weights": ahp_info["weights"], "ahp_cr": ahp_info["cr"],
                    "quality_mean": round(float(qs["quality_score"].mean()), 1),
                    "quality_levels": qs["fuzzy_best_level"].value_counts().to_dict(),

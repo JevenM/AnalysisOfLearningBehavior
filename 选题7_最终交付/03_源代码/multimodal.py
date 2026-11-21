@@ -748,7 +748,7 @@ def robustness(all_: pd.DataFrame, transfer: dict, models: dict) -> dict:
                                                share_of_all=round(17402 / 794053, 4)))
 
 
-def run_all(all_: pd.DataFrame, sources: list) -> dict:
+def run_all(all_: pd.DataFrame, sources: list, budget_ratio: float = 0.45) -> dict:
     print("[run] 分形态建模 …")
     models = form_models(all_)
     all_ = make_segments(all_, models)
@@ -758,7 +758,7 @@ def run_all(all_: pd.DataFrame, sources: list) -> dict:
     effect = form_effect(all_)
     platform = platform_effect(all_)
     print("[run] 系统评价 / 系统决策 / 稳健性 …")
-    ev, dc = evaluate(all_, models, platform), decide(all_)
+    ev, dc = evaluate(all_, models, platform), decide(all_, budget_ratio)
     rb = robustness(all_, transfer, models)
     res = dict(meta=dict(seed=SEED, dims=DIMS, dim_cn=DIM_CN, forms=FORMS,
                          label_cn=LABEL_CN, n_total=int(len(all_))),
@@ -785,6 +785,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--prepare", action="store_true", help="从原始数据重建建模样本")
     ap.add_argument("--run", action="store_true", help="强制重跑（默认也跑）")
+    ap.add_argument("--budget-ratio", type=float, default=0.45,
+                    help="0-1 规划预算占全量干预成本比例（0.20—1.00，默认 0.45）")
     args = ap.parse_args()
     if args.prepare or not os.path.exists(os.path.join(DATA, "multimodal_all.csv")):
         all_, sources = prepare_all()
@@ -792,7 +794,7 @@ def main():
         all_ = pd.read_csv(os.path.join(DATA, "multimodal_all.csv"), encoding="utf-8-sig")
         sources = json.load(open(os.path.join(DATA, "sources.json"), encoding="utf-8"))
         print(f"[load] 已落盘建模样本 {len(all_):,} 行（4 类形态）")
-    res = run_all(all_, sources)
+    res = run_all(all_, sources, budget_ratio=float(args.budget_ratio))
     p = os.path.join(OUT, "multimodal_results.json")
     json.dump(res, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=2, default=_num)
     print("\n=== 核心结论 ===")

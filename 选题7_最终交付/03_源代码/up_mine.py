@@ -27,6 +27,10 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="统一管线阶段[4]：挖掘层")
     ap.add_argument("--device", choices=["auto", "cpu", "gpu"], default=None, help="计算设备：默认读取环境变量 WB_DEVICE（由 run_all.py 贯通），可显式覆盖")
     ap.add_argument("--out-dir", default=OUT_DIR, help="产物目录")
+    ap.add_argument("--min-support", type=float, default=0.05,
+                    help="Apriori 最小支撑度（默认 0.05；调低会挖掘出更多长尾规则）")
+    ap.add_argument("--min-conf", type=float, default=0.4,
+                    help="Apriori 最小置信度（默认 0.4）")
     args = ap.parse_args(argv)
     detect_device(args.device or os.environ.get("WB_DEVICE", "auto"))
     open_log(args.out_dir)
@@ -55,7 +59,9 @@ def main(argv=None) -> int:
         pat_df, time_patterns = temporal_analysis(clicks, args.out_dir)
 
         # Apriori
-        _, apriori_summary = apriori_path_mining(clicks, args.out_dir)
+        _, apriori_summary = apriori_path_mining(clicks, args.out_dir,
+                                                 min_support=args.min_support,
+                                                 min_conf=args.min_conf)
 
         # 场景对比
         tbl, per_stu, scene_dict = scene_comparison(clicks, args.out_dir)

@@ -811,8 +811,13 @@ def basic_stats_analysis(uni: pd.DataFrame, out_dir: str) -> dict:
     demo_df = pd.DataFrame(rows)
     demo_df.to_csv(os.path.join(out_dir, "up_demographics_distribution.csv"),
                    index=False, encoding="utf-8-sig")
+    # 某维度整体缺失（如单来源数据的 region）时优雅降级，不取首行报错
     core = {c: demo_df[demo_df["dimension"] == c].iloc[0]["category"]
-            for c in demo_cols}
+            for c in demo_cols
+            if (demo_df["dimension"] == c).any()}
+    if len(core) < len(demo_cols):
+        missing = [c for c in demo_cols if c not in core]
+        log(f"  警告: 人口维度 {missing} 在输入数据中无有效值，跳过该维度统计")
     log(f"  人口结构: 核心群体 {core}")
 
     # 2) 基础行为指标基线
@@ -969,6 +974,9 @@ def run_predictions(uni: pd.DataFrame, cols: list[str], out_dir: str) -> dict:
     res = {}
     y = uni["success"].astype(int)
     X = uni[cols].fillna(uni[cols].median())
+    if y.nunique() < 2:
+        log("  警告: 标签 success 仅 1 类（输入数据覆盖面不足），跳过成功/风险预测")
+        return res
 
     # 1) LogisticRegression 成功预测（data-pipeline 思路）
     X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=SEED,
@@ -1071,18 +1079,25 @@ def performance_model_extended(uni: pd.DataFrame, cols: list[str], out_dir: str)
                                               test_size=0.3, random_state=SEED)
 
     res, models = {}, {}
-    for name, clf in [("RandomForest", RandomForestClassifier(n_estimators=200,
-                                                              random_state=SEED,
-                                                              n_jobs=-1)),
-                      ("GradientBoosting", GradientBoostingClassifier(random_state=SEED))]:
-        clf.fit(X_tr, u_tr["grade_band"])
-        pred = clf.predict(X_te)
-        res[f"{name}_grade_acc"] = accuracy_score(u_te["grade_band"], pred)
-        res[f"{name}_grade_recall"] = recall_score(u_te["grade_band"], pred,
-                                                   average="macro", zero_division=0)
-        res[f"{name}_grade_precision"] = precision_score(u_te["grade_band"], pred,
-                                                         average="macro", zero_division=0)
-        models[name] = clf
+    band_classes = pd.unique(u_tr["grade_band"])
+    if len(band_classes) < 2:
+        # 自定义输入数据等级单一（如仅含一门课/一个群体）时优雅降级：跳过等级分类，
+        # 只保留二分类与回归口径，避免训练集类数为 1 时模型崩溃。
+        log("  警告: 训练集成绩等级仅 1 类（输入数据覆盖面不足），跳过等级分类，"
+            "仅输出认证二分类与回归口径")
+    else:
+        for name, clf in [("RandomForest", RandomForestClassifier(n_estimators=200,
+                                                                  random_state=SEED,
+                                                                  n_jobs=-1)),
+                          ("GradientBoosting", GradientBoostingClassifier(random_state=SEED))]:
+            clf.fit(X_tr, u_tr["grade_band"])
+            pred = clf.predict(X_te)
+            res[f"{name}_grade_acc"] = accuracy_score(u_te["grade_band"], pred)
+            res[f"{name}_grade_recall"] = recall_score(u_te["grade_band"], pred,
+                                                       average="macro", zero_division=0)
+            res[f"{name}_grade_precision"] = precision_score(u_te["grade_band"], pred,
+                                                             average="macro", zero_division=0)
+            models[name] = clf
     # 是否结课认证（二分类）
     rf_cert = RandomForestClassifier(n_estimators=200, random_state=SEED,
                                      n_jobs=-1).fit(X_tr, u_tr["certified"])
@@ -1090,31 +1105,39 @@ def performance_model_extended(uni: pd.DataFrame, cols: list[str], out_dir: str)
     res["cert_acc"] = accuracy_score(u_te["certified"], cert_pred)
     res["cert_recall_risk"] = recall_score(u_te["certified"], cert_pred,
                                            pos_label=0, zero_division=0)
-    best = max(["RandomForest", "GradientBoosting"],
-               key=lambda m: res[f"{m}_grade_acc"])
+    if models:
+        best = max(models, key=lambda m: res[f"{m}_grade_acc"])
+    else:
+        best = "RandomForest"
     res["best_model"] = best
 
-    # Top5 关键行为特征（以最佳模型的等级分类为准）
-    imp = pd.Series(models[best].feature_importances_, index=cols).sort_values(
-        ascending=False)
+    # Top5 关键行为特征（等级模型可用时取等级模型，降级时取认证模型）
+    imp = pd.Series(models.get(best, rf_cert).feature_importances_,
+                    index=cols).sort_values(ascending=False)
     res["top5_features"] = imp.head(5).round(3).to_dict()
     fig, ax = plt.subplots(figsize=(9, 5))
     imp.head(10)[::-1].plot.barh(ax=ax, color=PALETTE[0])
-    ax.set(title=f"学业结果预测特征重要性 Top10（{best} 成绩等级模型）")
+    ax.set(title=f"学业结果预测特征重要性 Top10（{best} 模型）")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_model_feature_importance.png"), bbox_inches="tight")
     plt.close()
 
     # 早期预警：结课概率最低的学生（高辍学风险）
-    proba = rf_cert.predict_proba(X)[:, list(rf_cert.classes_).index(1)]
+    if 1 in rf_cert.classes_:
+        proba = rf_cert.predict_proba(X)[:, list(rf_cert.classes_).index(1)]
+    else:
+        log("  警告: certified 仅 1 类，早期预警概率降级为常数 0")
+        proba = pd.Series(0.0, index=X.index)
     ew = uni[["student_id", "persona", "region", "completion_rate", "final_grade"]].copy()
     ew["cert_prob"] = proba.round(3)
     ew["risk_level"] = pd.cut(proba, [0, 0.2, 0.4, 1], labels=["高", "中", "低"])
     ew = ew.sort_values("cert_prob").head(50)
     ew.to_csv(os.path.join(out_dir, "up_early_warning_students.csv"), index=False,
               encoding="utf-8-sig")
-    log(f"  扩展建模: 最佳模型={best} 成绩等级 acc={res[best + '_grade_acc']:.3f} "
-        f"recall={res[best + '_grade_recall']:.3f}; 认证 acc={res['cert_acc']:.3f}; "
+    grade_txt = (f"成绩等级 acc={res[best + '_grade_acc']:.3f} "
+                 f"recall={res[best + '_grade_recall']:.3f}; "
+                 if best in models else "成绩等级: 已跳过（等级单一）; ")
+    log(f"  扩展建模: 最佳模型={best} {grade_txt}认证 acc={res['cert_acc']:.3f}; "
         f"Top5 关键行为: {list(res['top5_features'])}")
     return res, ew
 
