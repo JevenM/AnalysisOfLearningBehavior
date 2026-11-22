@@ -1,16 +1,16 @@
 {
   "k": 4,
-  "silhouette": 0.5519890189170837,
+  "silhouette": 0.5520854035019229,
   "personas": {
-    "At-Risk / Disengaged": 53281,
-    "Independent Deep Learner": 11445,
-    "Low-Engagement Strong-Performance Learner": 753,
-    "Guided Learner": 1165
+    "风险流失型": 53291,
+    "自主深度型": 11435,
+    "低投入·强表现型": 753,
+    "引导依赖型": 1165
   },
   "cert_acc": 0.9549364809442833,
   "cert_recall_risk": 0.9746434231378764,
-  "rf_auc_early": 0.8824342285099787,
-  "rf_auc_full": 0.9778754049709877,
+  "rf_auc_early": 0.8824341899496556,
+  "rf_auc_full": 0.9778755096250069,
   "gm_trends": {
     "平稳": 9911,
     "下降": 1400,

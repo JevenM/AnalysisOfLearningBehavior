@@ -353,7 +353,8 @@ function renderCompare(){
   $('cmpAuc').innerHTML=hbars(FORMS.map((f,i)=>({label:D.forms[f].cn,value:D.forms[f].auc,color:P[i]})),{rowH:36,fmtFn:v=>fx(v,3)});
   const pm=cf.platform.mixed_auc||0, pw=cf.platform.within_platform_auc||0;
   const rel=pm>pw?'高于':(pm<pw?'低于':'等于');
-  $('cmpAucNote').innerHTML=`跨域迁移平均 AUC ${fx(cf.transfer.mean_transfer,3)}，低于域内 ${fx(cf.transfer.mean_indomain,3)}；`
+  const relT=cf.transfer.mean_transfer>=cf.transfer.mean_indomain?'不低于':'低于';
+  $('cmpAucNote').innerHTML=`跨域迁移平均 AUC ${fx(cf.transfer.mean_transfer,3)}，${relT}域内 ${fx(cf.transfer.mean_indomain,3)}；`
     +`平台混合口径 AUC ${fx(pm,3)} ${rel}平台内 ${fx(pw,3)}，`
     +`两种情形都指向按平台分层建模的必要性，结论以平台内口径为准。`;
   $('cmpTable').innerHTML='<thead><tr><th>形态</th><th>样本量</th><th>标签语义</th><th>达标率</th><th>画像群</th><th>CV-AUC</th><th>来源</th></tr></thead><tbody>'

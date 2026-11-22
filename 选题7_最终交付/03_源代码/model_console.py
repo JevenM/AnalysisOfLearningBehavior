@@ -258,6 +258,21 @@ def build_cmds(scope: str, stages):
         cmds.append({"key": key, "name": name, "cmd": cmd, "kind": kind})
     if scope.startswith("sandbox"):
         os.makedirs(SANDBOX, exist_ok=True)
+        if any(c["key"] == "up_build_unified" for c in cmds):
+            meta_path = os.path.join(SANDBOX, "upload_meta.json")
+            if os.path.isfile(meta_path):
+                try:
+                    with open(meta_path, encoding="utf-8") as f:
+                        meta = json.load(f)
+                except (OSError, ValueError):
+                    meta = {}
+                if meta:
+                    raise ValueError(
+                        f"沙箱目录存在上传的测试数据（{meta.get('filename', 'CSV')}，"
+                        f"{meta.get('rows', '?')} 行，上传于 {meta.get('time', '?')}）。“沙箱全管线”"
+                        "将按六源适配器重建统一表并覆盖它。为防止数据丢失已拒绝启动："
+                        "请改用“沙箱·用已上传数据”范围；如确需重建全量统一表，"
+                        "先在“② 数据”页点“恢复默认数据 / 清空沙箱”再运行")
         src, dst = os.path.join(RUN, "up_clicks.csv"), os.path.join(SANDBOX, "up_clicks.csv")
         if os.path.exists(src) and not os.path.exists(dst):
             _log("沙箱补齐事件流表（沿用默认数据，供挖掘/预警演示）")
@@ -306,7 +321,11 @@ def _run_chain(scope: str, cmds) -> None:
 def start_run(scope: str, stages) -> dict:
     if RUN_STATE["running"]:
         return {"ok": False, "error": "已有任务在运行，请等待完成"}
-    cmds = build_cmds(scope, stages)
+    try:
+        cmds = build_cmds(scope, stages)
+    except ValueError as e:            # 数据保护：拒绝会覆盖上传测试数据的链路
+        _log(f"[拒绝] {e}")
+        return {"ok": False, "error": str(e)}
     if not cmds:
         return {"ok": False, "error": "没有可运行的阶段（检查 scope/stages）"}
     RUN_STATE.update({"running": True, "scope": scope, "stage": "", "log": [],
@@ -336,6 +355,12 @@ def upload_data(body: bytes, target: str, filename: str) -> dict:
         os.makedirs(SANDBOX, exist_ok=True)
         with open(os.path.join(SANDBOX, "up_unified.csv"), "wb") as f:
             f.write(body)
+        # 写入上传标记：防止“沙箱全管线”的统一表构建步骤静默覆盖上传的测试数据
+        with open(os.path.join(SANDBOX, "upload_meta.json"), "w",
+                  encoding="utf-8") as f:
+            json.dump({"filename": filename, "rows": n - 1,
+                       "time": time.strftime("%Y-%m-%d %H:%M:%S")}, f,
+                      ensure_ascii=False, indent=2)
         _log(f"[数据] 沙箱输入已替换: {filename}（{n - 1} 行）→ 沙箱链路将从“聚类画像”起跑")
         return {"ok": True, "rows": n - 1, "target": target}
     backup = os.path.join(RUN, "up_unified.default.csv")

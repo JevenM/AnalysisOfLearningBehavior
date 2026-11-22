@@ -109,6 +109,9 @@ PERSONA_CN = {
     "Guided Learner": "引导依赖型",
     "Independent Deep Learner": "自主深度型",
     "Low-Engagement Strong-Performance Learner": "低投入高绩效型",
+    "Low-Engagement Weak-Performance Learner": "低投入弱表现型",
+    "High-Engagement Strong-Performance Learner": "高投入强表现型",
+    "High-Engagement Weak-Performance Learner": "高投入弱表现型",
 }
 personas = [{
     "cn": PERSONA_CN.get(r["persona"], r["persona"]), "n": int(r["n_students"]),

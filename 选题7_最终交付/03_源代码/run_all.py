@@ -56,7 +56,7 @@ def _up(name: str, *args: str) -> int:
 
 
 # 报告插图清单（OULAD 单源图已删：fig04—fig10、fig15—fig19）
-EXPECTED_FIGS = ["fig01", "fig02", "fig03", "fig11", "fig12", "fig13", "fig14",
+EXPECTED_FIGS = ["fig00", "fig01", "fig02", "fig03", "fig11", "fig12", "fig13", "fig14",
                  "fig20", "fig21", "fig22"]
 
 

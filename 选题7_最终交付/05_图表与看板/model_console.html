@@ -96,14 +96,16 @@ align-items:center;justify-content:center;flex-direction:column;gap:10px;cursor:
     <div class="runrow"><button class="gray" id="resetData">恢复默认数据 / 清空沙箱</button></div>
     <p class="note">内置测试文件：02_数据与数据集/测试上传数据/test_upload_harvardx_holdout.csv
     （8,000 名未参与建模的留出学习者）。必需列：student_id、source、total_clicks、active_days、final_grade、success、completion_rate。
-    上传到沙箱后，运行"沙箱试验（用已上传数据）"即从聚类画像起跑；沙箱事件流沿用默认数据。</p>
+    上传到沙箱后，运行"沙箱试验（用已上传数据）"即从聚类画像起跑；沙箱事件流沿用默认数据。
+    <b>数据保护</b>：沙箱存在上传数据时，"沙箱试验（全管线）"会被拒绝启动（防止覆盖）；
+    如需按六源重建沙箱总表，先点"恢复默认数据 / 清空沙箱"再运行。</p>
   </div>
 
   <div class="card">
     <h2>③ 运行</h2>
     <div class="row"><label>运行范围</label>
       <select id="scope">
-        <option value="sandbox">沙箱试验（全管线 → 04_运行结果_沙箱，不动正式结果）</option>
+        <option value="sandbox">沙箱试验（全管线：按六源适配器重建沙箱总表）</option>
         <option value="sandbox_upload">沙箱试验（用已上传数据，从聚类起跑）</option>
         <option value="pipeline">正式 · 统一管线 + 三看板</option>
         <option value="single">单阶段（正式目录，可勾选四形态/画像/看板）</option>

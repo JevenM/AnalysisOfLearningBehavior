@@ -48,23 +48,54 @@ from up_adapters import ALL_FEATURES, LSA_ACTIONS
 # 画像体系（Learner-Persona + ai-personalized-learning 思路）
 # ----------------------------------------------------------------------
 PERSONA_NAMES = [
-    "Independent Deep Learner",
-    "Guided Learner",
-    "Exam-Driven Learner",
-    "At-Risk / Disengaged",
+    "自主深度型",
+    "引导依赖型",
+    "考前冲刺型",
+    "风险流失型",
 ]
 PERSONA_DESC = {
-    "Independent Deep Learner": "高投入、深度探索内容、测验得分高、极少求助。",
-    "Guided Learner": "中等投入、偏好视频、频繁求助、依赖结构化指导。",
-    "Exam-Driven Learner": "日常活跃度低、临近考核爆发、测验尝试率高、策略性取用内容。",
-    "At-Risk / Disengaged": "点击与活跃天数极低、得分差、几乎无互动，流失风险高。",
+    "自主深度型": "高投入、深度探索内容、测验得分高、极少求助。",
+    "引导依赖型": "中等投入、偏好视频、频繁求助、依赖结构化指导。",
+    "考前冲刺型": "日常活跃度低、临近考核爆发、测验尝试率高、策略性取用内容。",
+    "风险流失型": "点击与活跃天数极低、得分差、几乎无互动，流失风险高。",
+    "高投入·强表现型": "投入高但测验表现一般——学习努力，方法或反馈环节待改进。",
+    "高投入·弱表现型": "投入高但测验表现弱——学习时长未转化为成绩，需方法指导。",
+    "低投入·强表现型": "投入很低但成绩不错——高效学习型或策略性取用内容。",
+    "低投入·弱表现型": "投入与表现双低——与风险流失型同向，需优先干预。",
 }
 CONTENT_REC = {
-    "Independent Deep Learner": "研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。",
-    "Guided Learner": "分步视频教程、例题演示、即时反馈测验、脚手架式学习路径。",
-    "Exam-Driven Learner": "精简摘要、记忆卡片、模拟试卷、间隔重复工具、截止日提醒。",
-    "At-Risk / Disengaged": "短微内容单元、游戏化激励、主动推送通知、导师早期介入。",
+    "自主深度型": "研究性阅读材料、开放性项目、同伴讨论论坛、挑战级测评。",
+    "引导依赖型": "分步视频教程、例题演示、即时反馈测验、脚手架式学习路径。",
+    "考前冲刺型": "精简摘要、记忆卡片、模拟试卷、间隔重复工具、截止日提醒。",
+    "风险流失型": "短微内容单元、游戏化激励、主动推送通知、导师早期介入。",
+    "高投入·强表现型": "错题诊断反馈、元认知策略训练、同伴互评与答疑。",
+    "高投入·弱表现型": "学习方法辅导、分步脚手架测验、错因讲解视频。",
+    "低投入·强表现型": "挑战性拓展任务、竞赛与项目制内容，维持学习动机。",
+    "低投入·弱表现型": "微任务打卡、游戏化激励、导师早期介入与主动提醒。",
 }
+
+# 统一特征列的中文名称（图表坐标轴/图例/热力图刻度使用；未知特征回退原列名）
+FEAT_CN = {
+    "total_clicks": "总点击量", "active_days": "活跃天数",
+    "avg_session_min": "平均会话时长(分)", "forum_posts": "论坛发帖数",
+    "resource_clicks": "资源浏览次数", "video_clicks": "视频点击次数",
+    "quiz_attempts": "测验尝试次数", "avg_quiz_score": "测验平均分",
+    "assignment_submit_lag": "作业提交延迟", "help_requests": "求助次数",
+    "login_freq_per_week": "每周登录频次", "accuracy": "答题正确率",
+    "avg_response_time": "平均作答用时", "hesitation_rate": "犹豫率",
+    "engagement_score": "互动投入度", "hint_usage": "提示使用次数",
+    "success_rate": "成功完成率", "skip_rate": "跳过率",
+    "unique_days_ratio": "独立活跃天占比", "level_ups": "等级提升次数",
+    "code_lines": "代码行数", "code_functions": "代码函数数",
+    "comment_ratio": "代码注释率", "video_completion_rate": "视频完播率",
+    "study_hours_per_week": "周学习时长", "submission_rate": "作业提交率",
+    "study_hours": "学习时长", "attendance_rate": "出勤率",
+}
+
+
+def feat_cn(name: str) -> str:
+    """特征列 → 中文名（未收录时原样返回）。"""
+    return FEAT_CN.get(name, name)
 
 # AHP 评价体系：三个维度及其下属指标；两两比较矩阵（行为 vs 效果 vs 互动）
 AHP_DIMS = ["学习行为", "学习效果", "互动参与"]
@@ -192,14 +223,17 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
         k = k_max
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    fig.suptitle("Selecting Optimal Number of Clusters", fontsize=14, fontweight="bold")
+    fig.suptitle("聚类数 K 的自动选择（肘部法 + 轮廓系数双准则）",
+                 fontsize=14, fontweight="bold")
     axes[0].plot(k_range, inertias, "o-", color=PALETTE[0])
-    axes[0].axvline(knee_k, color=PALETTE[3], ls="--", label=f"Elbow K = {knee_k}")
-    axes[0].set(xlabel="K", ylabel="Inertia", title="Elbow Method")
+    axes[0].axvline(knee_k, color=PALETTE[3], ls="--", label=f"肘部拐点 K = {knee_k}")
+    axes[0].set(xlabel="候选聚类数 K", ylabel="簇内平方和 Inertia（越小越紧凑）",
+                title="肘部法：Inertia 随 K 的下降出现拐点")
     axes[0].legend()
     axes[1].plot(k_range, sils, "s-", color=PALETTE[1])
-    axes[1].axvline(k, color=PALETTE[2], ls="--", label=f"K = {k}")
-    axes[1].set(xlabel="K", ylabel="Silhouette", title="Silhouette Analysis")
+    axes[1].axvline(k, color=PALETTE[2], ls="--", label=f"综合最优 K = {k}")
+    axes[1].set(xlabel="候选聚类数 K", ylabel="轮廓系数（越大分离度越好）",
+                title="轮廓系数分析：衡量簇内紧密度与簇间分离度")
     axes[1].legend()
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_elbow_silhouette.png"), bbox_inches="tight")
@@ -223,14 +257,22 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
     log(f"  PCA 方差解释率: PC1={var[0]:.1f}%, PC2={var[1]:.1f}%")
     plot_idx = fit_idx if n > max_plot else np.arange(n)
     lab_p, pca_p = labels[plot_idx], X_pca[plot_idx]
-    fig, ax = plt.subplots(figsize=(9, 6))
+
+    # 主成分语义解读：取载荷绝对值最大的特征，声明该维度代表什么行为信息
+    def _pc_top(j):
+        w = pca.components_[j]
+        order = np.argsort(-np.abs(w))[:3]
+        return "、".join(feat_cn(cols[i]) for i in order)
+
+    fig, ax = plt.subplots(figsize=(9, 6.6))
     for c in range(k):
         m = lab_p == c
         ax.scatter(pca_p[m, 0], pca_p[m, 1], c=PALETTE[c % len(PALETTE)],
-                   label=f"Cluster {c}", alpha=0.75, s=55, edgecolors="white", linewidths=0.4)
-    ax.set(xlabel=f"PC1 ({var[0]:.1f}%)", ylabel=f"PC2 ({var[1]:.1f}%)",
-           title="Learner Personas — PCA Projection")
-    ax.legend(title="Cluster")
+                   label=f"画像簇 {c}", alpha=0.75, s=55, edgecolors="white", linewidths=0.4)
+    ax.set(xlabel=f"主成分 PC1（解释方差 {var[0]:.1f}%）\n主要由 {_pc_top(0)} 等特征驱动",
+           ylabel=f"主成分 PC2（解释方差 {var[1]:.1f}%）\n主要由 {_pc_top(1)} 等特征驱动",
+           title="学习者画像聚类 — PCA 二维投影\n（坐标 = 标准化行为特征的线性组合，颜色 = 所属画像簇）")
+    ax.legend(title="画像簇", loc="best")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_pca_clusters.png"), bbox_inches="tight")
     plt.close()
@@ -258,9 +300,11 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
             ax.scatter(sub["tSNE1"], sub["tSNE2"], c=PALETTE[c % len(PALETTE)],
                        label=f"Cluster {c}", alpha=0.55, s=12,
                        edgecolors="none", rasterized=True)
-        ax.set(title="Learner Personas — t-SNE Projection "
-                     "(cluster separation view; axis scale has no business meaning)")
-        ax.legend(title="Cluster", markerscale=3)
+        ax.set(title="学习者画像 — t-SNE 非线性嵌入\n"
+                     "（坐标为嵌入空间尺度，无业务含义；本图仅用于展示簇分离结构，不参与建模）")
+        ax.set_xlabel("t-SNE 维度 1（无业务含义）")
+        ax.set_ylabel("t-SNE 维度 2（无业务含义）")
+        ax.legend(title="画像簇", markerscale=3)
         plt.tight_layout()
         plt.savefig(os.path.join(out_dir, "up_tsne_clusters.png"),
                     bbox_inches="tight", dpi=150)
@@ -286,9 +330,11 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
             ax.scatter(sub["UMAP1"], sub["UMAP2"], c=PALETTE[c % len(PALETTE)],
                        label=f"Cluster {c}", alpha=0.55, s=12,
                        edgecolors="none", rasterized=True)
-        ax.set(title="Learner Personas — UMAP Projection "
-                     "(cluster separation view; axis scale has no business meaning)")
-        ax.legend(title="Cluster", markerscale=3)
+        ax.set(title="学习者画像 — UMAP 降维投影\n"
+                     "（坐标为嵌入空间尺度，无业务含义；本图仅用于展示簇分离结构，不参与建模）")
+        ax.set_xlabel("UMAP 维度 1（无业务含义）")
+        ax.set_ylabel("UMAP 维度 2（无业务含义）")
+        ax.legend(title="画像簇", markerscale=3)
         plt.tight_layout()
         plt.savefig(os.path.join(out_dir, "up_umap_clusters.png"),
                     bbox_inches="tight", dpi=150)
@@ -312,9 +358,10 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
         clusters = list(cm.index)
         ncol = min(len(clusters), 3)
         nrow = int(np.ceil(len(clusters) / ncol))
-        fig, axes = plt.subplots(nrow, ncol, figsize=(5 * ncol, 4.5 * nrow),
+        fig, axes = plt.subplots(nrow, ncol, figsize=(5 * ncol, 4.5 * nrow + 0.8),
                                  subplot_kw=dict(polar=True), squeeze=False)
-        fig.suptitle("Behavioral Radar — Learner Personas", fontsize=14, fontweight="bold")
+        fig.suptitle("学习者画像行为雷达图\n（每个轴 = 一项行为特征的簇均值经 0–1 归一化，越靠外圈表示该行为越突出）",
+                     fontsize=13, fontweight="bold")
         for idx, ax in enumerate(axes.flat):
             if idx >= len(clusters):
                 ax.remove()
@@ -324,9 +371,13 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
             ax.plot(angles, vals, color=PALETTE[idx % len(PALETTE)], lw=2)
             ax.fill(angles, vals, color=PALETTE[idx % len(PALETTE)], alpha=0.25)
             ax.set_xticks(angles[:-1])
-            ax.set_xticklabels(radar_cols, size=7)
+            ax.set_xticklabels([feat_cn(c2) for c2 in radar_cols], size=8)
             ax.set_yticklabels([])
-            ax.set_title(f"Cluster {idx}", pad=12, fontweight="bold")
+            ax.set_title(f"画像簇 {c}（簇内特征均值轮廓）", pad=14, fontweight="bold")
+        fig.text(0.5, 0.005,
+                 "维度说明：总点击/活跃天数/会话时长 = 学习投入强度；测验均分/正确率 = 学业表现；"
+                 "发帖/求助 = 互动与支持需求；视频/资源点击 = 内容消费偏好",
+                 ha="center", fontsize=8.5, color="#555555")
         plt.tight_layout()
         plt.savefig(os.path.join(out_dir, "up_radar_personas.png"), bbox_inches="tight")
         plt.close()
@@ -337,13 +388,15 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
     fig, ax = plt.subplots(figsize=(min(14, 1.0 * len(cols) + 4), 4))
     hm_arr = hm_z.values
     im = ax.imshow(hm_arr, cmap="RdYlGn", aspect="auto")
-    ax.set_xticks(range(len(cols)), cols, rotation=35, ha="right", fontsize=8)
-    ax.set_yticks(range(k), [f"Cluster {c}" for c in hm_z.index])
+    ax.set_xticks(range(len(cols)), [feat_cn(c) for c in cols],
+                  rotation=35, ha="right", fontsize=8)
+    ax.set_yticks(range(k), [f"画像簇 {c}" for c in hm_z.index])
     for i in range(hm_arr.shape[0]):
         for j in range(hm_arr.shape[1]):
             ax.text(j, i, f"{hm_arr[i, j]:.2f}", ha="center", va="center", fontsize=7)
-    fig.colorbar(im, ax=ax, label="Z-score")
-    ax.set_title("Feature Z-scores per Cluster", fontweight="bold")
+    fig.colorbar(im, ax=ax, label="Z 分数（相对全体学习者均值的标准化离差：红=显著高于，绿=显著低于）")
+    ax.set_title("各画像簇行为特征对比热力图（Z 分数越红表示该簇在此行为上越突出）",
+                 fontweight="bold")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_heatmap_features.png"), bbox_inches="tight")
     plt.close()
@@ -357,15 +410,20 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
 
 
 def label_personas(uni: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
-    """基于簇中心的启发式签名 → 统一画像命名（各参考项目的画像体系的并集）。"""
+    """基于簇中心的启发式签名 → 统一画像命名（全中文，簇名严格唯一）。
+
+    命名规则：先按投入/表现/求助签名归入四类标准画像（自主深度型/引导依赖型/
+    考前冲刺型/风险流失型），未命中时按投入×表现四象限生成描述型画像名；
+    多簇命中同名画像时以"（高投入变体）/（低投入变体）"区分，仍冲突则追加
+    "变体 2/3…"——保证每个簇一个唯一名字，推荐表行数恒等于簇数。
+    """
     z = uni.groupby("cluster")[cols].mean()
     zscore = (z - uni[cols].mean()) / (uni[cols].std() + 1e-9)
 
     def get(c, col, default=0.0):
         return zscore.loc[c, col] if col in zscore.columns else default
 
-    names, mapping = {}, {}
-    used = set()
+    mapping, used = {}, set()
     ranked = sorted(z.index, key=lambda c: -get(c, "total_clicks") - get(c, "active_days"))
     for c in ranked:
         eng = get(c, "total_clicks") + get(c, "active_days") + get(c, "engagement_score")
@@ -373,27 +431,26 @@ def label_personas(uni: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
         help_z = get(c, "help_requests") + get(c, "hint_usage")
         video = get(c, "video_clicks")
         quiz_rate = get(c, "quiz_attempts") - get(c, "active_days") * 0.3
-        if c in used:
-            continue
         if eng < -0.5 and perf < 0:
-            name = "At-Risk / Disengaged"
+            base = "风险流失型"
         elif eng > 0.4 and perf > 0.3 and help_z < 0.3:
-            name = "Independent Deep Learner"
+            base = "自主深度型"
         elif help_z > 0.3 or video > 0.5:
-            name = "Guided Learner"
+            base = "引导依赖型"
         elif quiz_rate > 0.2:
-            name = "Exam-Driven Learner"
+            base = "考前冲刺型"
         else:
-            name = None
-        if name and name in used:
-            # 同签名簇按投入度追加限定词区分
-            qual = "High Engagement" if eng > 0 else "Low Engagement"
-            name = f"{name} ({qual})"
-        if name is None:
-            perf_rank = "high" if perf > 0 else "low"
-            eng_rank = "high" if eng > 0 else "low"
-            name = f"{'High' if eng_rank == 'high' else 'Low'}-Engagement "
-            name += f"{'Strong' if perf_rank == 'high' else 'Weak'}-Performance Learner"
+            base = ("高投入·强表现型" if eng > 0 and perf > 0 else
+                    "高投入·弱表现型" if eng > 0 else
+                    "低投入·强表现型" if perf > 0 else "低投入·弱表现型")
+        if base not in used:
+            name = base
+        else:                       # 同名画像的第二个及以后簇 → 变体区分
+            name = f"{base}（{'高' if eng > 0 else '低'}投入变体）"
+            n = 2
+            while name in used:     # 兜底去重：绝不允许两簇共用一个名字
+                name = f"{base}（变体 {n}）"
+                n += 1
         mapping[c] = name
         used.add(name)
     uni["persona"] = uni["cluster"].map(mapping)
@@ -493,11 +550,11 @@ def sna_analysis(clicks: pd.DataFrame, out_dir: str, top_k: int = 15):
                          arrowprops=dict(arrowstyle="->", color="gray", alpha=0.45,
                                          lw=1 + e["count"] / max(path_edges["count"].max(), 1) * 4,
                                          connectionstyle="arc3,rad=0.15"), zorder=1)
-    ax1.set_title("Resource Network (size ∝ PageRank, edges = top access paths)")
+    ax1.set_title("资源共现网络\n（节点大小 ∝ PageRank 重要度，箭头 = Top 访问路径）")
     ax1.axis("off")
     ax2.hist(deg_c[:len(learners)], bins=20, color=PALETTE[0], alpha=0.8)
-    ax2.set(xlabel="Learner Degree Centrality", ylabel="# Learners",
-            title="Learner Degree Centrality Distribution")
+    ax2.set(xlabel="学习者度中心性（连接的独立资源/课程数）", ylabel="学习者人数",
+            title="学习者度中心性分布（右偏长尾：多数人只访问少量资源）")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_sna_network.png"), bbox_inches="tight")
     plt.close()
@@ -743,7 +800,8 @@ def apriori_path_mining(clicks: pd.DataFrame, out_dir: str,
     fig, ax = plt.subplots(figsize=(9, 5))
     txt = [f"{r.antecedent} → {r.consequent}" for r in top.itertuples()]
     ax.barh(txt[::-1], top["lift"][::-1], color=PALETTE[1])
-    ax.set(xlabel="Lift", title="学习路径关联规则 Top10（Apriori）")
+    ax.set(xlabel="提升度 Lift（>1 表示规则前项会提升后项出现概率）",
+           title="学习路径关联规则 Top10（Apriori，按提升度排序）")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_apriori_rules.png"), bbox_inches="tight")
     plt.close()
@@ -900,8 +958,10 @@ def correlation_analysis(uni: pd.DataFrame, out_dir: str):
     top = g.head(10)
     fig, ax = plt.subplots(figsize=(9, 5))
     colors = [PALETTE[1] if r > 0 else PALETTE[2] for r in top["pearson_r"]]
-    ax.barh(top["indicator"][::-1], top["pearson_r"][::-1], color=colors[::-1])
-    ax.set(xlabel="Pearson r（与最终成绩）", title="行为指标与学业效果相关性 Top10")
+    ax.barh([feat_cn(i) for i in top["indicator"]][::-1], top["pearson_r"][::-1],
+            color=colors[::-1])
+    ax.set(xlabel="Pearson 相关系数 r（与最终成绩；向右=正相关，向左=负相关）",
+           title="行为指标与学业效果相关性 Top10")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_correlation_top_factors.png"), bbox_inches="tight")
     plt.close()
@@ -1056,8 +1116,9 @@ def rf_performance_model(uni: pd.DataFrame, cols: list[str], out_dir: str) -> di
                encoding="utf-8-sig")
     fig, ax = plt.subplots(figsize=(8, 6))
     imp.head(12)[::-1].plot.barh(ax=ax, color=PALETTE[0])
-    ax.set(title="RandomForest 特征重要性 — 最终成绩预测 Top 12",
-           xlabel="Importance")
+    ax.set_yticklabels([feat_cn(i) for i in imp.head(12)[::-1].index], fontsize=9)
+    ax.set(title="随机森林特征重要性 — 最终成绩预测 Top12",
+           xlabel="重要性（该特征在模型中的基尼不纯度下降贡献）")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_rf_feature_importance.png"), bbox_inches="tight")
     plt.close()
@@ -1117,7 +1178,9 @@ def performance_model_extended(uni: pd.DataFrame, cols: list[str], out_dir: str)
     res["top5_features"] = imp.head(5).round(3).to_dict()
     fig, ax = plt.subplots(figsize=(9, 5))
     imp.head(10)[::-1].plot.barh(ax=ax, color=PALETTE[0])
-    ax.set(title=f"学业结果预测特征重要性 Top10（{best} 模型）")
+    ax.set_yticklabels([feat_cn(i) for i in imp.head(10)[::-1].index], fontsize=9)
+    ax.set_xlabel("重要性（该特征在模型中的基尼不纯度下降贡献）")
+    ax.set_title(f"学业结果预测特征重要性 Top10（{best} 模型；前 4 周早期行为同样适用）")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_model_feature_importance.png"), bbox_inches="tight")
     plt.close()
@@ -1379,7 +1442,7 @@ def generate_recommendations(uni: pd.DataFrame) -> pd.DataFrame:
     """分画像内容推荐（Learner-Persona + ai-personalized-learning 思路）。"""
     recs = []
     for persona, group in uni.groupby("persona"):
-        base = persona.split(" (")[0]  # 变体簇复用基础画像的描述与推荐
+        base = persona.split("（")[0]  # 变体簇复用基础画像的描述与推荐
         recs.append({
             "persona": persona, "n_students": len(group),
             "share_pct": round(100 * len(group) / len(uni), 1),
@@ -1396,12 +1459,12 @@ def generate_optimization_suggestions(uni, recs, scene_tbl, corr_top, sd_info,
     rows = []
     # 1) 画像差异化推送与干预
     for _, r in recs.iterrows():
-        base = r["persona"].split(" (")[0]
+        base = r["persona"].split("（")[0]
         extra_map = {
-            "At-Risk / Disengaged": "推送轻量化短视频学习内容 + 每日微任务签到，提升留存率",
-            "Exam-Driven Learner": "考前冲刺包 + 间隔重复记忆卡片推送",
-            "Guided Learner": "微课 + 即时反馈测验组合推送，逐步过渡到自主学习",
-            "Independent Deep Learner": "开放项目与进阶资源优先推送，邀请担任社区助教",
+            "风险流失型": "推送轻量化短视频学习内容 + 每日微任务签到，提升留存率",
+            "考前冲刺型": "考前冲刺包 + 间隔重复记忆卡片推送",
+            "引导依赖型": "微课 + 即时反馈测验组合推送，逐步过渡到自主学习",
+            "自主深度型": "开放项目与进阶资源优先推送，邀请担任社区助教",
         }
         rows.append({"策略类型": "画像差异化运营", "对象": r["persona"],
                      "建议": extra_map.get(base, str(r["content_recommendation"]))})

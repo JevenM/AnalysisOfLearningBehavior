@@ -118,7 +118,8 @@ const DIMS=[
    chartTitle:'用户主观看时段占比', chartDesc:'时段为用户主观看时段（p_hour 0–23 聚合），国内短视频真实数据。',
    metrics:[['share','用户占比'],['users','用户数']],
    rows:d=>d.rows, label:r=>r.group,
-   stat:d=>`<div class="note"><b>解读</b>　观看高峰集中在下午与晚间；知识内容做短并放入这些时段，才能被看到（"搭车"分发）。</div>`,
+   stat:d=>{const _top=d.main_seg&&d.main_seg.length?d.main_seg.slice().sort((a,b)=>b.share-a.share)[0]:null;
+     return `<div class="note"><b>解读</b>　${_top?`观看高峰集中在「${esc(_top.group)}」（占 ${pct(_top.share)}）；`:''}知识内容做短并放入高峰时段，才能被看到（"搭车"分发）。</div>`},
    cols:[['group','时段'],['users','用户数'],['share','占比']],
    fmt:(r,k)=>k==='users'?r.users.toLocaleString():pct(r.share),
    extra:d=>'', after:null},

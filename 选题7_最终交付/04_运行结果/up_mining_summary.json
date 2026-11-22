@@ -55,10 +55,10 @@
       "lift": 2.75
     },
     {
-      "antecedent": "读资源",
-      "consequent": "OULAD 课程资源",
+      "antecedent": "OULAD 课程资源",
+      "consequent": "读资源",
       "support": 0.352,
-      "confidence": 0.968,
+      "confidence": 0.998,
       "lift": 2.74
     }
   ],

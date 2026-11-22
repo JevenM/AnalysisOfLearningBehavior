@@ -77,15 +77,30 @@ with open(unified_path, encoding="utf-8-sig") as f:
         cnt = Counter(row[col] for row in rd if len(row) > col)
         sources = OrderedDict(sorted(cnt.items(), key=lambda kv: -kv[1]))
 
-# 四类画像（带中文命名与一句话建议）
+# 画像命名自管线 v2 起直接输出中文；此处映射仅用于兼容旧版（英文命名）CSV，
+# 并为卡片副标题提供中英对照
 PERSONA_CN = {
     "At-Risk / Disengaged": "风险流失型",
     "Guided Learner": "引导依赖型",
     "Independent Deep Learner": "自主深度型",
     "Low-Engagement Strong-Performance Learner": "低投入高绩效型",
+    "Low-Engagement Weak-Performance Learner": "低投入弱表现型",
+    "High-Engagement Strong-Performance Learner": "高投入强表现型",
+    "High-Engagement Weak-Performance Learner": "高投入弱表现型",
+}
+PERSONA_EN = {
+    "自主深度型": "Independent Deep Learner",
+    "引导依赖型": "Guided Learner",
+    "考前冲刺型": "Exam-Driven Learner",
+    "风险流失型": "At-Risk / Disengaged",
+    "低投入高绩效型": "Low-Engagement Strong-Performance Learner",
+    "低投入弱表现型": "Low-Engagement Weak-Performance Learner",
+    "高投入强表现型": "High-Engagement Strong-Performance Learner",
+    "高投入弱表现型": "High-Engagement Weak-Performance Learner",
 }
 personas = [{
-    "name": r["persona"], "cn": PERSONA_CN.get(r["persona"], r["persona"]),
+    "name": PERSONA_CN.get(r["persona"], r["persona"]),
+    "en": PERSONA_EN.get(PERSONA_CN.get(r["persona"], r["persona"]), ""),
     "n": int(r["n_students"]), "share": float(r["share_pct"]),
     "desc": r["description"], "reco": r["content_recommendation"],
 } for r in _csv_rows("up_persona_recommendations.csv")]
@@ -158,13 +173,18 @@ FIG_DIR = os.path.join(HERE, "figures", FIG_SUB) if FIG_SUB else os.path.join(HE
 os.makedirs(FIG_DIR, exist_ok=True)
 for f in sorted(set(os.listdir(RES)) |
                 (set(os.listdir(FALLBACK)) if FALLBACK and os.path.isdir(FALLBACK) else set())):
-    if not (f.startswith("up_") and f.endswith(".png")):
+    if not ((f.startswith("up_") or f == "fig00_architecture.png") and f.endswith(".png")):
         continue
     src_png = os.path.join(RES, f)
     if not os.path.isfile(src_png) and FALLBACK:
         src_png = os.path.join(FALLBACK, f)  # 沙箱未产出该图时回退正式图，保证渲染完整
     if os.path.isfile(src_png):
         shutil.copyfile(src_png, os.path.join(FIG_DIR, f))
+# 架构图是静态方法学资产（存放在 figures/ 根目录），沙箱版看板也需引用 → 复制到子目录
+_f00_src = os.path.join(HERE, "figures", "fig00_architecture.png")
+_f00_dst = os.path.join(FIG_DIR, "fig00_architecture.png")
+if os.path.isfile(_f00_src) and os.path.abspath(_f00_src) != os.path.abspath(_f00_dst):
+    shutil.copyfile(_f00_src, _f00_dst)
 insight["fig_prefix"] = f"figures/{FIG_SUB}/" if FIG_SUB else "figures/"
 
 
@@ -193,7 +213,15 @@ _sc = MI.get("scene") or {}
 _sna = MI.get("sna_top_resources") or []
 _sd_best_res = (EV.get("sd_results") or {}).get(EV.get("sd_best") or "", {}) or {}
 
+_n_feat = len(UM.get("cluster_cols") or [])
 insight["figs"] = {
+    "0": [  # 屏1 顶部 · 总体方法架构（静态方法学图，不随运行变化）
+        {"f": "fig00_architecture.png", "t": "总体方法架构 · 数据到建模链全景",
+         "c": f"数据层（真实公开数据源+事件流）→ 统一特征层（{_n_feat} 维行为特征，{N_LEARNERS:,} 人）→ "
+              "建模层七环节（聚类画像→行为挖掘→相关分层→预测预警→统一评价→策略仿真→决策建议）→ "
+              "输出层（报告/{n_figs} 张证据图/三个看板）。全链固定随机种子可复现，沙箱试验不污染正式结果；"
+              "每个环节的方法与产物文件在图中逐一标注，与本看板各屏一一对应。"},
+    ],
     "1": [  # 屏1 · 环节=聚类画像（K-means + 多方法降维）
         {"f": "up_elbow_silhouette.png", "t": "环节证据 · K 选择（肘部+轮廓双准则）",
          "c": f"在 K=2–8 候选中自动选定 K={UM.get('k')}：轮廓系数 {_fnum(UM.get('silhouette'))}、"
@@ -204,15 +232,15 @@ insight["figs"] = {
          "c": "非线性降维同样呈现紧凑分簇：分组结论对降维方法稳健。"},
         {"f": "up_umap_clusters.png", "t": "环节证据 · UMAP 降维投影",
          "c": "第三种降维方法复现相同结构，三种视角交叉验证聚类可靠性。"},
-        {"f": "up_radar_personas.png", "t": "环节证据 · 四类画像行为中心雷达",
-         "c": "各画像行为中心差异集中在投入维度（点击/活跃/互动）——画像由行为塑造，而非人口标签。"},
+        {"f": "up_radar_personas.png", "t": "环节证据 · 画像行为中心雷达",
+         "c": f"各画像行为中心差异集中在投入维度（点击/活跃/互动）——{len(personas)} 类画像由行为塑造，而非人口标签。"},
         {"f": "up_heatmap_features.png", "t": "环节证据 · 聚类 × 行为特征热力图",
-         "c": "逐特征比对四类行为中心：总点击与活跃天数是区分度最强的特征，直接用于画像命名。"},
+         "c": "逐特征比对各类行为中心（Z 分数标注各簇显著偏高/偏低的行为），命名依据即此差异。"},
     ],
     "2": [  # 屏2 · 环节=相关分析与投入分层
         {"f": "up_correlation_top_factors.png", "t": "环节证据 · 行为 × 成绩相关排序",
          "c": f"与成绩关联最强的行为是“{_IND_CN.get(_corr0.get('indicator'), _corr0.get('indicator'))}”"
-              f"（r={_fnum(_corr0.get('pearson_r'))}，显著）——坚持出勤比单次爆发更能解释成绩。"},
+              f"（r={_fnum(_corr0.get('pearson_r'))}，显著）——该项行为的持续积累比单次爆发更能解释成绩差异。"},
         {"f": "up_engagement_tiers.png", "t": "环节证据 · 投入分层增益",
          "c": f"高投入组相对低投入组：{AS.get('tier_lift')}——投入分层的增益可量化，是干预优先级的直接依据。"},
         {"f": "up_demographics_cross.png", "t": "环节证据 · 人口属性 × 行为交叉",
@@ -230,7 +258,8 @@ insight["figs"] = {
 insight["figs"]["4"] = [  # 屏4 · 环节=行为序列与资源挖掘（LSA/SNA/Apriori）
     {"f": "up_lsa_transition_graph.png", "t": "环节证据 · LSA 行为模式转移图",
      "c": f"逐人行为序列归为三型：{' / '.join(f'{k} {v} 人' for k, v in _lsa.items())}"
-          "——高频“刷课”型最多，需要完整学习路径引导而非放任刷量。"},
+          + (f"——其中“{max(_lsa, key=_lsa.get)}”型最多，需要完整学习路径引导而非放任刷量。"
+             if _lsa else "。")},
     {"f": "up_sna_network.png", "t": "环节证据 · SNA 资源共现网络",
      "c": f"少数资源承载多数访问（Top：{'、'.join(_sna[:3])}…）——核心资源应优先保障可用性与加载速度。"},
     {"f": "up_apriori_rules.png", "t": "环节证据 · Apriori 关联规则",
@@ -250,17 +279,17 @@ insight["figs"]["5"] = [  # 屏5 · 环节=预测与早期预警
 ]
 insight["figs"]["6"] = [  # 屏6 · 环节=统一评价与策略仿真
     {"f": "up_quality_score_distribution.png", "t": "环节证据 · 学习质量评分分布",
-     "c": f"全体质量分均值 {EV.get('quality_mean')}/100，分布右偏——少数高投入个体拉高均值，"
+     "c": f"全体质量分均值 {EV.get('quality_mean')}/100——均值受少数高分个体拉动，"
           "干预应聚焦长尾低分群体而非均值本身。"},
     {"f": "up_sd_simulation.png", "t": "环节证据 · 系统动力学（SD）策略仿真",
      "c": f"52 周策略仿真：最优策略「{EV.get('sd_best')}」最终参与度增幅 "
           f"+{_sd_best_res.get('growth_pct', '—')}%——供给型策略具复利效应，激励型策略长期衰减。"},
 ]
 
-
-
-
-
+# 证据图总数在全部图组构建完毕后回填（fig00 图注中的 {n_figs} 占位符）
+_total_figs = sum(len(v) for v in insight["figs"].values())
+insight["figs"]["0"][0]["c"] = insight["figs"]["0"][0]["c"].replace(
+    "{n_figs}", f"{_total_figs}")
 tpl = open(os.path.join(HERE, "dashboard.template.html"), encoding="utf-8").read()
 data = json.dumps(insight, ensure_ascii=False, separators=(",", ":"))
 assert "</script" not in data.lower(), "数据中含有会截断 script 的字符串"

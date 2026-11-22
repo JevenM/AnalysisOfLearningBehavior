@@ -77,8 +77,8 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
 <header class="hero">
   <div class="wrap">
     <div style="opacity:.82;font-size:13px;letter-spacing:1px">《系统工程原理》课程实践项目 · 选题 7</div>
-    <h1>学习者行为数据分析（六类数据集统一口径）</h1>
-    <p class="lead">慕课、微课、短视频、编程练习、传统课堂等六类真实公开数据集合并成一张总表后统一分析：
+    <h1>学习者行为数据分析<span id="heroScope"></span></h1>
+    <p class="lead"><span id="heroLead"></span>
     学习者可以分成哪几类、投入与结果的关系、平台据此该怎么安排帮扶。每节先给结论，再看图表；所有数字都来自实跑结果文件。
     这是<b>主看板（总览，先看这里）</b>，配套专题：
     <a href="persona_dashboard.html">形态画像看板</a>（四形态分组与散点联动）、
@@ -89,12 +89,14 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
   </div>
 </header>
 <nav class="nav"><div class="wrap">
-  <a href="#s1">四类学习者</a><a href="#s2">投入与结果</a><a href="#s3">节律与兴趣</a>
+  <a href="#s1">画像分组</a><a href="#s2">投入与结果</a><a href="#s3">节律与兴趣</a>
   <a href="#s4">行为序列</a><a href="#s5">早期预警</a><a href="#s6">评价与行动</a><a href="#s7">数据来源</a>
 </div></nav>
 
 <section class="section" id="s1"><div class="wrap">
   <div class="sec-h"><div class="sec-no">1</div><h2>学习者可以分成哪几类</h2></div>
+  <div class="figblock"><div class="fighead"><b>总体方法架构</b> —— 从六源真实数据到七环节建模链再到报告与看板的全景图；各环节方法与产物文件逐一标注</div>
+    <div class="figrow" id="figs0"></div></div>
   <div class="answer" id="a1"></div>
   <div class="pgrid" id="personas"></div>
   <div class="figblock"><div class="fighead"><b>本环节（聚类画像）的建模证据图</b> —— 管线实跑产出，每图标注其证明的结论；点击放大</div>
@@ -107,7 +109,7 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
   <div class="cols">
     <div class="pcard"><h3>与成绩最相关的行为（Pearson 相关系数 r）</h3>
       <div class="viz" id="corr"></div>
-      <div class="hintline">r 介于 -1~1，越接近 1 关联越强；活跃天数（坚持出勤）是第一相关因子。</div></div>
+      <div class="hintline">r 介于 -1~1，越接近 1 关联越强；排名第一的因子见上方结论（随每次运行动态更新）。</div></div>
     <div class="pcard"><h3>行为特征重要性 Top5（随机森林）</h3>
       <div class="viz" id="feat"></div>
       <div class="hintline">哪个特征被模型用得越多越重要；与相关分析互相印证。</div></div>
@@ -121,7 +123,7 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
   <div class="answer" id="a3"></div>
   <div class="cols">
     <div class="pcard"><h3>统一管线的登录节律分型</h3><div class="viz" id="timepat"></div>
-      <div class="hintline">按全体登录时间分布自动归类（六源合并口径）。</div></div>
+      <div class="hintline">按全体登录时间分布自动归类（合并总表口径）。</div></div>
     <div class="pcard"><h3>短视频用户主观看时段（国内内容级数据）</h3><div class="viz" id="tod"></div>
       <div class="hintline">内容消费的高峰时段，知识内容可"搭车"分发。</div></div>
   </div>
@@ -143,7 +145,7 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
     <div class="pcard"><h3>逐人行为序列三类模式（滞后序列分析）</h3><div class="viz" id="lsa"></div>
       <div class="hintline">按相邻两次点击的转换规律归类；"刷课"指高频重复点击。</div></div>
     <div class="pcard"><h3>最显著的点击转换（调整残差 z 分数）</h3><div class="pillrow" id="lsatop"></div>
-      <div class="hintline">|z|&gt;1.96 为统计显著；连续刷视频极其普遍，学完资源不回视频。</div></div>
+      <div class="hintline">|z|&gt;1.96 为统计显著；强度越高表示该转换规律越稳定，具体哪些转换最显著见上方标签。</div></div>
   </div>
   <div class="pcard" style="margin-top:16px"><h3>强关联规则（Apriori）与核心资源（PageRank）</h3>
     <div class="pillrow" id="apriori"></div><div class="pillrow" id="sna"></div>
@@ -189,8 +191,8 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding:22px 0 40px;font
   <div class="sec-h"><div class="sec-no">7</div><h2>数据从哪里来</h2></div>
   <div class="answer" id="a7"></div>
   <div class="cols">
-    <div class="pcard"><h3>六类数据源构成（学习者数）</h3><div class="viz" id="sources"></div>
-      <div class="hintline">慕课（HarvardX/MITx）、清华短视频、ASSISTments 编程练习、OULAD、UCI 学生成绩（课堂对照）、天池微课——全部真实公开数据，无仿真样本。</div></div>
+    <div class="pcard"><h3>数据源构成（学习者数）</h3><div class="viz" id="sources"></div>
+      <div class="hintline">来源个数与名称按实跑统一表的来源列动态计数。</div></div>
     <div class="pcard"><h3>口径与伦理边界</h3><div class="qlist" id="ethics"></div></div>
   </div>
 </div></section>
@@ -229,38 +231,56 @@ const pct1 = v => (v * 100).toFixed(1) + "%";
 const CN = {active_days: "活跃天数", avg_quiz_score: "测验均分", forum_posts: "论坛发帖",
             quiz_attempts: "测验次数", resource_clicks: "资源点击", total_clicks: "总点击"};
 
-/* KPI */
+/* KPI + hero 口径（数据源个数与名称全部来自实跑来源列计数） */
+const N_SRC = Object.keys(D.overview.sources || {}).length;
+$("heroScope").textContent = N_SRC ? `（${N_SRC} 类数据集统一口径）` : "";
+$("heroLead").textContent = N_SRC
+  ? `${mk(D.overview.sources).map(d => d.label.replace(/^real:/, "")).join("、")}等 ${N_SRC} 类真实公开数据源合并成一张总表后统一分析：`
+  : "真实公开数据合并成总表后统一分析：";
 $("kpis").innerHTML = [
-  [D.overview.n.toLocaleString(), "六源合并学习者 / 人"],
+  [D.overview.n.toLocaleString(), `${N_SRC || "多"}源合并学习者 / 人`],
   [Object.keys(D.overview.sources || {}).length + " 类", "真实公开数据源"],
   [`K=${D.overview.k}（${(+D.overview.sil).toFixed(3)}）`, "聚类类数（轮廓系数）"],
   [(D.cert_acc * 100).toFixed(1) + "%", "达标判断准确率"],
   [(D.auc_early * 100).toFixed(1) + "%", "第4周早期预警 AUC"]
 ].map(([b, t]) => `<div class="kpi"><b>${b}</b><span>${t}</span></div>`).join("");
 
-/* S1 四类画像 */
-const top2 = D.personas[0].share + D.personas[1].share;
-$("a1").innerHTML = `六类数据集合并后共 <b>${D.overview.n.toLocaleString()} 名学习者</b>，统一聚类分成 <b>${D.overview.k} 类</b>
+/* S1 画像（结论与卡片全部按实跑结果动态生成） */
+const top2 = D.personas[0].share + (D.personas[1] ? D.personas[1].share : 0);
+const top1 = D.personas[0];
+const majorityTxt = /风险流失|弱表现|低投入/.test(top1.name)
+  ? `其中"${top1.name}"占绝对多数（${top1.share.toFixed(1)}%）——绝大多数学习者在当前平台上投入很低，干预空间巨大。`
+  : `其中占比最高的是"${top1.name}"（${top1.share.toFixed(1)}%），各画像的行为特征与运营建议见下方卡片。`;
+$("a1").innerHTML = `${N_SRC || "多"}类数据源合并后共 <b>${D.overview.n.toLocaleString()} 名学习者</b>，统一聚类分成 <b>${D.overview.k} 类</b>
 （轮廓系数 ${(+D.overview.sil).toFixed(3)}，K-means ${D.overview.backend === "torch" ? "在 GPU 上" : ""}完成，跨数据集口径统一）。
-最大的两类合计约 <b>${top2.toFixed(1)}%</b>，其中"风险流失型"占绝对多数——绝大多数学习者在当前平台上投入很低，干预空间巨大。
-每张卡片下方给出对应的运营建议。`;
+最大的两类合计约 <b>${top2.toFixed(1)}%</b>，${majorityTxt}`;
 $("personas").innerHTML = D.personas.map(p => `
-  <div class="pcard persona"><div class="nm">${esc(p.cn)}</div><div class="en">${esc(p.name)}</div>
+  <div class="pcard persona"><div class="nm">${esc(p.name)}</div>
+    ${p.en ? `<div class="en">${esc(p.en)}</div>` : ""}
     <div class="num">${p.n.toLocaleString()}<small> 人 · ${p.share.toFixed(1)}%</small></div>
     <div class="desc">${esc(p.desc) || "按簇中心特征定制内容策略。"}</div>
     <div class="reco">建议：${esc(p.reco) || "—"}</div></div>`).join("");
 
-/* S2 投入与结果 */
-$("a2").innerHTML = `投入分层直接兑换成结果：统一管线把学习者按投入度分组后，<b>最高组比最低组 ${esc(D.tier_lift)}</b>。
-"坚持出勤"（活跃天数）同时是相关分析和随机森林重要性的第一因子——改善持续性比冲刺单次测验更有效。`;
+/* S2 投入与结果（第一名因子按实跑结果动态指认） */
+const corrNo1 = (D.corr_top || []).length ? (CN[D.corr_top[0].label] || D.corr_top[0].label) : null;
+const featNo1 = (D.top5_features || []).length ? (CN[D.top5_features[0].label] || D.top5_features[0].label) : null;
+$("a2").innerHTML = `投入分层直接兑换成结果：统一管线把学习者按投入度分组后，<b>最高组比最低组 ${esc(D.tier_lift)}</b>。` +
+  (corrNo1 && featNo1 && corrNo1 === featNo1
+    ? `"${esc(corrNo1)}"同时是相关分析和随机森林重要性的第一因子——优先改善这项行为，比冲刺单次测验更有效。`
+    : `相关分析第一因子是${corrNo1 ? `“${esc(corrNo1)}”` : "见下表"}，随机森林最依赖${featNo1 ? `“${esc(featNo1)}”` : "见下表"}——两套独立方法互为印证，据此排干预优先级。`);
 $("corr").innerHTML = hbars(D.corr_top.map(d => ({label: CN[d.label] || d.label, value: d.r})),
                             {fmtFn: v => "r=" + (+v).toFixed(3), max: 1});
 $("feat").innerHTML = hbars(mk(D.top5_features).map(d => ({label: CN[d.label] || d.label, value: d.value})), {fmtFn: v => (+v).toFixed(3)});
 
-/* S3 节律与兴趣 */
-$("a3").innerHTML = `合并口径下登录节律分四类，<b>常规型与夜间型是主流</b>；国内短视频内容级数据显示消费高峰在<b>下午与晚间</b>。
-内容偏好高度娱乐化——知识内容做短、放进这些时段，才能被看到。`;
-$("timepat").innerHTML = hbars(mk(D.time_patterns).sort((a, b) => b.value - a.value), {fmtFn: v => Math.round(v).toLocaleString() + " 人"});
+/* S3 节律与兴趣（主流节律/高峰时段/最大类别全部按实跑结果取值） */
+const tpArr = mk(D.time_patterns).sort((a, b) => b.value - a.value);
+const todArr = (D.tod || []).slice().sort((a, b) => b.share - a.share);
+const catArr = (D.cats || []).slice().sort((a, b) => b.share - a.share);
+$("a3").innerHTML = `合并口径下登录节律自动分为 ${tpArr.length} 类，<b>${esc(tpArr.slice(0, 2).map(t => t.label).join("与"))}是主流</b>（合计 ${(tpArr.slice(0, 2).reduce((a, t) => a + t.value, 0)).toLocaleString()} 人）；` +
+  (todArr.length ? `国内短视频内容级数据显示消费高峰在<b>${esc(todArr[0].group)}</b>（占 ${pct1(todArr[0].share)}）。` : "") +
+  (catArr.length ? `内容类别中占比最高的是“${esc(catArr[0].name)}”（${catArr[0].share.toFixed(1)}%）——知识内容做短、放进高峰时段，才能被看到。`
+                 : "知识内容做短、放进高峰时段，才能被看到。");
+$("timepat").innerHTML = hbars(tpArr, {fmtFn: v => Math.round(v).toLocaleString() + " 人"});
 $("tod").innerHTML = hbars(D.tod.map(r => ({label: r.group, value: r.share})), {fmtFn: pct1});
 $("cats").innerHTML = hbars(D.cats.map(c => ({label: c.name, value: c.share})), {fmtFn: v => v.toFixed(1) + "%"});
 $("itypes").innerHTML = D.itypes.map(t => `<span class="pill">${esc(t.name)} ${t.share}%</span>`).join("");
@@ -310,12 +330,15 @@ $("sugg").innerHTML = Object.entries(D.suggestions || {}).map(([cat, items]) =>
   `<div class="qitem"><b>${esc(cat)}</b>（${items.length} 条）：` +
   items.map(it => `${esc(it.target)}——${esc(it.advice)}`).join("；") + "</div>").join("");
 
-/* S7 数据来源 */
-$("a7").innerHTML = `项目分析的是<b>六类真实公开数据集的合并总表</b>（不单独拆分任何一个数据集）：
-慕课（HarvardX/MITx）、清华 FIB 短视频、ASSISTments 编程练习、OULAD 开放大学、UCI 学生成绩（课堂对照）、天池微课。
+/* S7 数据来源（源清单与规模全部来自实跑 up_unified.csv 的来源列计数） */
+const srcs = mk(D.overview.sources).map(d => Object.assign({}, d, {label: d.label.replace(/^real:/, "")}))
+                                   .sort((a, b) => b.value - a.value);
+$("a7").innerHTML = srcs.length
+  ? `项目分析的是<b>${srcs.length} 类真实公开数据源的合并总表</b>（不单独拆分任何一个数据源）：${esc(srcs.map(s => s.label).join("、"))}。
 合并后共 <b>${D.overview.n.toLocaleString()} 名学习者</b>。数据都是公开真实数据，没有仿真样本；seed=20260101 仅用于可复现抽样。
-下面这些差异都是观察性关联，不对个人做评价。`;
-$("sources").innerHTML = hbars(mk(D.overview.sources).map(d => ({label: d.label.replace(/^real:/, ""), value: d.value})),
+下面这些差异都是观察性关联，不对个人做评价。`
+  : `项目分析的是<b>真实公开数据的合并总表</b>（不单独拆分任何一个数据源），共 <b>${D.overview.n.toLocaleString()} 名学习者</b>。数据都是公开真实数据，没有仿真样本；seed=20260101 仅用于可复现抽样。下面这些差异都是观察性关联，不对个人做评价。`;
+$("sources").innerHTML = hbars(srcs.map(d => ({label: d.label, value: d.value})),
                                {fmtFn: v => Math.round(v).toLocaleString()});
 $("ethics").innerHTML = [
   "观看完成度为观看时长/视频时长截断 1 的代理，非真实完课率。",
