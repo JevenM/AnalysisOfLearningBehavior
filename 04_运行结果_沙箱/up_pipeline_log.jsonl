@@ -1,0 +1,8 @@
+{"ts": "2026-11-22T12:41:36", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-22T12:41:36", "msg": "  计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）"}
+{"ts": "2026-11-22T12:41:36", "msg": "[up 3] 分析层（PCA + 聚类画像）"}
+{"ts": "2026-11-22T12:41:36", "msg": "[up 3] 失败: FileNotFoundError: [Errno 2] No such file or directory: '..\\\\..\\\\04_运行结果_沙箱\\\\up_unified.csv'"}
+{"ts": "2026-11-22T12:43:30", "msg": "  中文字体已配置: Microsoft YaHei"}
+{"ts": "2026-11-22T12:43:30", "msg": "  计算设备: CPU（sklearn 多核并行，--device gpu 可启用 GPU 加速）"}
+{"ts": "2026-11-22T12:43:30", "msg": "[up 3] 分析层（PCA + 聚类画像）"}
+{"ts": "2026-11-22T12:43:30", "msg": "[up 3] 失败: FileNotFoundError: [Errno 2] No such file or directory: '..\\\\..\\\\04_运行结果_沙箱\\\\up_unified.csv'"}

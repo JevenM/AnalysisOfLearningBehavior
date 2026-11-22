@@ -247,6 +247,14 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
         f"Silhouette(基于 {len(fit_idx)} 样本) = {sil:.3f}")
     uni["cluster"] = labels
 
+    # 画像命名提前到绘图前：各图图例直接使用画像语义名（而非"画像簇 0/1/2/3"）
+    label_personas(uni, cols)
+    _cnt = uni["cluster"].value_counts()
+    cnames = {int(c): f"{name}（{_cnt[c]:,} 人）"
+              for c, name in
+              uni.drop_duplicates("cluster").set_index("cluster")["persona"].items()}
+    log(f"  画像命名: { {c: n for c, n in cnames.items()} }")
+
     # --- PCA 散点（大样本时仅绘制子集） ---
     pca = PCA(n_components=2, random_state=SEED)
     X_pca = pca.fit_transform(X)
@@ -268,11 +276,12 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
     for c in range(k):
         m = lab_p == c
         ax.scatter(pca_p[m, 0], pca_p[m, 1], c=PALETTE[c % len(PALETTE)],
-                   label=f"画像簇 {c}", alpha=0.75, s=55, edgecolors="white", linewidths=0.4)
+                   label=cnames.get(c, f"画像簇 {c}"), alpha=0.75, s=55,
+                   edgecolors="white", linewidths=0.4)
     ax.set(xlabel=f"主成分 PC1（解释方差 {var[0]:.1f}%）\n主要由 {_pc_top(0)} 等特征驱动",
            ylabel=f"主成分 PC2（解释方差 {var[1]:.1f}%）\n主要由 {_pc_top(1)} 等特征驱动",
-           title="学习者画像聚类 — PCA 二维投影\n（坐标 = 标准化行为特征的线性组合，颜色 = 所属画像簇）")
-    ax.legend(title="画像簇", loc="best")
+           title="学习者画像聚类 — PCA 二维投影\n（坐标 = 标准化行为特征的线性组合，颜色 = 所属画像类别）")
+    ax.legend(title="画像类别（K-Means 簇）", loc="best")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "up_pca_clusters.png"), bbox_inches="tight")
     plt.close()
@@ -298,13 +307,13 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
         for c in range(k):
             sub = emb[emb["cluster"] == c]
             ax.scatter(sub["tSNE1"], sub["tSNE2"], c=PALETTE[c % len(PALETTE)],
-                       label=f"Cluster {c}", alpha=0.55, s=12,
+                       label=cnames.get(c, f"画像簇 {c}"), alpha=0.55, s=12,
                        edgecolors="none", rasterized=True)
         ax.set(title="学习者画像 — t-SNE 非线性嵌入\n"
-                     "（坐标为嵌入空间尺度，无业务含义；本图仅用于展示簇分离结构，不参与建模）")
+                     "（坐标为嵌入空间尺度，无业务含义；本图仅用于展示画像类别间的分离结构，不参与建模）")
         ax.set_xlabel("t-SNE 维度 1（无业务含义）")
         ax.set_ylabel("t-SNE 维度 2（无业务含义）")
-        ax.legend(title="画像簇", markerscale=3)
+        ax.legend(title="画像类别（K-Means 簇）", markerscale=3)
         plt.tight_layout()
         plt.savefig(os.path.join(out_dir, "up_tsne_clusters.png"),
                     bbox_inches="tight", dpi=150)
@@ -328,13 +337,13 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
         for c in range(k):
             sub = emb[emb["cluster"] == c]
             ax.scatter(sub["UMAP1"], sub["UMAP2"], c=PALETTE[c % len(PALETTE)],
-                       label=f"Cluster {c}", alpha=0.55, s=12,
+                       label=cnames.get(c, f"画像簇 {c}"), alpha=0.55, s=12,
                        edgecolors="none", rasterized=True)
         ax.set(title="学习者画像 — UMAP 降维投影\n"
-                     "（坐标为嵌入空间尺度，无业务含义；本图仅用于展示簇分离结构，不参与建模）")
+                     "（坐标为嵌入空间尺度，无业务含义；本图仅用于展示画像类别间的分离结构，不参与建模）")
         ax.set_xlabel("UMAP 维度 1（无业务含义）")
         ax.set_ylabel("UMAP 维度 2（无业务含义）")
-        ax.legend(title="画像簇", markerscale=3)
+        ax.legend(title="画像类别（K-Means 簇）", markerscale=3)
         plt.tight_layout()
         plt.savefig(os.path.join(out_dir, "up_umap_clusters.png"),
                     bbox_inches="tight", dpi=150)
@@ -373,7 +382,7 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
             ax.set_xticks(angles[:-1])
             ax.set_xticklabels([feat_cn(c2) for c2 in radar_cols], size=8)
             ax.set_yticklabels([])
-            ax.set_title(f"画像簇 {c}（簇内特征均值轮廓）", pad=14, fontweight="bold")
+            ax.set_title(f"{cnames.get(c, f'画像簇 {c}')}行为轮廓", pad=14, fontweight="bold")
         fig.text(0.5, 0.005,
                  "维度说明：总点击/活跃天数/会话时长 = 学习投入强度；测验均分/正确率 = 学业表现；"
                  "发帖/求助 = 互动与支持需求；视频/资源点击 = 内容消费偏好",
@@ -390,7 +399,7 @@ def cluster_personas(uni: pd.DataFrame, cols: list[str], k: int, out_dir: str,
     im = ax.imshow(hm_arr, cmap="RdYlGn", aspect="auto")
     ax.set_xticks(range(len(cols)), [feat_cn(c) for c in cols],
                   rotation=35, ha="right", fontsize=8)
-    ax.set_yticks(range(k), [f"画像簇 {c}" for c in hm_z.index])
+    ax.set_yticks(range(k), [cnames.get(int(c), f"画像簇 {c}") for c in hm_z.index])
     for i in range(hm_arr.shape[0]):
         for j in range(hm_arr.shape[1]):
             ax.text(j, i, f"{hm_arr[i, j]:.2f}", ha="center", va="center", fontsize=7)

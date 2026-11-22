@@ -1,16 +1,16 @@
 {
-  "silhouette": 0.5519890189170837,
+  "silhouette": 0.5520854035019229,
   "k": 4,
   "knee_k": 4,
-  "backend": "torch",
+  "backend": "cpu",
   "k_scores": {
-    "2": 0.534,
+    "2": 0.756,
     "3": 0.524,
     "4": 0.552,
-    "5": 0.497,
-    "6": 0.521,
-    "7": 0.507,
-    "8": 0.439
+    "5": 0.548,
+    "6": 0.558,
+    "7": 0.481,
+    "8": 0.581
   },
   "n_fit_samples": 15000,
   "cluster_cols": [
@@ -28,31 +28,5 @@
     "engagement_score",
     "hint_usage",
     "success_rate"
-  ],
-  "RandomForest_grade_acc": 0.9416825047514255,
-  "RandomForest_grade_recall": 0.5449206246521338,
-  "RandomForest_grade_precision": 0.5309944523816077,
-  "GradientBoosting_grade_acc": 0.9460338101430429,
-  "GradientBoosting_grade_recall": 0.552930430362521,
-  "GradientBoosting_grade_precision": 0.5420716437954705,
-  "cert_acc": 0.9549364809442833,
-  "cert_recall_risk": 0.9746434231378764,
-  "best_model": "GradientBoosting",
-  "top5_features": {
-    "active_days": 0.429,
-    "avg_quiz_score": 0.229,
-    "forum_posts": 0.213,
-    "quiz_attempts": 0.032,
-    "resource_clicks": 0.027
-  },
-  "logreg_acc": 0.9535860758227468,
-  "logreg_auc": 0.9828024281004375,
-  "rf_auc_full": 0.9778754049709877,
-  "rf_auc_early": 0.8824341954613409,
-  "persona_pred_acc": 0.9748506143398166,
-  "gm_trends": {
-    "平稳": 9911,
-    "下降": 1400,
-    "上升": 46
-  }
+  ]
 }
