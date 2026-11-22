@@ -1582,3 +1582,92 @@
 [12:22:43] [完成] 内容画像看板 耗时 0.1s
 [12:22:43] [链路结束] scope=pipeline，共 11 步，结果目录 D:\Git\AnalysisOfLearningBehavior\选题7_最终交付\04_运行结果
 [12:22:43] [提示] 正式结果已更新：在“结果看板”区刷新三个看板链接查看
+[12:57:19] [数据] 沙箱输入已替换: test_upload_harvardx_holdout.csv（8000 行）→ 沙箱链路将从“聚类画像”起跑
+[12:57:59] [数据] 沙箱输入已替换: test_upload_harvardx_holdout.csv（8000 行）→ 沙箱链路将从“聚类画像”起跑
+[12:58:03] [开始] scope=sandbox_upload，参数 {'k': 0, 'device': 'auto', 'min_support': 0.05, 'min_conf': 0.4, 'sd_weeks': 52, 'budget_ratio': 0.45}，7 个阶段
+[12:58:03] [1/7] 统一管线[2] 聚类画像
+[12:59:31]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\umap\distances.py:1063: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+[12:59:31]     @numba.jit()
+[12:59:31]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\umap\distances.py:1071: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+[12:59:31]     @numba.jit()
+[12:59:31]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\umap\distances.py:1086: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+[12:59:31]     @numba.jit()
+[12:59:31]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\umap\umap_.py:660: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+[12:59:31]     @numba.jit()
+[12:59:31]     中文字体已配置: Microsoft YaHei
+[12:59:31]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[12:59:31]   [up 3] 分析层（PCA + 聚类画像）
+[12:59:31]     聚类特征（缺失率 ≤ 40%）: ['total_clicks', 'active_days', 'forum_posts', 'resource_clicks', 'video_clicks', 'avg_quiz_score']
+[12:59:31]     PCA 主成分命名: PC1=学习投入度(62.0%), PC2=互动活跃度(16.5%), PC3=资源偏好度(11.2%), PC4=学业表现(5.5%)
+[12:59:31]     自动选择 K = 3（轮廓系数 0.814，肘部拐点 K=5，各 K 综合得分: {2: 0.5, 3: 0.75, 4: 0.47, 5: 0.67, 6: 0.26, 7: 0.14, 8: 0.01}）
+[12:59:31]     K-Means(K=3, backend=torch)  Silhouette(基于 8000 样本) = 0.814
+[12:59:31]     画像命名: {2: '低投入·弱表现型（7,366 人）', 0: '自主深度型（高投入变体）（509 人）', 1: '自主深度型（125 人）'}
+[12:59:31]     PCA 方差解释率: PC1=62.0%, PC2=16.5%
+[12:59:31]     非线性嵌入可视化: 8000 样本
+[12:59:31]     t-SNE: perplexity=30 (大数据集需 1-2 分钟)
+[12:59:31]     UMAP: n_neighbors=15, min_dist=0.1 (约 10-30 秒)
+[12:59:31]     画像分布: {'低投入·弱表现型': 7366, '自主深度型（高投入变体）': 509, '自主深度型': 125}
+[12:59:31]   [up 3] 完成
+[12:59:32] [完成] 统一管线[2] 聚类画像 耗时 88.8s
+[12:59:32] [2/7] 统一管线[3] 行为挖掘
+[13:03:39]     中文字体已配置: Microsoft YaHei
+[13:03:39]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[13:03:39]   [up 4] 挖掘层（SNA/LSA/时序/Apriori/场景）
+[13:03:39]     SNA 完成: 11357 学习者 / 18221 资源节点; PageRank Top 资源: ['S542811', 'S703721', 'S703737']
+[13:03:39]     LSA 完成: 行为模式分布 {'刷课': 6298, '正常': 4830, '跳步学习': 229}
+[13:03:39]     时序模式分布: {'常规型学习': 4439, '夜间型学习': 3517, '集中式周末学习': 3309, '碎片化高频学习': 92}
+[13:03:39]     Apriori 规则 21 条; 只看短视频跳过完整慕课占比: 58.5%
+[13:03:39]     场景对比: {'慕课长视频': {'完播率': 0.39, '倍速使用率': 0.424, '平均拖拽次数': nan}, '短视频': {'完播率': 0.348, '倍速使用率': 0.0, '平均拖拽次数': nan}}
+[13:03:39]     警告: 人口维度 ['region'] 在输入数据中无有效值，跳过该维度统计
+[13:03:39]     人口结构: 核心群体 {'gender': '男', 'age_band': '26-30', 'education': '本科'}
+[13:03:39]   [up 4] 完成
+[13:03:39] [完成] 统一管线[3] 行为挖掘 耗时 247.2s
+[13:03:39] [3/7] 统一管线[4] 相关与分层
+[13:03:46]     中文字体已配置: Microsoft YaHei
+[13:03:46]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[13:03:46]   [up 5] 关联层（相关/异质性/投入分层）
+[13:03:46]     相关性 Top3（成绩）: [{'indicator': 'avg_quiz_score', 'pearson_r': 1.0}, {'indicator': 'active_days', 'pearson_r': 0.694}, {'indicator': 'total_clicks', 'pearson_r': 0.692}]
+[13:03:46]     投入分层: 高投入组较低投入组 完成率 +41.0%, 成绩 +16.5 分
+[13:03:46]   [up 5] 完成
+[13:03:46] [完成] 统一管线[4] 相关与分层 耗时 6.8s
+[13:03:46] [4/7] 统一管线[5] 预测与预警
+[13:04:18]   D:\Git\AnalysisOfLearningBehavior\选题7_最终交付\03_源代码\up_stages.py:1232: RuntimeWarning: overflow encountered in exp
+[13:04:18]     return (x0[0] - b / a) * np.exp(-a * k) + b / a
+[13:04:18]   D:\Anaconda3\envs\pytorch-gpu\lib\site-packages\numpy\lib\function_base.py:1448: RuntimeWarning: invalid value encountered in subtract
+[13:04:18]     a = op(a[slice1], a[slice2])
+[13:04:18]     中文字体已配置: Microsoft YaHei
+[13:04:18]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[13:04:18]   [up 6] 预测层（RF/GBDT/LogReg/预警/GM(1,1)）
+[13:04:18]     RF 学业表现预测: 最终成绩 R²=1.000 (MAE=0.01), 完成率 R²=0.833, 完成判定 acc=0.972
+[13:04:18]     扩展建模: 最佳模型=GradientBoosting 成绩等级 acc=1.000 recall=1.000; 认证 acc=0.972; Top5 关键行为: ['avg_quiz_score', 'video_clicks', 'total_clicks', 'active_days', 'resource_clicks']
+[13:04:18]     LogisticRegression 成功预测: acc=0.995 AUC=1.000
+[13:04:18]     RandomForest 风险预测 5-fold AUC: 全特征=1.000  早期特征(['total_clicks', 'active_days'])=0.949
+[13:04:18]     RandomForest 由行为预测画像标签: acc=0.994 (classes=['低投入·弱表现型', '自主深度型', '自主深度型（高投入变体）'])
+[13:04:18]     GM(1,1) 完成: 有效预测 11357/11357 人, 趋势分布 {'平稳': 9911, '下降': 1400, '上升': 46}, 模型精度分布 {'合格': 11223, '优': 75, '良': 59}
+[13:04:18]   [up 6] 完成
+[13:04:19] [完成] 统一管线[5] 预测与预警 耗时 32.8s
+[13:04:19] [5/7] 统一管线[6] 评价与 SD 仿真
+[13:04:26]     中文字体已配置: Microsoft YaHei
+[13:04:26]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[13:04:26]   [up 7] 评价层（AHP+模糊评判 / SD 仿真）
+[13:04:26]     AHP 权重: {'学习行为': 0.32, '学习效果': 0.558, '互动参与': 0.122}  一致性 CR=0.016 (通过)
+[13:04:26]     学习质量评分: 均值=40.7, 等级分布 {'差': 7674, '中': 326}
+[13:04:26]     SD 仿真: 52 周后最优策略 = 加强资源供给（投入水平 1.0）
+[13:04:26]   [up 7] 完成
+[13:04:27] [完成] 统一管线[6] 评价与 SD 仿真 耗时 7.6s
+[13:04:27] [6/7] 统一管线[7] 决策与建议
+[13:04:36]     中文字体已配置: Microsoft YaHei
+[13:04:36]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[13:04:36]   [up 8] 决策层（队列/推荐/建议）
+[13:04:36]     优化建议: 输出 7 条落地策略
+[13:04:36]     干预队列分布: {'none': 6395, 'enrichment': 1605}
+[13:04:36]   [up 8] 完成
+[13:04:36] [完成] 统一管线[7] 决策与建议 耗时 9.4s
+[13:04:36] [7/7] 统一管线[8] 汇总报告
+[13:04:41]     中文字体已配置: Microsoft YaHei
+[13:04:41]     计算设备: GPU[GeForce GTX 1050 Ti]，KMeans / 轮廓系数 / 质心分配使用 torch 后端加速
+[13:04:41]   [up 9] 输出层（汇总报告）
+[13:04:41]     报告已生成: D:\Git\AnalysisOfLearningBehavior\选题7_最终交付\04_运行结果_沙箱\up_report.md (2270 字符)
+[13:04:41]   [up 9] 完成
+[13:04:42] [完成] 统一管线[8] 汇总报告 耗时 5.6s
+[13:04:42] [链路结束] scope=sandbox_upload，共 7 步，结果目录 D:\Git\AnalysisOfLearningBehavior\选题7_最终交付\04_运行结果_沙箱

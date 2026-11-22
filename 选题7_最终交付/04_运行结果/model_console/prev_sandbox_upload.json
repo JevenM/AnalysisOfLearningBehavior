@@ -7,31 +7,18 @@
     "自主深度型": 68,
     "自主深度型（变体 2）": 36
   },
-  "cert_acc": 0.9720833333333333,
-  "cert_recall_risk": 0.9828465461288827,
-  "rf_auc_early": 0.9489873367868811,
-  "rf_auc_full": 0.9996224606094088,
-  "gm_trends": {
-    "平稳": 9911,
-    "下降": 1400,
-    "上升": 46
-  },
-  "ahp_cr": 0.016,
-  "quality_mean": 40.7,
-  "sd_best": "加强资源供给",
-  "sd_growth": 233.3,
-  "queues": {
-    "none": 6395,
-    "enrichment": 1605
-  },
-  "apriori_top": {
-    "antecedent": "论坛互动、读资源",
-    "consequent": "OULAD 课程资源",
-    "support": 0.319,
-    "confidence": 0.988,
-    "lift": 2.8
-  },
-  "suggestions": 8,
+  "cert_acc": null,
+  "cert_recall_risk": null,
+  "rf_auc_early": null,
+  "rf_auc_full": null,
+  "gm_trends": {},
+  "ahp_cr": null,
+  "quality_mean": null,
+  "sd_best": null,
+  "sd_growth": null,
+  "queues": {},
+  "apriori_top": {},
+  "suggestions": null,
   "budget": {
     "budget_ratio": 0.45,
     "budget": 199183.0,
